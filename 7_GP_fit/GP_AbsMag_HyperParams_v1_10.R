@@ -11,7 +11,6 @@
 # book `Gaussian Processes for Machine Learning' provides a detailed explanation of the
 # math for Gaussian process regression. 
 
-# Version 3.0 (Sep 27, 2016)
 # - implementation of the previous template as a PRIOR for the GP fitting 
 
 ####################################################
