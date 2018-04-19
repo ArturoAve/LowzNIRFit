@@ -32,12 +32,12 @@ sample <- 'AllSamples'
 
 
 # Band to fit:
-bandname <- 'K'     # (Y, J, H, K)
+bandname <- 'Y'     # (Y, J, H, K)
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
-# FALSE = fit the absolute-magnitude light-curves
+# FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the GP hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
-FitAppMag <- TRUE
+FitAppMag <- FALSE
 
 #----------------
 
