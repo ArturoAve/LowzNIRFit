@@ -23,10 +23,10 @@
 
 #--  Choosing the directory
 
-# Band <- 'J'
+Band <- 'J'
 # Band <- 'Y'
 # Band <- 'H'
-Band <- 'K'
+# Band <- 'K'
 
 # KindOfData <- 'CfA'
 # KindOfData <- 'CSP' 
@@ -34,7 +34,7 @@ Band <- 'K'
 KindOfData <- 'AllSamples'
 
 # Compute a normalized template?:
-NormalizedTemp <- TRUE # Options: (TRUE, FALSE)
+NormalizedTemp <- FALSE # Options: (TRUE, FALSE)
 
 #-- Redshift cutoff. I've set 3 options (z=0, 0.01, anything else).
 z_lowerLimit <- 0.0  
