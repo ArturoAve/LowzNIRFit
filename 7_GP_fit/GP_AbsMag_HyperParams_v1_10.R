@@ -1,4 +1,4 @@
-# GAUSSIAN PROCESS CODE
+# GAUSSIAN-PROCESSES FITTING OF NIR LIGHT CURVES OF SNe Ia.
 # Author: Arturo Avelino
 
 #     DESCRIPTION
@@ -31,11 +31,13 @@ sample <- 'AllSamples'
 
 
 # Band to fit:
-bandname <- 'Y'     # (Y, J, H, K)
+bandname <- 'J'     # (Y, J, H, K)
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
 # FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
-# TRUE  = fit the apparent-magnitude light-curves. In this case, the GP hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
+# "FALSE" is also the option to create the -normalized- template.
+# TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
+# "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max.
 FitAppMag <- FALSE
 
 #----------------
@@ -46,8 +48,11 @@ FitAppMag <- FALSE
 ComputeHyperpars <- TRUE  # (TRUE, FALSE). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 
-# Peculiar velocity uncertainty (km/sec) to compute the template. Use 0 (zero) to compute the -normalized- template and also to fit the apparent-magnitude light curves.
-velPecuFix <- 0  # (0, 150, 300). I use zero for the low-z paper.
+# Peculiar velocity uncertainty (km/sec) to compute the template. 
+# Use 0 (zero) to compute the -normalized- template, and also to fit the apparent-magnitude light curves.
+# I use zero for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
+# Set velPecuFix > 0 (i.e., "velPecuFix <- 150") to compute the mean ABS-mag light curve.
+velPecuFix <- 150  # (0, 150, 300) km/s. 
 
 # Cutoffs on the SNe used to determine the hyperparameters of the GP kernel
 zMin <- 0
