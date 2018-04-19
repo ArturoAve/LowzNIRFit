@@ -1330,12 +1330,15 @@ for(i in 1:length(list_outside)){
 
 #   CREATE THE DIRECTORY WHERE I'LL PUT THE SNE WITH PROBLEMS DURING FITTING
 
+
 DirProblems_1 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/')
 DirProblems_2 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/ToTrim/')
 DirProblems_3 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/ScarseData/')
 DirProblems_4 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/Weird/')
+DirProblems_5 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/InvertPhasesAndRefit/')
 dir.create(DirProblems_1); dir.create(DirProblems_2); 
 dir.create(DirProblems_3); dir.create(DirProblems_4);
+dir.create(DirProblems_5);
 
 #---------------------------------------
 

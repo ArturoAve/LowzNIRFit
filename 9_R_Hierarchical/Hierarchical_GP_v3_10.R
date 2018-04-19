@@ -8,12 +8,16 @@
 
 # DESCRIPTION
 
-# The code will output 4 files:
+# The code will output 2 files:
 
-# Template_phase_mu_stdError_FromR.dat:
-# Template_phase_mu_stdError_FromR_Norma.dat:
-# Template_phase_mu_tau_FromR.dat:
+#   "NormalizedTemp <- TRUE"
 # Template_phase_mu_tau_FromR_Norma.dat:
+# Template_phase_mu_stdError_FromR_Norma.dat:
+
+#   "NormalizedTemp <- FALSE"
+# Template_phase_mu_stdError_FromR.dat:
+# Template_phase_mu_tau_FromR.dat:
+
 
 # Note that this code doesn't say, know, or need, anything about the peculiar velocity uncertainty.
 
@@ -35,7 +39,7 @@ KindOfData <- 'AllSamples'
 
 # Compute a normalized template?:
 # "FALSE" =  the mean ABS-mag light curve.
-NormalizedTemp <- FALSE # Options: (TRUE, FALSE)
+NormalizedTemp <- TRUE # Options: (TRUE, FALSE)
 
 #-- Redshift cutoff. I've set 3 options (z=0, 0.01, anything else).
 z_lowerLimit <- 0.0  
