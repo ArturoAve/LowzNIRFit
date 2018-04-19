@@ -3,3 +3,9 @@
 */.ipynb_checkpoints/*
 .gitattributes
 0_Canopy_ToRunPythonScripts.ipynb
+
+.Rproj.user
+.Rapp.history
+.RData
+.Rhistory
+*.Rproj
