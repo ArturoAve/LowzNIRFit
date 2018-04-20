@@ -38,7 +38,7 @@ bandname <- 'J'     # (Y, J, H, K)
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max.
-FitAppMag <- FALSE
+FitAppMag <- TRUE
 
 #----------------
 
@@ -52,7 +52,7 @@ if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 # Use 0 (zero) to compute the -normalized- template, and also to fit the apparent-magnitude light curves.
 # I use zero for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
 # Set velPecuFix > 0 (i.e., "velPecuFix <- 150") to compute the mean ABS-mag light curve.
-velPecuFix <- 150  # (0, 150, 300) km/s. 
+velPecuFix <- 0  # (0, 150, 300) km/s. 
 
 # Cutoffs on the SNe used to determine the hyperparameters of the GP kernel
 zMin <- 0

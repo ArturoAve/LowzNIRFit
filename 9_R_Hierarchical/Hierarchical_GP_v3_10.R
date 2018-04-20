@@ -39,7 +39,7 @@ KindOfData <- 'AllSamples'
 
 # Compute a normalized template?:
 # "FALSE" =  the mean ABS-mag light curve.
-NormalizedTemp <- TRUE # Options: (TRUE, FALSE)
+NormalizedTemp <- FALSE # Options: (TRUE, FALSE)
 
 #-- Redshift cutoff. I've set 3 options (z=0, 0.01, anything else).
 z_lowerLimit <- 0.0  
