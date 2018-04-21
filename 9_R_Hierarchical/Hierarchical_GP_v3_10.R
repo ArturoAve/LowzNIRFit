@@ -27,19 +27,20 @@
 
 #--  Choosing the directory
 
-Band <- 'J'
+# Band <- 'J'
 # Band <- 'Y'
-# Band <- 'H'
+Band <- 'H'
 # Band <- 'K'
 
 # KindOfData <- 'CfA'
 # KindOfData <- 'CSP' 
 # KindOfData <- 'Others'
-KindOfData <- 'AllSamples'
+KindOfData <- 'AllSamples_vpec_0'
+# KindOfData <- 'AllSamples_vpec_150'
 
 # Compute a normalized template?:
 # "FALSE" =  the mean ABS-mag light curve.
-NormalizedTemp <- FALSE # Options: (TRUE, FALSE)
+NormalizedTemp <- TRUE # Options: (TRUE, FALSE)
 
 #-- Redshift cutoff. I've set 3 options (z=0, 0.01, anything else).
 z_lowerLimit <- 0.0  
@@ -159,7 +160,7 @@ if (NormalizedTemp == TRUE) {
   write.table(text3, file='SN_list_template_Norma_.txt', quote=FALSE, row.names='#',   col.names=FALSE, append=TRUE)
   write.table(text4, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   write.table(text5, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
-  write.table(text6, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  # write.table(text6, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   write.table(text7, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 } else {
   # Write to the text file the headers created above:

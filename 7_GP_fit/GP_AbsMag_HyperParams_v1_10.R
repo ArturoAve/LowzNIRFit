@@ -1267,11 +1267,12 @@ if (FitAppMag == TRUE) {
   subfolder <- 'AllSamples_appMag'
 } else {subfolder <- 'AllSamples'}
 
-# subfolder
 
+# Subfolders
 DirSelection_1 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior')
-DirSelection_2 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior', subfolder)
-DirSaveOutputGood <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior', subfolder, 'Goods/')
+DirSelection_2    <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior', paste(subfolder, '_vpec_', velPecuFix, sep=''))
+DirSaveOutputGood <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior', paste(subfolder, '_vpec_', velPecuFix, sep=''), 'Goods/')
+DirSaveOutputGood
 dir.create(DirSelection_1); dir.create(DirSelection_2); dir.create(DirSaveOutputGood)
 
 for(i in 1:numSNeAfterCutoff){
