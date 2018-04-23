@@ -28,8 +28,8 @@
 #--  Choosing the directory
 
 # Band <- 'J'
-# Band <- 'Y'
-Band <- 'H'
+Band <- 'Y'
+# Band <- 'H'
 # Band <- 'K'
 
 # KindOfData <- 'CfA'
@@ -38,17 +38,19 @@ Band <- 'H'
 # KindOfData <- 'AllSamples_vpec_0'
 KindOfData <- 'AllSamples_vpec_150'
 
+# NOTE: To construct the normalized template I have to GP fit the light curves 
+# assuming a peculiar velocity uncertainty of vpec = 0, then to compute the 
+# template in this case select "KindOfData <- 'AllSamples_vpec_0'" and 
+# "NormalizedTemp <- FALSE".
+
 # Compute a normalized template?:
 # "FALSE" =  the mean ABS-mag light curve.
-# To construct the normalized template I have to GP the light curves assuming a peculiar velocity
-# uncertainty of vpec = 0.
 NormalizedTemp <- FALSE # Options: (TRUE, FALSE)
 
 #-- Redshift cutoff. I've set 3 options (z=0, 0.01, anything else).
 z_lowerLimit <- 0.0  
 # z_lowerLimit = 0.01
 # z_lowerLimit =  # <-- For any other value of redshift cutoff
-
 
 # Indicate the technique ALREADY USED to compute the GP fitting in the '1_AllData_InitialFit' step.
 # This information is just to label the '3_Template' folder where I will save the output.
