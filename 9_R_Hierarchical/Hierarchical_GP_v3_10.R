@@ -28,9 +28,9 @@
 #--  Choosing the directory
 
 # Band <- 'J'
-Band <- 'Y'
+# Band <- 'Y'
 # Band <- 'H'
-# Band <- 'K'
+Band <- 'K'
 
 # KindOfData <- 'CfA'
 # KindOfData <- 'CSP' 
