@@ -52,7 +52,7 @@ if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 # Use 0 (zero) to compute the -normalized- template, and also to fit the apparent-magnitude light curves.
 # I use zero for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
 # Set velPecuFix > 0 (i.e., "velPecuFix <- 150") to compute the mean ABS-mag light curve.
-velPecuFix <- 150  # (0, 150, 300) km/s. 
+velPecuFix <- 0  # (0, 150, 300) km/s. 
 
 # Cutoffs on the SNe used to determine the hyperparameters of the GP kernel
 zMin <- 0
@@ -1331,12 +1331,12 @@ for(i in 1:length(list_outside)){
 
 #   CREATE THE DIRECTORY WHERE I'LL PUT THE SNE WITH PROBLEMS DURING FITTING
 
+DirProblems_1 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',paste(subfolder, '_vpec_', velPecuFix, sep=''),'Problems/')
+DirProblems_2 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',paste(subfolder, '_vpec_', velPecuFix, sep=''),'Problems/ToTrim/')
+DirProblems_3 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',paste(subfolder, '_vpec_', velPecuFix, sep=''),'Problems/ScarseData/')
+DirProblems_4 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',paste(subfolder, '_vpec_', velPecuFix, sep=''),'Problems/Weird/')
+DirProblems_5 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',paste(subfolder, '_vpec_', velPecuFix, sep=''),'Problems/InvertPhasesAndRefit/')
 
-DirProblems_1 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/')
-DirProblems_2 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/ToTrim/')
-DirProblems_3 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/ScarseData/')
-DirProblems_4 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/Weird/')
-DirProblems_5 <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'Problems/InvertPhasesAndRefit/')
 dir.create(DirProblems_1); dir.create(DirProblems_2); 
 dir.create(DirProblems_3); dir.create(DirProblems_4);
 dir.create(DirProblems_5);
