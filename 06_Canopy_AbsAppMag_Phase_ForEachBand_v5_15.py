@@ -5,12 +5,6 @@
 # # - (phase, absolute mag, error mag) and
 # # - (phase, apparent mag, error mag)
 
-# ### Notes
-#
-# - The section of the code more pulished is for J band:  use it as template for any other band.
-# - So far, the only case that apply (z_min, z_max) are the bands: J
-# - So far, the only case that apply (z_min) are the bands: B, J
-
 # # User interface
 
 # In[1]:
