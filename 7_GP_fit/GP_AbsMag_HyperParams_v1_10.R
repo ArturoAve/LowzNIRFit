@@ -31,7 +31,7 @@ sample <- 'AllSamples'
 
 
 # Band to fit:
-bandname <- 'Y'     # (Y, J, H, K)
+bandname <- 'H'     # (Y, J, H, K)
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
 # FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
@@ -45,7 +45,7 @@ FitAppMag <- FALSE
 # Compute the GP hyperparameters from the global likelihood PDF ('ComputeHyperpars <- TRUE')?
 # or assume a fixed value set by hand ('ComputeHyperpars <- FALSE')?
 # I use 'TRUE' for the paper, however, when I need to remake the GP fit for some individual LCs, then I use 'FALSE' and then set up the values of hyperparameters by hand. I use 'FALSE' also when fitting the apparent-magnitude light curves.
-ComputeHyperpars <- FALSE  # (TRUE, FALSE). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
+ComputeHyperpars <- TRUE  # (TRUE, FALSE). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 
 # Peculiar velocity uncertainty (km/sec) to compute the template. 
