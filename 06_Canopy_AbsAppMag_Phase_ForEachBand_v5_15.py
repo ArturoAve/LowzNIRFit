@@ -1,29 +1,31 @@
 
 # coding: utf-8
 
-# # Create text files of:
+# # Create text files of: 
 # # - (phase, absolute mag, error mag) and
 # # - (phase, apparent mag, error mag)
 
 # # User interface
 
-# In[1]:
+# In[15]:
 
 # USER
 
-import sys # To read arguments in command line
+# To read arguments in command line
+# Used in the ".py" version of this notebook.
+import sys 
 
 #--- For command line ---
-bandName = '%s'%sys.argv[1]
-Sample = '%s'%sys.argv[2]
-
+# bandName = '%s'%sys.argv[1]
+# Sample = '%s'%sys.argv[2]
+ 
 #---- For notebook----
-# bandName = 'J'  # (Y, Y, H, K)
+# bandName = 'H'  # (Y, Y, H, K)
 
 # Sample = 'CfA'
-# Sample = 'CSP'
-# Sample = 'Others'
-# Sample = 'CfA_CSP'
+# Sample = 'CSP' 
+# Sample = 'Others' 
+# Sample = 'CfA_CSP' 
 
 
 #----------------
@@ -35,35 +37,38 @@ OmMFix = 0.28
 OmLFix = 0.72
 wFix = -1
 
+# Print some marks to debug the code?
+debug = False
+
 
 # -----
 
 # # Automatic
 
-# In[2]:
+# In[16]:
 
 from snpy import *
-# from numpy import *
+# from numpy import * 
 import numpy as np
 from matplotlib import pyplot as plt
 import json
 import glob # To read the name of the files in a given directory
 
-# %pylab qt
+# %pylab qt 
 # For CANOPY python: to show the plots in a separated Windows instead of inline.
 # If used, then I don't have to put the instruction "plt.close()" at
-# the end of the plot because it will show the figure and instantaneously
+# the end of the plot because it will show the figure and instantaneously 
 # close the windows too.
 
 5+6
 
 
-# In[2]:
+# In[16]:
 
 
 
 
-# In[3]:
+# In[17]:
 
 
 #-------- BAND --------------------
@@ -80,7 +85,7 @@ if bandName == 'H':
 if bandName == 'K':
     filterNames = ['Ks2m', 'KANDI', 'K', 'Kd']
 
-#--------------------
+#-------------------- 
 
 DataType = 'OpticalNIR' # OpticalNIR, Optical
 
@@ -98,7 +103,7 @@ FilterSyst = 'Std_filters/'
 # FilterSyst = 'CSP_filters/'
 
 
-# In[4]:
+# In[18]:
 
 
 # Range of redshift data to be considered
@@ -113,7 +118,7 @@ flag1 = 0.175; flag2 = 0.25 # OK
 #-----------------------------------------
 
 #-- Consider the light curves with -at least- the following number of data:
-MinNumberOfDataInLCs=3
+MinNumberOfDataInLCs=1
 
 #-- Consider the LC that contains data in the following range -at least- only:
 # phase_min = 3
@@ -136,14 +141,14 @@ cc = 299792.458  # Speed of light (km/s)
 # MainDir = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/'
 
 
-# In[4]:
+# In[18]:
 
 
 
 
 # ## Metadata: (zhel, zcmb)
 
-# In[5]:
+# In[19]:
 
 DirMetadata = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/'
 
@@ -153,16 +158,16 @@ infoSNe_data = np.genfromtxt(DirMetadata+
                             dtype=['S17', float,float, 'S40',float,float,
                                    float,float,float,float,'S16', int ])
 
-# Create a dictionary:
+# Create a dictionary: 
 # {snname: ra, dec, zhelio, e_zhel, zcmb, e_zcmb, zcmbFlow, e_zcmbFlow, code}
 
 infoSNe_dict = {infoSNe_data['f0'][i]: np.array( [ infoSNe_data['f1'][i],
-                infoSNe_data['f2'][i],
+                infoSNe_data['f2'][i], 
                 infoSNe_data['f4'][i]/cc, infoSNe_data['f5'][i]/cc,
                 infoSNe_data['f6'][i]/cc, infoSNe_data['f7'][i]/cc,
                 infoSNe_data['f8'][i]/cc, infoSNe_data['f9'][i]/cc,
                 infoSNe_data['f11'][i]] )
-                for i in range(len(infoSNe_data)) }
+                for i in range(len(infoSNe_data)) } 
 
 print infoSNe_dict['sn1991T']
 # [  1.88542500e+02   2.66556000e+00   5.79067269e-03   3.33564095e-06
@@ -170,21 +175,21 @@ print infoSNe_dict['sn1991T']
 #    2.00000000e+00]
 
 
-# In[5]:
+# In[19]:
 
 
 
 
 # ### Uploading the SED of Hsiao to compute the extinction
 
-# In[6]:
+# In[20]:
 
 Ia_w, Ia_f = kcorr.get_SED(0,'H3')
 
 
 # ### Cosmology theory for $\mu(z)$
 
-# In[7]:
+# In[21]:
 
 from scipy.integrate import quad as intquad
 
@@ -198,13 +203,13 @@ def InvEHubblePar(z, OmM, wde):
 def LumDistance(z, OmM, wde, Ho):
     "Luminosity distance"
     LumDistanceVecInt = 0.
-    LumDistanceVecInt = cc*(1.+z)*intquad(InvEHubblePar, 0., z, args=(OmM, wde))[0]/Ho
+    LumDistanceVecInt = cc*(1.+z)*intquad(InvEHubblePar, 0., z, args=(OmM, wde))[0]/Ho 
     return LumDistanceVecInt
 
 
 # ---- Distance modulus ----
 def DistanceMu(z, OmM, wde, Ho):
-    "Distance modulus"
+    "Distance modulus"     
     DistanceMuInt = 5.0*np.log10(LumDistance(z, OmM, wde, Ho)) + 25.0
     return DistanceMuInt
 
@@ -216,24 +221,24 @@ print DistanceMu(ztest1, OmMFix, wFix, HoFix)
 # 38.2202031449
 
 
-# In[7]:
+# In[21]:
 
 
 
 
 # ### Generating a table of data (phase[TBmax], M, error_M) including the info of the SNe, from the "snpy" files
-#
+# 
 # The output data is already corrected by
 # - k-correction
 # - extinction by Milky Way dust
 # - time dilation using the z_helio
-#
+# 
 
-# In[8]:
+# In[25]:
 
 #- Directory to save the data
 
-DirSaveFiles = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/TheTemplates/'+bandName+'_band/'+FilterSyst+'1_AllData_InitialFit/AbsMag/'+Sample+'/'
+DirSaveFiles = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/TheTemplates/'+bandName+'_band/'+FilterSyst+'1_AllData_InitialFit/AbsMag/'+Sample+'/'    
 
 #- Force the creation of the directory to save the outputs.
 #- "If the subdirectory does not exist then create it"
@@ -245,19 +250,16 @@ DirLocationData = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLC
 
 os.chdir(DirLocationData)
 
-# Create a list of the the ".snpy" file names:
+# Create a list of the the ".snpy" file names: 
 list_SN = glob.glob('*_StdFilt.snpy')
 # tmp. list_SN = glob.glob('*_1stFit.snpy') # tmp
 
 print len(list_SN),"SNe read with extension '_StdFilt.snpy.'"
 
 
-# In[8]:
+# ### Main Loop
 
-
-
-
-# In[9]:
+# In[26]:
 
 # AUTOMATIC: THIS DOES NOT NEED USER INTERACTION
 
@@ -266,6 +268,8 @@ print len(list_SN),"SNe read with extension '_StdFilt.snpy.'"
 
 log_text = open(DirSaveFiles+'Log_ListSNeWithData_in_'+bandName+'_band_'+Sample+'.log', 'w')
 # log_tex2 = open(DirSavAppMag+'Log_ListSNeWithData_in_'+bandName+'_band_'+Sample+'.log', 'w')
+
+text_line = '#'+'-'*50 + '\n'
 
 log_text.write("# %s SNe read with extension '_StdFilt.snpy' \
 in folder: \n"%len(list_SN))
@@ -283,16 +287,24 @@ countSN_nir = 0 # Count SNe with data in a given NIR band
 for sn in list_SN: # Loop over the SNe.
 
     s=get_sn(sn) # upload .snpy info
-
+    
+    if debug: print "Step 1: %s SN to work out."%s.name
+        
+    # Reset arrays and variables
+    data_all_np  = np.array([0.,0.,0.,0.,0.,0.,0.])
+    Flag_LC_passed_cutoffs = 0  
+    CountNumSimilarBands = 0
+    count_AllNumDataInLC = 0
+    
     # The kcorr uncertainties were computed during the snoopy fitting
     # of the light curves?
-    if error_kcorr == True:
+    if error_kcorr == True:    
         # upload the .json dictionary containing the k-corr uncertainties
-        with open(sn[:-12]+'kcorr_Mean_Std.json','r') as outfile: s_errorKcorr = json.load(outfile)
-
+        with open(sn[:-12]+'kcorr_Mean_Std.json','r') as outfile: s_errorKcorr = json.load(outfile)  
+            
     zhelio     = infoSNe_dict[s.name][2]
     err_zhelio = infoSNe_dict[s.name][3]
-
+    
     # Flag to determine the appropiate z_cmb:
     flag_zcmb  = infoSNe_dict[s.name][8]
     if flag_zcmb > 0.1:
@@ -301,28 +313,35 @@ for sn in list_SN: # Loop over the SNe.
     else:
         zcmb       = infoSNe_dict[s.name][6]
         err_zcmb   = infoSNe_dict[s.name][7]
+        
+    if debug: print 'Step 3: z_CMB defined; done.'
 
     if zhelio > zMinCuttoff and zhelio < zMaxCuttoff:
 
-        # Count the number of similar bands in the same SNe (e.g., J, J2m)
-        CountNumSimilarBands = 0
-
+        if debug: print 'Step 4: (First cutoff) SNe within the z_helio cutoff; done'
+        if debug: print "Step 5: Loop over filters:"
+            
         # Loop over all the variants of filters names in a given band.
-        for band in filterNames:
+        for band in filterNames: 
+            
+            if debug: print band
+                
+            # Reset arrays
+            data_np = np.array([0.,0.,0.,0.,0.,0.,0.])
+            data_band_np = np.array([0.,0.,0.,0.,0.,0.,0.])
+            
+            # Check if the LC has data inside my cutoffs.
             if (band in s.data.keys() and
                 (s.data[band].MJD[0] -s.Tmax)/(1+zhelio) <= phase_min and
                 (s.data[band].MJD[-1]-s.Tmax)/(1+zhelio) >= phase_max and
                 len(s.data[band].MJD) >= MinNumberOfDataInLCs):
+                
+                # If the LC has data inside my cutoffs, flag it
+                # This flag will be used when writting the data to a
+                # text file.
+                Flag_LC_passed_cutoffs = 1
 
-                CountNumSimilarBands = CountNumSimilarBands + 1
-
-                if CountNumSimilarBands == 1:
-                    SN_txtfile = open(DirSaveFiles+sn[0:18]+'_'+Sample+'_'+
-                                      bandName+'.txt', 'w')
-                else:
-                    SN_txtfile = open(DirSaveFiles+sn[0:18]+'_'+Sample+'_'+
-                                      bandName+'.txt', 'a')
-                    SN_txtfile.write("#------ %s ------\n"%band)
+                if debug: print 'Step 6: LC with data in %s band and inside my cutoffs.'%band
 
                 #------- The extinction A_lambda --------
                 R_F = fset[band].R(wave=Ia_w, flux=Ia_f, Rv=3.1)
@@ -331,9 +350,19 @@ for sn in list_SN: # Loop over the SNe.
 
                 #------- distance modulus (LCDM)
                 mu_LCDM = DistanceMu(zcmb, OmMFix, wFix, HoFix)
+                
+                if debug: print 'HERE 7'
 
                 #------------------------------------------------------------------------
                 #   WRITTING THE HEADERS IN THE TEXT FILE
+                
+                # Count the number of similar bands in the same SNe (e.g., J, J2m)
+                CountNumSimilarBands += 1
+                    
+                # Create the text file to write the metadata info only.
+                if CountNumSimilarBands == 1: 
+                    SN_txtfile = open(DirSaveFiles+sn[0:18]+'_'+Sample+'_'+
+                                      bandName+'.txt', 'w')
 
                 if CountNumSimilarBands == 1:
                     SN_txtfile.write("# {0} \n".format(s.name))
@@ -394,39 +423,54 @@ Ho={3}) \n".format(OmMFix, OmLFix, wFix, HoFix))
                     SN_txtfile.write("#  %s \n"%band)
                     SN_txtfile.write('#Phase(TBmax) Abs mag  Err_Absmag  App mag  \
 Err_appmag   kcorr    err_kcorr  \n')
+                    
+                    SN_txtfile.close()
 
                 #------------------------------------------------------------------------
-                #   WRITTING THE PHOTOMETRY
+                #   SAVING TO AN ARRAY THE PHOTOMETRY
 
                 # Retriving the error in EBVgal
                 # e_EBVgal = dust_getval.get_dust_sigma_RADEC(s.ra, s.decl, calibration='SF11')
 
+                if debug: print 'Step 9: Metadata info written in the text file; done.'
+                
+                # Count the number data points in the LC, in a given band and SN.
+                count_NumDataInLC = 0
+                
                 for i in range(len(s.data[band].MJD)): # Loop over MJD in a given band
 
                     #---------------------------------------------
                     # Remove bad photometric data points in CfA sample based on the flag
                     # in the error value:
 
-                    if CommentFlaggedCfAData == False: CommentText = ''
+                    # Reset variable:
+                    CommentFlag = 0 # = "Don't comment this line"
+                    CommentText = ''
+                    
+                    if CommentFlaggedCfAData == False: 
+                        CommentText = ''
 
                     elif CommentFlaggedCfAData == True:
                         if (Sample == 'CfA' and (s.data[band].e_mag[i] == flag1 or
                               s.data[band].e_mag[i] == flag2)):
-                            CommentText = '##'
-                        else: CommentText = ''
-
+                            CommentFlag = 1
+                        else: CommentFlag = 0
+                            
                     # Define the err_kcorr value:
                     if error_kcorr == True:
                             err_kcorr = s_errorKcorr[band]['%s'%s.data[band].MJD[i]][1]
                     else: err_kcorr = 0.
 
-                    # Write in a text file: (phase, Absolute mag, error abs mag)
-                    SN_txtfile.write("%s%-9.5f   %.6f  %.6f  %.6f  %.6f  %10.6f  %.6f\n"%(
-                        CommentText,
+                    #-------------
+                    # Save the good photometry to an array:
+                    
+                    data_np = np.array([ 
+
+                        CommentFlag,
 
                         # phase:
                         (s.data[band].MJD[i]-s.Tmax)/((1+zhelio)*s.ks_s),
-
+                        
                         # Abs mag: kcorrected, MWdust corrected, and distance
                         # modulus subtracted:
                         s.data[band].mag[i] - s.ks[band][i] - Alamb - mu_LCDM,
@@ -446,34 +490,110 @@ Err_appmag   kcorr    err_kcorr  \n')
                        s.ks[band][i],
 
                        # k-corr error
-                       err_kcorr
-                       ))
-
+                       err_kcorr       ])
+                    
+                    # print "%s index"%i
+                    if i==0:
+                        data_band_np = data_np
+                        # print data_band_np
+                    elif i>0:
+                        data_band_np = np.vstack((data_band_np, data_np))
+                        # print data_band_np
+                        
+                    count_AllNumDataInLC += 1
+                    count_NumDataInLC += 1 
+                    # print "%s datum; done."%count_NumDataInLC
+                        
+                    # <<----- end loop over MJD, for a given type of band.
+                    
+                if debug: 
+                    print "Step 11. %s data in band %s; done."%(
+                                count_NumDataInLC, band)
+                if debug: print 'Step 12. Loop over MJD for band %s; done'%band
+                    
                 log_text.write('%s \n'%sn)
-                # log_tex2.write('%s \n'%sn)
 
-                SN_txtfile.close()
-                # SN_txtfil2.close()
-
-                countSN_nir = countSN_nir + 1
-                print '%r)'%countSN_nir, sn[0:36]
-
-            #--------------
-
-            # else:
-                # SNe_nodata += [sn]
-                # count_nodata += 1
-                # print "No %s band in:"%bandName, sn
+                # --- Save to an array all the good photometry in a given band
+                # if band in s.data.keys():
+                if CountNumSimilarBands == 1:
+                    data_all_np = data_band_np
+                else:
+                    data_all_np =  np.vstack((data_all_np, data_band_np))
+                    
+            # <<----- end loop over bands.
+            
+        if debug: print "Step 13. %s total number of data in all the bands of the same type"%count_AllNumDataInLC
+            
+        #---------------------------------------
+        
+        #------ Reorganize the data based dates -----
+        
+        
+        # -------- Write the array to a text file --------
+        # Open the already created text file that for now contains the 
+        # SNe metadata info only.
+        
+        if Flag_LC_passed_cutoffs == 1:
+            
+            SN_txtfile = open(DirSaveFiles+sn[0:18]+'_'+Sample+'_'+
+                                  bandName+'.txt', 'a')
+            
+            try:
+                # Make a copy to order it
+                # data_all_2_np = np.array([]) # Reset
+                # data_all_2_np = data_all_np
+                # Sort the array in increasing order.
+                # data_all_2_np[data_all_2_np[:,1].argsort()]
+                # test6[test6[:,1].argsort()]
+                
+                # Sort the array in increasing order.
+                data_all_2_np = np.sort(data_all_np.view('f8,f8,f8,f8,f8,f8,f8,f8'), 
+                                        order=['f1'], axis=0).view(np.float)
+            
+                for i1 in range(len(data_all_2_np)):
+                    if data_all_2_np[i1][0] == 0: CommentText = ''
+                    else: CommentText = '##'
+                    SN_txtfile.write("%s%-9.5f   %.6f  %.6f  %.6f  %.6f  %10.6f  %.6f\n"%(
+                            CommentText,
+                            data_all_2_np[i1][1], data_all_2_np[i1][2], data_all_2_np[i1][3],
+                            data_all_2_np[i1][4], data_all_2_np[i1][5], data_all_2_np[i1][6],
+                            data_all_2_np[i1][7]) )
+                    
+                if debug: print "Step 15. All %s data  written to the text file; done."%len(data_all_2_np)
+                    
+            # When there is just one datum in the LC:
+            except:
+                if data_all_np[0] == 0: CommentText = ''
+                else: CommentText = '##'
+                SN_txtfile.write("%s%-9.5f   %.6f  %.6f  %.6f  %.6f  %10.6f  %.6f\n"%(
+                            CommentText,
+                            data_all_np[1], data_all_np[2], data_all_np[3],
+                            data_all_np[4], data_all_np[5], data_all_np[6],
+                            data_all_np[7]))
+                if debug: print "Step 15. Only one datum written to the text file; done."
+                
+                
+            SN_txtfile.close()
+            # Count number SNe with NIR data.
+            countSN_nir += 1
+            print '%r) %s, done.'%(countSN_nir, sn[0:36])
+        
+        #--------------------------------------- 
+        
     else: print "SN with z <", zMinCuttoff,":", s.name
+        
+    if debug: print text_line
+        
+    # <<---- End loop over SNe.
 
 log_text.write("# %s SNe in this list. \n"%countSN_nir)
 log_text.close()
 # log_tex2.close()
 
 print "   "
-print "# -- %r SNe in subsample %s with data in %s band: done. -- "%(
+print "# %r SNe in subsample %s with data in generic %s band: done. "%(
         countSN_nir, Sample, bandName)
-print len(list_SN),"# SNe read with extension '_StdFilt.snpy.'"
+print "# %s SNe read with extension '_StdFilt.snpy.'"%len(list_SN)
 # print "# %s SNe with no data in %s band or less than %s observations."%(
 #         count_nodata, bandName, MinNumberOfDataInLCs)
 # print "# The SNe are:"
@@ -482,90 +602,5 @@ print len(list_SN),"# SNe read with extension '_StdFilt.snpy.'"
 
 # In[ ]:
 
-# -- 69 SNe in subsample CfA with data in J band: done --
-# -- 84 SNe in subsample CSP with data in J band: done --
 
 
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# -----
-
-# # Scratch

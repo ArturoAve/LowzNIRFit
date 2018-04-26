@@ -2,7 +2,7 @@
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 .gitattributes
-0_Canopy_ToRunPythonScripts.ipynb
+00_Canopy_ToRunPythonScripts.ipynb
 
 .Rproj.user
 .Rapp.history
