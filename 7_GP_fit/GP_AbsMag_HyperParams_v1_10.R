@@ -31,7 +31,7 @@ sample <- 'AllSamples'
 
 
 # Band to fit:
-bandname <- 'H'     # (Y, J, H, K)
+bandname <- 'Y'     # (Y, J, H, K)
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
 # FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
@@ -220,7 +220,7 @@ if (bandname == 'H'){
   # Note: I can run this line no matter the decision about 'ComputeHyperpars'.
   if (velPecuFix==0){
     # old. HyperByHand <- c(9.3354, 0.8692) # when velPecuFix <- 0 km/s 
-    HyperByHand <- c(10.0786, 0.8233) # when velPecuFix <- 0 km/s
+    HyperByHand <- c(9.9966, 0.7882) # when velPecuFix <- 0 km/s
   } else if (velPecuFix==150){
     HyperByHand <- c(9.1412, 0.8227) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
@@ -1305,7 +1305,8 @@ file.copy('Settings_GPFit_.txt', to=DirSaveOutputGood)
 
 #    COPY AND DELETE THE SNe OUTSIDE THE CUTOFFS
 
-DirSaveOutsideCuts <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'OutsideCuts/')
+# old. DirSaveOutsideCuts <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',subfolder,'OutsideCuts/')
+DirSaveOutsideCuts <- file.path(MainDir,'Std_filters/2_Selection_FlatPrior',paste(subfolder, '_vpec_', velPecuFix, sep=''),'OutsideCuts/')
 dir.create(DirSaveOutsideCuts)
 
 #--  Read the LC datafile names and create an array with them
