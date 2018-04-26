@@ -31,28 +31,32 @@ sample <- 'AllSamples'
 
 
 # Band to fit:
-bandname <- 'Y'     # (Y, J, H, K)
+bandname <- 'K'     # (Y, J, H, K)
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
 # FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max.
-FitAppMag <- FALSE
+FitAppMag <- TRUE
 
 #----------------
 
 # Compute the GP hyperparameters from the global likelihood PDF ('ComputeHyperpars <- TRUE')?
 # or assume a fixed value set by hand ('ComputeHyperpars <- FALSE')?
 # I use 'TRUE' for the paper, however, when I need to remake the GP fit for some individual LCs, then I use 'FALSE' and then set up the values of hyperparameters by hand. I use 'FALSE' also when fitting the apparent-magnitude light curves.
-ComputeHyperpars <- TRUE  # (TRUE, FALSE). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
+# (TRUE, FALSE). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
+ComputeHyperpars <- TRUE
+
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 
 # Peculiar velocity uncertainty (km/sec) to compute the template. 
 # Use 0 (zero) to compute the -normalized- template, and also to fit the apparent-magnitude light curves.
 # I use zero for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
 # Set velPecuFix > 0 (i.e., "velPecuFix <- 150") to compute the mean ABS-mag light curve.
-velPecuFix <- 0  # (0, 150, 300) km/s. 
+velPecuFix <- 0      # (0, 150, 300) km/s. 
+
+if (FitAppMag == TRUE){velPecuFix <- 0}
 
 # Cutoffs on the SNe used to determine the hyperparameters of the GP kernel
 zMin <- 0
@@ -178,8 +182,7 @@ if (bandname == 'Y'){
   # Note: I can run this line no matter the decision about 'ComputeHyperpars'.
   
   if (velPecuFix==0){
-    # old. HyperByHand <- c(8.5952, 0.7428) # when velPecuFix <- 0 km/s 
-    HyperByHand <- c(7.992, 0.716) # when velPecuFix <- 0 km/s 
+    HyperByHand <- c(7.9874, 0.7137) # when velPecuFix <- 0 km/s 
   } else if (velPecuFix==150){
     HyperByHand <- c(7.9308, 0.6973) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
@@ -259,8 +262,7 @@ if (bandname == 'K'){
   # If ComputeHyperpars = FALSE, then what values set by hand I use for (l, sigma)?
   # Note: I can run this line no matter the decision about 'ComputeHyperpars'.
   if (velPecuFix==0){
-    # old. HyperByHand <- c(8.1163, 0.6517) # when velPecuFix <- 0 km/s 
-    HyperByHand <- c(8.4079, 0.5879) # when velPecuFix <- 0 km/s 
+    HyperByHand <- c(8.2101, 0.5561) # when velPecuFix <- 0 km/s 
   } else if (velPecuFix==150){
     HyperByHand <- c(8.0240, 0.6533) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {

@@ -35,8 +35,8 @@ Band <- 'Y'
 # KindOfData <- 'CfA'
 # KindOfData <- 'CSP' 
 # KindOfData <- 'Others'
-KindOfData <- 'AllSamples_vpec_0'
-# KindOfData <- 'AllSamples_vpec_150'
+# KindOfData <- 'AllSamples_vpec_0'
+KindOfData <- 'AllSamples_vpec_150'
 
 # NOTE: To construct the normalized template I have to GP fit the light curves 
 # assuming a peculiar velocity uncertainty of vpec = 0, then to compute the 
@@ -45,7 +45,7 @@ KindOfData <- 'AllSamples_vpec_0'
 
 # Compute a normalized template?:
 # "FALSE" =  the mean ABS-mag light curve.
-NormalizedTemp <- TRUE   # Options: (TRUE, FALSE)
+NormalizedTemp <- FALSE   # Options: (TRUE, FALSE)
 
 #-- Redshift cutoff. I've set 3 options (z=0, 0.01, anything else).
 z_lowerLimit <- 0.0  
