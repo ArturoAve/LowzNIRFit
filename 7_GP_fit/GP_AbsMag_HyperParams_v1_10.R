@@ -62,8 +62,8 @@ if (FitAppMag == TRUE){velPecuFix <- 0}
 zMin <- 0
 zMax <- 0.09
 
-delta15Min <- 0.79
-delta15Max <- 1.6 #
+delta15Min <- 0.78
+delta15Max <- 1.62 #
 EBVhostMin <- -0.4
 EBVhostMax <- 0.4
 EBVmwMax <- 1
