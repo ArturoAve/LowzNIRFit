@@ -42,17 +42,26 @@ BandType = 'Optical'   # Options: (OpticalNIR, Optical)
 FitSpecificBands = True    # True, False
 
 if FitSpecificBands == True:
-    # It has to include observer-frame B,V bands always: my initial fit to
-    # determine T_Bmax comes from fitting BV only.
+    # For the the low-z SNe Ia, it is highly recommended  to include observer
+    # frame B,V bands always: my initial fit to determine T_Bmax comes from 
+    # fitting BV only.
+    # NIR LOW-Z. NOTE: It will used a dictionary containing the values of 
+    # T_Bmax derived from the optical LCs.
 
+	#      OPTICAL LOW-Z 
     # SpecificBands = ['BANDI', 'Bs', 'B', 'VANDI', 'Vs', 'V', 'V0', 'V1',
     #                 'RANDI','Rs', 'r', 'r_s']   # BVR bands
+    
+	#      NIR LOW-Z 
+	# NOTE: It will used a dictionary containing the values of T_Bmax derived
+	# from the optical LCs.
+    # SpecificBands = ['Y', 'Ydw']
 
-    # RAISIN 1
+    #      RAISIN 1
     # SpecificBands = ['r_ps1', 'i_ps1', 'z_ps1']
     # SpecificBands = ['r_ps1', 'i_ps1', 'z_ps1', 'f125w', 'f160w']
 
-    # RAISIN 2
+    #      RAISIN 2
     SpecificBands = ['r_des', 'i_des', 'z_des']
     # SpecificBands = ['r_des', 'i_des', 'z_des', 'f125w', 'f160w']
 
@@ -369,14 +378,15 @@ for file in the_list:
           		else: BandsExcludedOfFit += [band]
 
         elif FitSpecificBands == False:
-            #- Creation of an array with the name the OPTICAL and NIR filters only.
+            #- Creation of an array with the name the OPTICAL only and 
+            # NIR only filters.
             # Observer-frame NIR bands in Andy's compilation or RAISINs
             # (but using Snoopy names).
             All_NIR_bands = ['Y','Ydw','JANDI','J2m', 'J', 'Jrc1', 'Jrc2','Jdw',
                             'HANDI', 'H2m', 'H', 'Hdw', 'KANDI', 'Ks2m', 'K',
                             'f125w', 'f160w']
-            OpticalBands = []
-            NIRbands = []
+            OpticalBands = [] # List to put the optical-only bands
+            NIRbands = [] # List to put the NIR-only bands
             for band in s.data.keys():
                 if band not in All_NIR_bands: OpticalBands += [band]
                 else: NIRbands += [band]
@@ -416,7 +426,7 @@ for file in the_list:
         else: # When there is NOT the bands (B, V) nor (Bs, Vs) in the LC data
             # print ("No bands in %s \n" % (s.name ))
             print "No B,V observed-frame bands found, but don't worry."
-            fail_list.write('%s: No bands (B, V) or (Bs, Vs). \n' % file)
+            fail_list.write('%s: No (B, V) or (Bs, Vs) bands. \n' % file)
             # s.fit(OpticalBands) #  Fit all the data
 
         print "%s. Prefitting (B,V) with no kcorrections: done."%s.name
