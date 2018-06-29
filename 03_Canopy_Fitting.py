@@ -148,7 +148,7 @@ import datetime
 now = datetime.datetime.now()
 
 #---------------------------------------------------------------------------
-#      (OPTIONAL )Low-z SNe Metadata
+#      (OPTIONAL) Low-z SNe Metadata
 
 # I use the metadata information just to WRITE IN THE TEXT FILE comparison
 # between the value of zcmb in the metadata file vs the one retrieved from NED
