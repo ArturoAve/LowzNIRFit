@@ -43,16 +43,16 @@ FitSpecificBands = True    # True, False
 
 if FitSpecificBands == True:
     # For the the low-z SNe Ia, it is highly recommended  to include observer
-    # frame B,V bands always: my initial fit to determine T_Bmax comes from 
+    # frame B,V bands always: my initial fit to determine T_Bmax comes from
     # fitting BV only.
-    # NIR LOW-Z. NOTE: It will used a dictionary containing the values of 
+    # NIR LOW-Z. NOTE: It will used a dictionary containing the values of
     # T_Bmax derived from the optical LCs.
 
-	#      OPTICAL LOW-Z 
+	#      OPTICAL LOW-Z
     # SpecificBands = ['BANDI', 'Bs', 'B', 'VANDI', 'Vs', 'V', 'V0', 'V1',
     #                 'RANDI','Rs', 'r', 'r_s']   # BVR bands
-    
-	#      NIR LOW-Z 
+
+	#      NIR LOW-Z
 	# NOTE: It will used a dictionary containing the values of T_Bmax derived
 	# from the optical LCs.
     # SpecificBands = ['Y', 'Ydw']
@@ -170,8 +170,10 @@ now = datetime.datetime.now()
 #-----------------------------------------------
 #---- Creation of some text files -----
 #- Open a text file to write the failures on it.
+
 textfile_1 = open(DirSaveOutput + 'Fitting_Settings_Verbose.txt', 'w')
 fail_list = open(DirSaveOutput+'Fitting_Failure.log', 'w')
+
 fail_list.write('Failed SNe to be fitted: \n')
 
 now = datetime.datetime.now() # Read the time and date right now
@@ -378,7 +380,7 @@ for file in the_list:
           		else: BandsExcludedOfFit += [band]
 
         elif FitSpecificBands == False:
-            #- Creation of an array with the name the OPTICAL only and 
+            #- Creation of an array with the name the OPTICAL only and
             # NIR only filters.
             # Observer-frame NIR bands in Andy's compilation or RAISINs
             # (but using Snoopy names).
@@ -531,6 +533,7 @@ for file in the_list:
         #       PLOTTING
 
         print "%s. Preparing to plot the fit."%s.name
+        plt.close() # Close any possible plot unfinished/leftover.
         # Plot fit in phase
         s.plot(epoch=True, outfile=DirSaveOutput+NameDataFileToSave+'_PlotFit.png')
         plt.close()
