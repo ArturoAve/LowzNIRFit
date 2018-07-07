@@ -31,7 +31,7 @@ sample <- 'AllSamples'
 
 
 # Band to fit:
-bandname <- 'K'     # (Y, J, H, K)
+bandname <- 'Y'     # (Y, J, H, K)
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
 # FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
