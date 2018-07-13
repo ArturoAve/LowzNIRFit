@@ -22,23 +22,17 @@ require(ggplot2)
 
 #     USER DEFINITIONS
 
-#-- Choosing the sample to interpolate using the GP
-sample <- 'AllSamples'
-# sample <- 'CfA'
-# sample <- 'CSP'
-# sample <- 'Others'
-# sample <- 'CfA_CSP'
-
-
 # Band to fit:
-bandname <- 'Y'     # (Y, J, H, K)
+bandname <- 'J'     # (Y, J, H, K)
+
+#----------------
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
 # FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max.
-FitAppMag <- TRUE
+FitAppMag <- FALSE
 
 #----------------
 
@@ -49,14 +43,27 @@ FitAppMag <- TRUE
 ComputeHyperpars <- TRUE
 
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
+#----------------
 
 # Peculiar velocity uncertainty (km/sec) to compute the template. 
 # Use 0 (zero) to compute the -normalized- template, and also to fit the apparent-magnitude light curves.
-# I use zero for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
+# I use  0 (zero) for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
+# Use 150 km/s (or 300 km/s) to create a -NO- normalized template.
 # Set velPecuFix > 0 (i.e., "velPecuFix <- 150") to compute the mean ABS-mag light curve.
-velPecuFix <- 0      # (0, 150, 300) km/s. 
+# Options: (0, 150, 300) km/s. Must be integer numbers.
+velPecuFix <- 150      
 
 if (FitAppMag == TRUE){velPecuFix <- 0}
+#----------------
+
+#-- Choosing the sample to interpolate using the GP
+sample <- 'AllSamples'
+# sample <- 'CfA'
+# sample <- 'CSP'
+# sample <- 'Others'
+# sample <- 'CfA_CSP'
+
+#----------------
 
 # Cutoffs on the SNe used to determine the hyperparameters of the GP kernel
 zMin <- 0
@@ -140,8 +147,7 @@ if (bandname == 'J'){
   # If ComputeHyperpars = FALSE, then what values set by hand I use for (l, sigma)?
   # Note: I can run this line no matter the decision about 'ComputeHyperpars'.
   if (velPecuFix==0) {
-    # old. HyperByHand <- c(7.3958, 0.9947) # when velPecuFix <- 0 km/s
-    HyperByHand <- c(7.0570, 0.9920) # when velPecuFix <- 0 km/s
+    HyperByHand <- c(7.0885, 0.9845) # when velPecuFix <- 0 km/s
   } else if (velPecuFix==150){
     HyperByHand <- c(7.4790, 0.9918) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
@@ -182,7 +188,7 @@ if (bandname == 'Y'){
   # Note: I can run this line no matter the decision about 'ComputeHyperpars'.
   
   if (velPecuFix==0){
-    HyperByHand <- c(7.9874, 0.7137) # when velPecuFix <- 0 km/s 
+    HyperByHand <- c(7.9586, 0.7197) # when velPecuFix <- 0 km/s 
   } else if (velPecuFix==150){
     HyperByHand <- c(7.9308, 0.6973) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
@@ -222,8 +228,7 @@ if (bandname == 'H'){
   # If ComputeHyperpars = FALSE, then what values set by hand I use for (l, sigma)?
   # Note: I can run this line no matter the decision about 'ComputeHyperpars'.
   if (velPecuFix==0){
-    # old. HyperByHand <- c(9.3354, 0.8692) # when velPecuFix <- 0 km/s 
-    HyperByHand <- c(9.9966, 0.7882) # when velPecuFix <- 0 km/s
+    HyperByHand <- c(10.0205, 0.7902) # when velPecuFix <- 0 km/s
   } else if (velPecuFix==150){
     HyperByHand <- c(9.1412, 0.8227) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {

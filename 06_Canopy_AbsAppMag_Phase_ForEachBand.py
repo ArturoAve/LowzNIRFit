@@ -4,8 +4,8 @@
 # # Create text files of:
 # # - (phase, absolute mag, error mag) and
 # # - (phase, apparent mag, error mag)
-
-# # User interface
+#
+# ### User interface
 
 # In[2]:
 
@@ -15,22 +15,30 @@
 # Used in the ".py" version of this notebook.
 import sys
 
-#--- For command line ---
+#----- For command line --------
+# Comment this portion if running this script from
+# this notebook.
+
 bandName = '%s'%sys.argv[1]
 Sample = '%s'%sys.argv[2]
 
-#---- For notebook-------
-# bandName = 'Y'  # (Y, Y, H, K)
+#-------- For notebook----------
+# Comment this portion if running this script from
+# command line or other notebook
+
+# bandName = 'J'  # (Y, J, H, K)
 
 # Sample = 'CfA'
 # Sample = 'CSP'
 # Sample = 'Others'
 # Sample = 'CfA_CSP'
 
+#-------------------------------
 
-#----------------
-
+# The value HoFix = 73.24 is what we use in the
+# low-z paper.
 HoFix = 73.24 # Hubble constant (km/(s Mpc))
+
 # HoFix = 72.78  # TEMPORAL: value reported by Dhawan et al 2017.
 
 OmMFix = 0.28
@@ -41,9 +49,9 @@ wFix = -1
 debug = False
 
 
-# ---------------------------------------
+# --------
 
-# # Automatic
+# ### Automatic
 
 # In[3]:
 
@@ -52,7 +60,7 @@ from snpy import *
 import numpy as np
 from matplotlib import pyplot as plt
 import json
-import glob # To read the name of the files in a given directory
+import glob # To read file names in a directory
 
 # %pylab qt
 # For CANOPY python: to show the plots in a separated Windows instead of inline.
@@ -63,13 +71,7 @@ import glob # To read the name of the files in a given directory
 5+6
 
 
-# In[3]:
-
-
-
-
 # In[4]:
-
 
 #-------- BAND --------------------
 
@@ -104,7 +106,6 @@ FilterSyst = 'Std_filters/'
 
 
 # In[5]:
-
 
 # Range of redshift data to be considered
 zMinCuttoff = 0.
@@ -146,7 +147,7 @@ cc = 299792.458  # Speed of light (km/s)
 
 
 
-# ## Metadata: (zhel, zcmb)
+# ### Metadata: (zhel, zcmb)
 
 # In[6]:
 
@@ -232,7 +233,6 @@ print DistanceMu(ztest1, OmMFix, wFix, HoFix)
 # - k-correction
 # - extinction by Milky Way dust
 # - time dilation using the z_helio
-#
 
 # In[9]:
 
@@ -255,6 +255,11 @@ list_SN = glob.glob('*_StdFilt.snpy')
 # tmp. list_SN = glob.glob('*_1stFit.snpy') # tmp
 
 print len(list_SN),"SNe read with extension '_StdFilt.snpy.'"
+
+
+# In[ ]:
+
+
 
 
 # ### Main Loop
@@ -597,6 +602,10 @@ print "# %s SNe read with extension '_StdFilt.snpy.'"%len(list_SN)
 # print "# %s SNe with no data in %s band or less than %s observations."%(
 #         count_nodata, bandName, MinNumberOfDataInLCs)
 # print "# The SNe are:"
+
+
+# In[ ]:
+
 
 
 
