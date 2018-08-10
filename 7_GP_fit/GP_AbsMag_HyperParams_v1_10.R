@@ -31,7 +31,7 @@ bandname <- 'J'     # (Y, J, H, K)
 # FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
-# "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max.
+# "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max and B_max.
 FitAppMag <- FALSE
 
 #----------------
@@ -46,10 +46,10 @@ if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 #----------------
 
 # Peculiar velocity uncertainty (km/sec) to compute the template. 
-# Use 0 (zero) to compute the -normalized- template, and also to fit the apparent-magnitude light curves.
+# Use 0 (zero) to compute the -normalized- NIR template, and also to fit the apparent-magnitude light curves.
 # I use  0 (zero) for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
 # Use 150 km/s (or 300 km/s) to create a -NO- normalized template.
-# Set velPecuFix > 0 (i.e., "velPecuFix <- 150") to compute the mean ABS-mag light curve.
+# Set velPecuFix > 0 (e.g., "velPecuFix <- 150") to compute the mean ABSOLUTE-magnitude light curve.
 # Options: (0, 150, 300) km/s. Must be integer numbers.
 velPecuFix <- 150      
 
