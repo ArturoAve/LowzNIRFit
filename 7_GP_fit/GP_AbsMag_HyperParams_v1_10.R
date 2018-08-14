@@ -32,7 +32,7 @@ bandname <- 'J'     # (Y, J, H, K)
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max and B_max.
-FitAppMag <- FALSE
+FitAppMag <- TRUE
 
 #----------------
 
@@ -1117,7 +1117,7 @@ for(i in 1:numSNe){
     if (FitAppMag == TRUE){
       ymin_plot <- meanPriorFix + 3.5; ymax_plot <- meanPriorFix - 1.5; 
       yText_2 <- yText + meanPriorFix + 18
-      ylabel <- 'Apparent Magnitude'
+      ylabel <- 'apparent magnitude'
     } else {
       yText_2 <- yText
       ylabel <- 'Absolute Magnitude'
@@ -1150,15 +1150,15 @@ for(i in 1:numSNe){
     # MyPathAndNamePlot <- file.path('/Users/arturo/Dropbox/Research/Articulos/10-AndyKaisey/10Compute/NIR_Template/GaussianProcess/TheTemplates/J_band/2_Fit_GP_IndividualSNe_R', paste(KindOfData, '/GP_fit/', NameSN, '_GP_plot', '.png', sep = ''))
     
     MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot.png', sep = ''))
-    # OLD. MyPathAndNamePlot <- file.path(MainDir, paste(KindOfData, '/', NameSN, '_GP_plot', '.png', sep = ''))
     # MyPathAndNamePlot
     
     # Plotting the data, the mean function and its standard error
     gg2 <- ggplot() +
        # PLOT THE GP VARIANCE BAND
-       geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='gray', alpha=1) + 
+       # old. geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='gray', alpha=1) + 
+       geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
        # PLOT THE GP MEAN FUNCTION
-       geom_line(data=d, aes(x=phase, y=mean), colour='red', size=0.8) + 
+       geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
        theme_bw() + # Making the plot with white background
        ggtitle(NameSN) +
        # labs(x='Phase = (MJD - T_Bmax)/(1 + z_hel)', y='Absolute Magnitude') +
@@ -1168,20 +1168,23 @@ for(i in 1:numSNe){
        theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
        scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
        # scale_y_reverse(lim=c(-6,-18)) +  # FOR LOW LUMINOSITY SNe
-       xlim(-10,60) +
+       # old. xlim(-10,60) +
+       xlim(-7,57) +
        # PLOT THE DATA POINTS AND DATA BARS
        # geom_point(data=f,aes(x=x,y=(y+TempInterpol(x))), size=0.5) +
        if (GP_prior == 'flat') {
-       geom_errorbar(data=f,aes(x=x,y=(y+meanPriorFix),ymin=(y+meanPriorFix)-sigmaData_PecVel.n, ymax=(y+meanPriorFix)+sigmaData_PecVel.n), width=0.5, color='black')
+       geom_errorbar(data=f,aes(x=x,y=(y+meanPriorFix),ymin=(y+meanPriorFix)-sigmaData_PecVel.n, ymax=(y+meanPriorFix)+sigmaData_PecVel.n), width=0.5, color='red')
+       # tmp. geom_errorbar(data=f,mapping=aes(x=x,y=(y+meanPriorFix),ymin=(y+meanPriorFix)-sigmaData_PecVel.n, ymax=(y+meanPriorFix)+sigmaData_PecVel.n), width=0.5, color='red')
        } else if (GP_prior == 'template') { 
-         geom_errorbar(data=f,aes(x=x,y=(y+TempInterpol(x)),ymin=(y+TempInterpol(x))-sigmaData_PecVel.n, ymax=(y+TempInterpol(x))+sigmaData_PecVel.n), width=0.5, color='black') }
+         geom_errorbar(data=f,aes(x=x,y=(y+TempInterpol(x)),ymin=(y+TempInterpol(x))-sigmaData_PecVel.n, ymax=(y+TempInterpol(x))+sigmaData_PecVel.n), width=0.5, color='red') }
     
-    gg2 + if (GP_prior == 'flat') {
-      geom_point(data=f,aes(x=x,y=(y+meanPriorFix)), size=0.5)
-    } else if (GP_prior == 'template') { geom_point(data=f,aes(x=x,y=(y+TempInterpol(x))), size=0.5) }
+       gg2 + if (GP_prior == 'flat') {
+       geom_point(data=f,aes(x=x,y=(y+meanPriorFix)), size=0.5, color='red')
+       } else if (GP_prior == 'template') { geom_point(data=f,aes(x=x,y=(y+TempInterpol(x))), size=0.5, color='red') }
       
     # Adding text to the plot
-    gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
+    # TEMPORAL:
+    # gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
     
     # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
     ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
