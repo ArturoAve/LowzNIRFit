@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CurrentWorkingDirectory</key>
+	<string>/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/TheTemplates/My_Notes/NumberOfSNe_before_after_cutoffs/J/SequenceOfSNeDiscarded</string>
+	<key>WorksheetContents</key>
+	<string>#    "control + Enter" to run any command.
+
+cd /Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/TheTemplates/My_Notes/NumberOfSNe_before_after_cutoffs/J/SequenceOfSNeDiscarded
+
+
+pwd
+/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/TheTemplates/My_Notes/NumberOfSNe_before_after_cutoffs/J/SequenceOfSNeDiscarded
+
+
+
+
+</string>
+</dict>
+</plist>
