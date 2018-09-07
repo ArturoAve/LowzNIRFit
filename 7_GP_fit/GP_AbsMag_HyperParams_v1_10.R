@@ -51,7 +51,7 @@ if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 # Use 150 km/s (or 300 km/s) to create a -NO- normalized template.
 # Set velPecuFix > 0 (e.g., "velPecuFix <- 150") to compute the mean ABSOLUTE-magnitude light curve.
 # Options: (0, 150, 300) km/s. Must be integer numbers.
-velPecuFix <- 150      
+velPecuFix <- 0      
 
 if (FitAppMag == TRUE){velPecuFix <- 0}
 #----------------
