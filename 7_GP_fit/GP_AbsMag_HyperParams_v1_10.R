@@ -32,7 +32,7 @@ bandname <- 'J'     # (Y, J, H, K)
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max and B_max.
-FitAppMag <- TRUE
+FitAppMag <- FALSE
 
 #----------------
 
@@ -40,7 +40,7 @@ FitAppMag <- TRUE
 # or assume a fixed value set by hand ('ComputeHyperpars <- FALSE')?
 # I use 'TRUE' for the paper, however, when I need to remake the GP fit for some individual LCs, then I use 'FALSE' and then set up the values of hyperparameters by hand. I use 'FALSE' also when fitting the apparent-magnitude light curves.
 # (TRUE, FALSE). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
-ComputeHyperpars <- TRUE
+ComputeHyperpars <- FALSE
 
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 #----------------
@@ -1123,7 +1123,7 @@ for(i in 1:numSNe){
       ylabel <- 'Absolute Magnitude'
     }
     
-    # The standard deviation of the noise including pecular velocities.
+    # The standard deviation of the noise including peculiar velocities.
     # THIS IS USED FOR PLOTTING PURPOSES ONLY
     if (FitAppMag == TRUE) {
       sigmaData_PecVel.n <- sqrt( (sigma.n)^2 )
@@ -1230,7 +1230,7 @@ for(i in 1:numSNe){
        # Characteristics of the text of the title and axis labels
        theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
        theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
-       scale_y_reverse(lim=c(1.5, -1.5)) + 
+       scale_y_reverse(lim=c(3.0, -3.0)) + 
        # ylim(-1.5,1.5) +
        xlim(-10,60) +
        # PLOT THE DATA POINTS AND DATA BARS
