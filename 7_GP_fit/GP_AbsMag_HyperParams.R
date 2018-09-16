@@ -23,7 +23,7 @@ require(ggplot2)
 #     USER DEFINITIONS
 
 # Band to fit:
-bandname <- 'J'     # (Y, J, H, K)
+bandname <- 'J'     # ( Y , J , H , K )
 
 #----------------
 
@@ -39,7 +39,7 @@ FitAppMag <- FALSE
 # Compute the GP hyperparameters from the global likelihood PDF ('ComputeHyperpars <- TRUE')?
 # or assume a fixed value set by hand ('ComputeHyperpars <- FALSE')?
 # I use 'TRUE' for the paper, however, when I need to remake the GP fit for some individual LCs, then I use 'FALSE' and then set up the values of hyperparameters by hand. I use 'FALSE' also when fitting the apparent-magnitude light curves.
-# (TRUE, FALSE). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
+# ( TRUE , FALSE ). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
 ComputeHyperpars <- FALSE
 
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
@@ -50,8 +50,8 @@ if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 # I use  0 (zero) for the low-z paper, to create the normalized template, and to fit the apparent-magnitude light curves.
 # Use 150 km/s (or 300 km/s) to create a -NO- normalized template.
 # Set velPecuFix > 0 (e.g., "velPecuFix <- 150") to compute the mean ABSOLUTE-magnitude light curve.
-# Options: (0, 150, 300) km/s. Must be integer numbers.
-velPecuFix <- 0      
+# Options: ( 0 , 150 , 300 ) km/s. Must be an INTEGER number.
+velPecuFix <- 150      
 
 if (FitAppMag == TRUE){velPecuFix <- 0}
 #----------------
@@ -93,11 +93,16 @@ TemplateName <- 'TempWeightedSmooth_Box7_Step05_Window21_Poly3_.dat'
 
 #--------------------------
 
-# Use the peculiar velocity covariance matrix in the 'k.xx' to compute the mean function?:
-ComputeMeanUsingPecMatrix <- FALSE # (TRUE, FALSE). 'FALSE' is the way I proceed for the paper.
-# OLD. MeanTrick <- TRUE # TRUE, FALSE
+# Use the peculiar velocity covariance matrix in the 'k.xx' to compute the mean function?
 
-# Use the peculiar velocity covariance matrix in the k.xsx, k.xxs, kxsxs terms?:
+# ( TRUE, FALSE ). 'FALSE' is the way I was using  in the low-z paper so far. But
+# now I'm using the full correct formula for the posterior mean, that means to set to TRUE this variable.
+ComputeMeanUsingPecMatrix <- TRUE
+
+#--------------------------
+
+# Use the peculiar velocity covariance matrix in the k.xsx, k.xxs, kxsxs terms?
+
 # Note that this option does NOT have any effect on the k.xx term. 
 # When fitting the apparent magnitude light curves, the covariance matrix "k.xx" is used  without the peculiar velocity uncertainty, i.e., it is used k.xx_mean instead by default
 UsePecMatrix <- FALSE # (TRUE, FALSE). 'FALSE' is the CORRECT way and it is what I use for the paper.
@@ -118,7 +123,13 @@ randomSeed <- 12345
 set.seed(randomSeed)
 
 #------------------------------------------
+# Plotting options
 
+plotAbsMagDataOnly <- TRUE
+plotNormaGPFitOnly <- TRUE
+plotResidualDataOnly <- TRUE
+
+#------------------------------------------
 #   END OF USER SUPPLIED INFORMATION. THE REST SHOULD BE AUTOMATICALLY DONE FOR ALL THE BANDS WITHOUT THE NEED OF PARTICULAR MODIFICATIONS
 
 #####################################################################################
@@ -154,8 +165,8 @@ if (bandname == 'J'){
     HyperByHand <- c(7.4343, 0.9726) # when velPecuFix <- 300 km/s
   }
   
-  ymin_plot <- -14
-  ymax_plot <- -21
+  ymin_plot_band <- -14
+  ymax_plot_band <- -21
   
   # Location of text in the plot
   xText <- c(-10, -3, 2, 4, -10, -1.5, -10, -5, -10, 2, -10, 2, 8.5, 10.5, 35)
@@ -195,8 +206,8 @@ if (bandname == 'Y'){
     HyperByHand <- c(8.4647, 0.7224) # when velPecuFix <- 300 km/s
   }
   
-  ymin_plot <- -14.5 # tmp: -14
-  ymax_plot <- -19.5  # tmp: -21
+  ymin_plot_band <- -14.5 # tmp: -14
+  ymax_plot_band <- -19.5  # tmp: -21
   
   # Location of text in the plot
   xText <- c(-10, -3, 2, 4, -10, -1.5, -10, -5, -10, 2, -10, 2, 8.5, 10.5, 35)
@@ -235,8 +246,8 @@ if (bandname == 'H'){
     HyperByHand <- c(8.9101, 0.7666) # when velPecuFix <- 300 km/s
   }
   
-  ymin_plot <- -14.5
-  ymax_plot <- -20
+  ymin_plot_band <- -14.5
+  ymax_plot_band <- -20
   
   # Location of text in the plot
   xText <- c(-10, -3, 2, 4, -10, -1.5, -10, -5, -10, 2, -10, 2, 8.5, 10.5, 35)
@@ -274,8 +285,8 @@ if (bandname == 'K'){
   HyperByHand <- c(7.9214, 0.6325) # when velPecuFix <- 300 km/s
   }
   
-  ymin_plot <- -14.5
-  ymax_plot <- -20.5
+  ymin_plot_band <- -14.5
+  ymax_plot_band <- -20.5
   
   # Location of text in the plot
   xText <- c(-10, -3, 2, 4, -10, -1.5, -10, -5, -10, 2, -10, 2, 8.5, 10.5, 35)
@@ -285,7 +296,8 @@ if (bandname == 'K'){
   AbsMag_TBmax = -18.2809601225;   error_AbsMag_TBmax = 0.207906101646; # From SNe 0 < z < 0.06
 }
 
-#####################################################################################
+############################################################
+############################################################
 
 cc = 299792.458  # Speed of light
 # OLD. zerrorFix = 0.001 # Error in the estimation of redshift
@@ -551,7 +563,6 @@ if (GP_prior == 'template'){
   InterpolMax
 }
 
-
 #############################################################
 
 #     KERNEL DEFINITION
@@ -560,7 +571,7 @@ if (GP_prior == 'template'){
 
 kernelFunc <- function(X1,X2,l, sigma2kern) {
   # Empty matrix K with zeros as entries
-  K <- matrix(rep(0, length(X1)*length(X2)), nrow=length(X1))
+  K <- matrix(rep(0, length(X1)*length(X2)), nrow=length(X1), ncol=length(X2))
   for (i in 1:nrow(K)) {
     for (j in 1:ncol(K)) {
       # The covariance function Eq. (2.31) without the last term:
@@ -585,7 +596,7 @@ sigma2muPecu <- function(vpec, z, zerror){
 }
 
 # Testing that it works:
-sigma2muPecu(150, 0.0109942726, 0.0010420420)
+# sigma2muPecu(150, 0.0109942726, 0.0010420420)
 # 0.05212504
 
 # sigma2muPecu(150, 0.00299206993393, 1.33425638079e-05)
@@ -643,7 +654,6 @@ LogMargLikelFuncAll <- function(hyperpars) {
       # print('Flat prior is used.')
       
     } else if (GP_prior == 'template'){
-      
       x_array <- numeric(LengthData) # Creating the array for x.
       # length(x_array)
       residual <- numeric(LengthData) # Creating the array.
@@ -676,7 +686,6 @@ LogMargLikelFuncAll <- function(hyperpars) {
     # nn
     
     # The standard deviation of the noise
-    # sigma.n <- DataLC$V3[9:LengthData] # old
     sigma.n <- f$z
     # sigma.n
     # length(sigma.n)
@@ -774,9 +783,6 @@ if (ComputeHyperpars == TRUE){ # SEARCHING THE MINIMUM SETTING LIMITS TO THE PAR
 #############################################################
 #############################################################
 
-
-
-
 #     LOOP to fit the individual light curves but using the hyperparameter values computed above.
 # The loop is over the good SN LCs after the quality cutoffs.
 
@@ -820,7 +826,7 @@ for(i in 1:numSNe){
     
     # When fitting the abs-mag light curves, then mean prior is given by 'meanPriorFix'. However,
     # when fitting the app-mag light curves, then mean prior is given by DistanceMu + AbsMag_TBmax.
-    
+
     if (FitAppMag == TRUE){
       meanPriorFix <- DistanceMu + AbsMag_TBmax
     }
@@ -828,7 +834,8 @@ for(i in 1:numSNe){
     # The "training set", i.e., the observed data.
     if (GP_prior == 'flat'){
       if (FitAppMag == FALSE){
-        f <- data.frame(x=DataLC$V1[9:LengthData], y=(DataLC$V2[9:LengthData]-meanPriorFix), z=DataLC$V3[9:LengthData])
+        f <- data.frame(x=DataLC$V1[9:LengthData], y=(DataLC$V2[9:LengthData]-meanPriorFix), z=DataLC$V3[9:LengthData])  # ORIGINAL
+        # f <- data.frame(x=DataLC$V1[9:LengthData], y=(DataLC$V2[9:LengthData]-meanPriorFix), z=sqrt( (DataLC$V3[9:LengthData])^2 + sigma2muPecu(velPecuFix, redshiftSN, zcmb_error) ) )  # TEMPORAL
         counter2 <- LengthData
       } else if (FitAppMag == TRUE){
         f <- data.frame(x=DataLC$V1[9:LengthData], y=(DataLC$V4[9:LengthData]-meanPriorFix), z=DataLC$V5[9:LengthData])
@@ -862,14 +869,27 @@ for(i in 1:numSNe){
     # Assigning x as f$x
     x <- f$x
     # x
+    # length(x)
+    # [1] 15
+    # class(x)
+    # [1] "numeric"
     
     # Lenght trainning set
     nn <- length(f$x)
     # nn
+    # length(nn)
+    # [1] 1
+    # class(nn)
+    # [1] "integer"
     
     # The standard deviation of the data
-    sigma.n <- f$z
+    sigma.n <- f$z  # ORIGINAL
+    
     # sigma.n
+    # length(sigma.n)
+    # [1] 15
+    # class(sigma.n)
+    # [1] "numeric"
   
     #------------------------------------------------
     
@@ -898,10 +918,10 @@ for(i in 1:numSNe){
     # dim(sigma2PecuMatrix_xx)
     
     # Covariance matrix  K(X, X):
-    k.xx <- kernelFunc(x,x,l_Fix, sigma2kern_fix) + (sigma.n^2)*diag(1,nn) + sigma2PecuMatrix_xx
+    k.xx <- kernelFunc(x, x, l_Fix, sigma2kern_fix) + (sigma.n^2)*diag(1,nn) + sigma2PecuMatrix_xx
     
     # k.xx_mean matrix to be used to determine the -mean- function based on the data and ignoring the pec vel matrix
-    k.xx_mean <- kernelFunc(x,x,l_Fix, sigma2kern_fix) + (sigma.n^2)*diag(1,nn)
+    k.xx_mean <- kernelFunc(x, x, l_Fix, sigma2kern_fix) + (sigma.n^2)*diag(1,nn)
     # k.xx
     # dim(k.xx)
     # class(k.xx)
@@ -955,10 +975,12 @@ for(i in 1:numSNe){
     # dim(k.xsxs)
     # class(k.xsxs)
     
-    #----------------------------
+    #===============================================================
     
-    # Calculate the mean and covariance functions accounting for the noise in the data:
+    # MEAN AND VARIANCE
+
     # THE MEAN [EQ. (2.23)].
+    
     # In the following equation I have removed the correlated matrix of the noise in order to obtain a better determination of the mean function, otherwise, I will obtain something shifted upward or downward when the error bars are big (usually when peculiar vel uncertainty is big) and the LC is not centered with respect to the mean template.
     # f.bar.star <- k.xsx %*% solve(k.xx) %*% f$y # pec vel
     # f.bar.star <- k.xsx %*% solve(k.xx_mean) %*% f$y # no pec vel
@@ -966,23 +988,27 @@ for(i in 1:numSNe){
     if (ComputeMeanUsingPecMatrix == FALSE) {
       f.bar.star <- k.xsx %*% solve(k.xx_mean) %*% f$y 
     } else if (ComputeMeanUsingPecMatrix == TRUE) {
-      f.bar.star <- k.xsx %*% solve(k.xx) %*% f$y}
+      f.bar.star <- k.xsx %*% solve(k.xx) %*% f$y }
     
     # if (MeanTrick == FALSE) {f.bar.star <- k.xsx %*% solve(k.xx) %*% f$y}
     # else if (MeanTrick == TRUE) {f.bar.star <- k.xsx %*% solve(k.xx_mean) %*% f$y}
-    # f.bar.star
-    # dim(f.bar.star)
     
     # THE COVARIANCE [EQ. (2.24)]:
+    
     if (FitAppMag == TRUE) {
       cov.f.star <- k.xsxs - (k.xsx %*% solve(k.xx_mean) %*% k.xxs)
     } else if  (FitAppMag == FALSE){
       cov.f.star <- k.xsxs - (k.xsx %*% solve(k.xx) %*% k.xxs)
     }
     
+    # Write the covariance to a table
+    # write.table(cov.f.star,'cov_f_star.csv', sep=" , ", row.names = FALSE, col.names = FALSE)
     # cov.f.star
     # dim(cov.f.star)
-    # k.xsxs
+    # nrow(cov.f.star)
+    # ncol(cov.f.star)
+    # class(cov.f.star)
+    # [1] "matrix"
   
     #----------------------------
     
@@ -997,13 +1023,86 @@ for(i in 1:numSNe){
     # length(StdErrorMean)
     # StdErrorMean
     
-  
     #===============================================================
+    
+    # NORMALIZATION OF THE LIGHT CURVE
+    # Following Kaisey's notes
+  
+    # Dimension
+    ndim1 <- length(x.star)
+    
+    # Create an identity matrix:
+    I_matrix <- diag(ndim1)
+    # I_matrix
+    
+    # dim(I_matrix)
+    # ncol(I_matrix)
+    # nrow(I_matrix)
+    # class(I_matrix)
+    # [1] "matrix"
+    
+    #----------------------------------------------
+    
+    # Create the "Vk" matrix (Kaisey's notation)
+    
+    # Find the index of the phase=0. 
+    for (i1 in 1:ndim1) {
+      if (x.star[i1] == 0) {phaseZeroIndex <- i1} }
+    # cat(phaseZeroIndex) 
+    
+    # Define the value of the residual LC at phase = 0 
+    residLC_phase0 <- f.bar.star[phaseZeroIndex]
+    # residLC_phase0
+    
+    # Create a matrix of zeros:
+    Vk_matrix <- matrix(0, nrow=ndim1, ncol=ndim1)
+    
+    # Vk_matrix
+    # dim(Vk_matrix)
+    # class(Vk_matrix)
+    # [1] "matrix"
+    
+    # Add a column of "1"s to the "Vk_matrix":
+    for (i2 in 1:ndim1) {Vk_matrix[i2,phaseZeroIndex] <- 1 }
+    
+    #----------------------------------------------
+    
+    # Create the "K" matrix (Kaisey's notation)
+    KK <- I_matrix - Vk_matrix
+    
+    KK
+    # class(KK)
+    # [1] "matrix"
+    
+    #----------------------------------------------
+    
+    # MEAN OF THE NORMALIZED LIGHT CURVE
+    mu_norma <- KK %*% f.bar.star
+    
+    # mu_norma
+    # f.bar.star
+    
+    # COVARIANCE OF THE NORMALIZED LIGHT CURVE
+    cov_norma <- KK %*% cov.f.star %*% t(KK)   # correct
+    # cov_norma_test <- KK %*% cov.f.star %*% KK
+    
+    # cov_norma
+    # write.table(cov_norma,'cov_norma.csv', sep=" , ", row.names = FALSE, col.names = FALSE)
+
+    #  THE STANDARD ERROR OF EACH PREDICTED POINT
+    # Extracting the diagonal elements of the covariance matrix = variances of the predicted data
+    varianceCovMatrix_norma <- diag(cov_norma)
+    
+    # Converting the variance to standard error for the mean predicted data
+    StdErrorMean_norma <- sqrt(varianceCovMatrix_norma)
+    
+    ################################################################
     
     # SAVE THE DATA (phase, mean, stdErrorMean)
     
     # Array (phase, mean, stdErrorMean)
     phase_mu_stdError <- 0
+    phase_mu_stdError_norma <- 0
     
     # Adding the mean prior ('meanPriorFix' or template) to go back to the actual values of magnitude. 
     
@@ -1013,30 +1112,29 @@ for(i in 1:numSNe){
       MagPlusTemp <-  f.bar.star + TempInterpol(x.star)}
     
     # Combing (phase, mean, stdErrorMean) arrays in just one array.
-    # phase_mu_stdError <- cbind(x.star, f.bar.star+meanPriorFix, StdErrorMean) # old
     phase_mu_stdError <- cbind(x.star, MagPlusTemp, StdErrorMean)
+    phase_mu_stdError_norma <- cbind(x.star, mu_norma, StdErrorMean_norma)
     
     # Adding a name to each column:
     colnames(phase_mu_stdError) <- c("phase", "mean", "std error")
-    # phase_mu_stdError
+    colnames(phase_mu_stdError_norma) <- c("phase", "mean", "std error")
     
     MyPathAndName <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma.dat', sep = ''))
-    # OLD. MyPathAndName <- file.path(MainDir, paste(KindOfData, '/', NameSN, "_GP_mean_sigma", ".dat", sep = ""))
+    MyPathAndName_norma <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_norma.dat', sep = ''))
     
     # Writting the data to a file
     write.table(phase_mu_stdError, file=MyPathAndName, sep="   ", row.names = FALSE, col.names = FALSE)
+    write.table(phase_mu_stdError_norma, file=MyPathAndName_norma, sep="   ", row.names = FALSE, col.names = FALSE)
     
     #----------------------------
     
     #     CREATING AND SAVING THE 'FILLED' FILE TO BE USED IN THE HIERARCHICAL CODE
     
     # The actual predicted values from GP
-    # df_GPfit <- data.frame(phase=x.star, mean=f.bar.star+meanPriorFix, stdErr=StdErrorMean) # old
     df_GPfit <- data.frame(phase=x.star, mean=MagPlusTemp, stdErr=StdErrorMean)
-    # df_GPfit 
-    
+    df_GPfit_norma <- data.frame(phase=x.star, mean=MagPlusTemp, stdErr=StdErrorMean)
+
     #   The filling values
-    
     xFillDown <- seq(phase_lowerLimit, round(x[1])-StepSizeTestPoints, by=StepSizeTestPoints)
     # xFillDown
     yFillDown <- rep(40,length(xFillDown))
@@ -1115,127 +1213,303 @@ for(i in 1:numSNe){
     #     PLOTTING 1
     
     if (FitAppMag == TRUE){
-      ymin_plot <- meanPriorFix + 3.5; ymax_plot <- meanPriorFix - 1.5; 
-      yText_2 <- yText + meanPriorFix + 18
+      ymin_plot <- meanPriorFix + 3.5; 
+      ymax_plot <- meanPriorFix - 1.5; 
+      yText_2 <- yText + meanPriorFix + 18 # location text on top of plot
       ylabel <- 'apparent magnitude'
     } else {
-      yText_2 <- yText
+      ymin_plot <- ymin_plot_band; 
+      ymax_plot <- ymax_plot_band; 
+      yText_2 <- yText # location text on top of plot
       ylabel <- 'Absolute Magnitude'
     }
     
-    # The standard deviation of the noise including peculiar velocities.
+    # The standard deviation of the noise -including- peculiar velocities.
     # THIS IS USED FOR PLOTTING PURPOSES ONLY
     if (FitAppMag == TRUE) {
-      sigmaData_PecVel.n <- sqrt( (sigma.n)^2 )
+      errorBars_data <- sqrt( (sigma.n)^2 )
     } else if (FitAppMag == FALSE) {
-      sigmaData_PecVel.n <- sqrt((sigma.n)^2 + sigma2muPecu(velPecuFix, redshiftSN, zcmb_error))
+      errorBars_data <- sqrt((sigma.n)^2 + sigma2muPecu(velPecuFix, redshiftSN, zcmb_error))
+      # old. errorBars_data <- sqrt( (sigma.n)^2 )
     }
-    # sigmaData_PecVel.n <- sqrt((sigma.n)^2) #TMP
-    # sigmaData_PecVel.n
-    # length(sigmaData_PecVel.n)
-    
+    # errorBars_data
+    # length(errorBars_data)
+
     # Putting the predicted values of the mean function in a data frame:
-    d <- 0
-    
-    # d <- data.frame(phase=phase_mu_stdError[c(1:numberTestPoints),1], 
-    #                 mean=phase_mu_stdError[c(1:numberTestPoints),2], 
-    #                 lower=phase_mu_stdError[c(1:numberTestPoints),2]-phase_mu_stdError[c(1:numberTestPoints),3], 
-    #                 upper=phase_mu_stdError[c(1:numberTestPoints),2]+phase_mu_stdError[c(1:numberTestPoints),3])
-    
+    d <- 0 # reset. It's important.
     d <- data.frame(phase=x.star,   mean=(MagPlusTemp), 
                     lower = (MagPlusTemp)-StdErrorMean,
                     upper = (MagPlusTemp)+StdErrorMean)
     
     # Path and name of the figure to be saved
-    # MyPathAndNamePlot <- file.path('/Users/arturo/Dropbox/Research/Articulos/10-AndyKaisey/10Compute/NIR_Template/GaussianProcess/TheTemplates/J_band/2_Fit_GP_IndividualSNe_R', paste(KindOfData, '/GP_fit/', NameSN, '_GP_plot', '.png', sep = ''))
-    
     MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot.png', sep = ''))
     # MyPathAndNamePlot
     
     # Plotting the data, the mean function and its standard error
     gg2 <- ggplot() +
        # PLOT THE GP VARIANCE BAND
-       # old. geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='gray', alpha=1) + 
        geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
        # PLOT THE GP MEAN FUNCTION
        geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
        theme_bw() + # Making the plot with white background
        ggtitle(NameSN) +
-       # labs(x='Phase = (MJD - T_Bmax)/(1 + z_hel)', y='Absolute Magnitude') +
        labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y=ylabel) +
        # Characteristics of the text of the title and axis labels
        theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
        theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
        scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
        # scale_y_reverse(lim=c(-6,-18)) +  # FOR LOW LUMINOSITY SNe
-       # old. xlim(-10,60) +
        xlim(-7,57) +
-       # PLOT THE DATA POINTS AND DATA BARS
-       # geom_point(data=f,aes(x=x,y=(y+TempInterpol(x))), size=0.5) +
+       # PLOT THE ERROR BARS OF THE DATA
        if (GP_prior == 'flat') {
-       geom_errorbar(data=f,aes(x=x,y=(y+meanPriorFix),ymin=(y+meanPriorFix)-sigmaData_PecVel.n, ymax=(y+meanPriorFix)+sigmaData_PecVel.n), width=0.5, color='red')
-       # tmp. geom_errorbar(data=f,mapping=aes(x=x,y=(y+meanPriorFix),ymin=(y+meanPriorFix)-sigmaData_PecVel.n, ymax=(y+meanPriorFix)+sigmaData_PecVel.n), width=0.5, color='red')
+       geom_errorbar(data=f, aes(x=x, y=(y+meanPriorFix), ymin=(y+meanPriorFix)-errorBars_data, ymax=(y+meanPriorFix)+errorBars_data), width=0.5, color='red')
        } else if (GP_prior == 'template') { 
-         geom_errorbar(data=f,aes(x=x,y=(y+TempInterpol(x)),ymin=(y+TempInterpol(x))-sigmaData_PecVel.n, ymax=(y+TempInterpol(x))+sigmaData_PecVel.n), width=0.5, color='red') }
+         geom_errorbar(data=f,aes(x=x, y=(y+TempInterpol(x)), ymin=(y+TempInterpol(x))-errorBars_data, ymax=(y+TempInterpol(x))+errorBars_data), width=0.5, color='red') }
     
+       # PLOT THE MEAN VALUE OF THE DATA
        gg2 + if (GP_prior == 'flat') {
-       geom_point(data=f,aes(x=x,y=(y+meanPriorFix)), size=0.5, color='red')
-       } else if (GP_prior == 'template') { geom_point(data=f,aes(x=x,y=(y+TempInterpol(x))), size=0.5, color='red') }
+       geom_point(data=f,aes(x=x, y=(y+meanPriorFix)), size=0.5, color='red')
+       } else if (GP_prior == 'template') { geom_point(data=f,aes(x=x, y=(y+TempInterpol(x))), size=0.5, color='red') }
       
     # Adding text to the plot
-    # TEMPORAL:
+    # COMMENTED TEMPORAL:
     # gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
     
     # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
     ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
     # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
-    # ggsave(MyPathAndNamePlot)
+
+    #--------------------------------------------------------
     
-    #----------------------------
+    #     PLOTTING 1 B
     
-    #     PLOTTING 2
+    # A copy/paste of "PLOTTING 1"
+    
+    if (plotAbsMagDataOnly == TRUE) {
+      
+      if (FitAppMag == TRUE){
+        ymin_plot <- meanPriorFix + 3.5; 
+        ymax_plot <- meanPriorFix - 1.5; 
+        yText_2 <- yText + meanPriorFix + 18 # location text on top of plot
+        ylabel <- 'apparent magnitude'
+      } else {
+        ymin_plot <- ymin_plot_band; 
+        ymax_plot <- ymax_plot_band; 
+        yText_2 <- yText # location text on top of plot
+        ylabel <- 'Absolute Magnitude'
+      }
+      
+      # The standard deviation of the noise -including- peculiar velocities.
+      # THIS IS USED FOR PLOTTING PURPOSES ONLY
+      if (FitAppMag == TRUE) {
+        errorBars_data <- sqrt( (sigma.n)^2 )
+      } else if (FitAppMag == FALSE) {
+        errorBars_data <- sqrt((sigma.n)^2 + sigma2muPecu(velPecuFix, redshiftSN, zcmb_error))
+        # old. errorBars_data <- sqrt( (sigma.n)^2 )
+      }
+      # errorBars_data
+      # length(errorBars_data)
+      
+      # Putting the predicted values of the mean function in a data frame:
+      d <- 0 # reset. It's important.
+      d <- data.frame(phase=x.star,   mean=(MagPlusTemp), 
+                      lower = (MagPlusTemp)-StdErrorMean,
+                      upper = (MagPlusTemp)+StdErrorMean)
+      
+      # Path and name of the figure to be saved
+      MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot_data.png', sep = ''))
+      # MyPathAndNamePlot
+      
+      # Plotting the data, the mean function and its standard error
+      gg2 <- ggplot() +
+        # PLOT THE GP VARIANCE BAND
+        # Keep commented. geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
+        # PLOT THE GP MEAN FUNCTION
+        # Keep commented. geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
+        theme_bw() + # Making the plot with white background
+        ggtitle(NameSN) +
+        labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y=ylabel) +
+        # Characteristics of the text of the title and axis labels
+        theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
+        theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
+        scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
+        # scale_y_reverse(lim=c(-6,-18)) +  # FOR LOW LUMINOSITY SNe
+        xlim(-7,57) +
+        # PLOT THE ERROR BARS OF THE DATA
+        if (GP_prior == 'flat') {
+          geom_errorbar(data=f, aes(x=x, y=(y+meanPriorFix), ymin=(y+meanPriorFix)-errorBars_data, ymax=(y+meanPriorFix)+errorBars_data), width=0.5, color='red')
+        } else if (GP_prior == 'template') { 
+          geom_errorbar(data=f,aes(x=x, y=(y+TempInterpol(x)), ymin=(y+TempInterpol(x))-errorBars_data, ymax=(y+TempInterpol(x))+errorBars_data), width=0.5, color='red') }
+      
+      # PLOT THE MEAN VALUE OF THE DATA
+      gg2 + if (GP_prior == 'flat') {
+        geom_point(data=f,aes(x=x, y=(y+meanPriorFix)), size=0.5, color='red')
+      } else if (GP_prior == 'template') { geom_point(data=f,aes(x=x, y=(y+TempInterpol(x))), size=0.5, color='red') }
+      
+      # Adding text to the plot
+      # COMMENTED TEMPORAL:
+      # gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
+      
+      # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
+      ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
+      # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
+    }
+    #--------------------------------------------------------
+    
+    #     PLOTTING 2: NORMALIZED LC.
+    
+    # This is basically a copy of the section PLOTTING 1
+    # In this section I plot the normalized light curve.
+    
+    ymin_plot <- 4.5; 
+    ymax_plot <- -1.2; 
+    yText_2 <- yText + 18 + residLC_phase0 # location text on top of plot
+    ylabel <- 'Magnitude'
+
+    # The error bars of the data
+    errorBars_data <- sqrt( (sigma.n)^2 )
+    
+    # Putting the predicted values of the mean function in a data frame:
+    d <- 0  # reset, it's important.
+    d <- data.frame(phase=x.star,   mean=(mu_norma), 
+                    lower = (mu_norma)-StdErrorMean_norma,
+                    upper = (mu_norma)+StdErrorMean_norma)
+    
+    # Path and name of the figure to be saved
+    MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot_norma.png', sep = ''))
+    # MyPathAndNamePlot
+    
+    # Plotting the data, the mean function and its standard error
+    gg2 <- ggplot() +
+      # PLOT THE GP VARIANCE BAND
+      geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
+      # PLOT THE GP MEAN FUNCTION
+      geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
+      theme_bw() + # Making the plot with white background
+      ggtitle(NameSN) +
+      labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y=ylabel) +
+      # Characteristics of the text of the title and axis labels
+      theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
+      theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
+      scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
+      xlim(-7,57) +
+      # PLOT THE ERROR BARS OF THE DATA
+      geom_errorbar(data=f, aes(x=x,y=(y-residLC_phase0), ymin=(y-residLC_phase0)-errorBars_data, ymax=(y-residLC_phase0)+errorBars_data), width=0.5, color='red') +
+      # PLOT THE MEAN VALUE OF THE DATA
+      geom_point(data=f,aes(x=x,y=(y-residLC_phase0)), size=0.5, color='red')
+    
+    # Adding text to the plot
+    # COMMENTED TEMPORAL:
+    # gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
+    
+    # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
+    ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
+    # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
+
+    #--------------------------------------------------------
+    
+    #     PLOTTING 2 B: NORMALIZED LC.
+    
+    # A copy/paste of section "PLOTTING 2"
+    
+    if (plotNormaGPFitOnly == TRUE) {
+        
+      ymin_plot <- 4.5; 
+      ymax_plot <- -1.2; 
+      yText_2 <- yText + 18 + residLC_phase0 # location text on top of plot
+      ylabel <- 'Magnitude'
+      
+      # The error bars of the data
+      errorBars_data <- sqrt( (sigma.n)^2 )
+      
+      # Putting the predicted values of the mean function in a data frame:
+      d <- 0  # reset, it's important.
+      d <- data.frame(phase=x.star,   mean=(mu_norma), 
+                      lower = (mu_norma)-StdErrorMean_norma,
+                      upper = (mu_norma)+StdErrorMean_norma)
+      
+      # Path and name of the figure to be saved
+      MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot_norma_GPOnly.png', sep = ''))
+      # MyPathAndNamePlot
+      
+      # Plotting the data, the mean function and its standard error
+      gg2 <- ggplot() +
+        # PLOT THE GP VARIANCE BAND
+        geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
+        # PLOT THE GP MEAN FUNCTION
+        geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
+        theme_bw() + # Making the plot with white background
+        ggtitle(NameSN) +
+        labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y=ylabel) +
+        # Characteristics of the text of the title and axis labels
+        theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
+        theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
+        scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
+        xlim(-7,57) +
+        # PLOT THE ERROR BARS OF THE DATA
+        # keep commented. geom_errorbar(data=f, aes(x=x,y=(y-residLC_phase0), ymin=(y-residLC_phase0)-errorBars_data, ymax=(y-residLC_phase0)+errorBars_data), width=0.5, color='red') +
+        # PLOT THE MEAN VALUE OF THE DATA
+        # keep commented. geom_point(data=f,aes(x=x,y=(y-residLC_phase0)), size=0.5, color='red')
+      
+      # Adding text to the plot
+      # COMMENTED TEMPORAL:
+      # gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
+      
+      # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
+      ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
+      # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
+    }
+    #--------------------------------------------------------
+    
+    #     PLOTTING 3
+    
     # This is basically a copy of the section PLOTTING 1
     # In this section I plot the actual residual data (data minus moving window template) that
     # it is what I'm actually fitting with Gaussian Processes.
     
+    ymin_plot <- 3.0; 
+    ymax_plot <- -3.0; 
+    
+    # The standard deviation of the noise -including- peculiar velocities.
+    # THIS IS USED FOR PLOTTING PURPOSES ONLY
+    if (FitAppMag == TRUE) {
+      errorBars_data <- sqrt( (sigma.n)^2 )
+    } else if (FitAppMag == FALSE) {
+      errorBars_data <- sqrt((sigma.n)^2 + sigma2muPecu(velPecuFix, redshiftSN, zcmb_error))
+      # old. errorBars_data <- sqrt( (sigma.n)^2 )
+    }
+    # errorBars_data <- sqrt((sigma.n)^2) #TMP
+    # errorBars_data
+    # length(errorBars_data)
+    
     # Putting the predicted values of the mean function in a data frame:
-    d <- 0
-    
-    # d <- data.frame(phase=phase_mu_stdError[c(1:numberTestPoints),1], 
-    #                 mean=phase_mu_stdError[c(1:numberTestPoints),2], 
-    #                 lower=phase_mu_stdError[c(1:numberTestPoints),2]-phase_mu_stdError[c(1:numberTestPoints),3], 
-    #                 upper=phase_mu_stdError[c(1:numberTestPoints),2]+phase_mu_stdError[c(1:numberTestPoints),3])
-    
+    d <- 0   # reset, it's important.
     d <- data.frame(phase=x.star, mean=(f.bar.star), 
                     lower = (f.bar.star)-StdErrorMean,
                     upper = (f.bar.star)+StdErrorMean)
     
     # Path and name of the figure to be saved
-    # MyPathAndNamePlot <- file.path('/Users/arturo/Dropbox/Research/Articulos/10-AndyKaisey/10Compute/NIR_Template/GaussianProcess/TheTemplates/J_band/2_Fit_GP_IndividualSNe_R', paste(KindOfData, '/GP_fit/', NameSN, '_GP_plot', '.png', sep = ''))
-    
     MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GPResidual.png', sep = ''))
-    # OLD. MyPathAndNamePlot <- file.path(MainDir, paste(KindOfData, '/', NameSN, '_GPResidual', '.png', sep = ''))
     # MyPathAndNamePlot
     
     # Plotting the data, the mean function and its standard error
     gg3 <- ggplot() +
        # PLOT THE GP VARIANCE BAND
-       geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='gray', alpha=1) + 
+       geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
        # PLOT THE GP MEAN FUNCTION
-       geom_line(data=d, aes(x=phase, y=mean), colour='red', size=0.8) + 
+       geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
        theme_bw() + # Making the plot with white background
        ggtitle(NameSN) +
-       # labs(x='Phase = (MJD - T_Bmax)/(1 + z_hel)', y='Absolute Magnitude') +
-       labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y='Absolute Magnitude') +
+       labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y='Magnitude') +
        # Characteristics of the text of the title and axis labels
        theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
        theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
-       scale_y_reverse(lim=c(3.0, -3.0)) + 
-       # ylim(-1.5,1.5) +
-       xlim(-10,60) +
-       # PLOT THE DATA POINTS AND DATA BARS
-       geom_point(data=f,aes(x=x,y=y), size=0.5) +
-       geom_errorbar(data=f,aes(x=x,y=NULL,ymin=y-sigmaData_PecVel.n, ymax=y+sigmaData_PecVel.n), width=0.5, color='black')
+       scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
+       xlim(-7,57) +
+       # PLOT THE MEAN VALUE OF THE DATA
+       geom_point(data=f,aes(x=x, y=y), size=0.5, color='red') +
+       # PLOT THE ERROR BARS OF THE DATA
+       geom_errorbar(data=f, aes(x=x, y=NULL, ymin=y-errorBars_data, ymax=y+errorBars_data), width=0.5, color='red')
   
     # Adding text to the plot
     # gg3 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(ResultOptim$par[1],3), 'sigma_kern =', round(sqrt(ResultOptim$par[2]),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
@@ -1243,11 +1517,70 @@ for(i in 1:numSNe){
     # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
     ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
     # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
-    # ggsave(MyPathAndNamePlot)
+
+    #--------------------------------------------------------
     
-    #---------------------------- 
+    #     PLOTTING 3 B
+    # Copy/ paste of "PLOTTING 3"
     
-    #     PLOTTING 3
+    if (plotResidualDataOnly == TRUE) {
+      
+      ymin_plot <- 3.0; 
+      ymax_plot <- -3.0; 
+      
+      # The standard deviation of the noise -including- peculiar velocities.
+      # THIS IS USED FOR PLOTTING PURPOSES ONLY
+      if (FitAppMag == TRUE) {
+        errorBars_data <- sqrt( (sigma.n)^2 )
+      } else if (FitAppMag == FALSE) {
+        errorBars_data <- sqrt((sigma.n)^2 + sigma2muPecu(velPecuFix, redshiftSN, zcmb_error))
+        # old. errorBars_data <- sqrt( (sigma.n)^2 )
+      }
+      # errorBars_data <- sqrt((sigma.n)^2) #TMP
+      # errorBars_data
+      # length(errorBars_data)
+      
+      # Putting the predicted values of the mean function in a data frame:
+      d <- 0   # reset, it's important.
+      d <- data.frame(phase=x.star, mean=(f.bar.star), 
+                      lower = (f.bar.star)-StdErrorMean,
+                      upper = (f.bar.star)+StdErrorMean)
+      
+      # Path and name of the figure to be saved
+      MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GPResidual_data.png', sep = ''))
+      # MyPathAndNamePlot
+      
+      # Plotting the data, the mean function and its standard error
+      gg3 <- ggplot() +
+        # PLOT THE GP VARIANCE BAND
+        # keep commented. geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
+        # PLOT THE GP MEAN FUNCTION
+        # keep commented. geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
+        theme_bw() + # Making the plot with white background
+        ggtitle(NameSN) +
+        labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y='Magnitude') +
+        # Characteristics of the text of the title and axis labels
+        theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
+        theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
+        scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
+        xlim(-7,57) +
+        # PLOT THE MEAN VALUE OF THE DATA
+        geom_point(data=f,aes(x=x, y=y), size=0.5, color='red') +
+        # PLOT THE ERROR BARS OF THE DATA
+        geom_errorbar(data=f, aes(x=x, y=NULL, ymin=y-errorBars_data, ymax=y+errorBars_data), width=0.5, color='red')
+      
+      # Adding text to the plot
+      # gg3 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(ResultOptim$par[1],3), 'sigma_kern =', round(sqrt(ResultOptim$par[2]),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
+      
+      # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
+      ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
+      # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
+      
+    }
+    
+    #--------------------------------------------------------
+    
+    #     PLOTTING 4
     # Plot the f data frame. The dots in this plot should be the same to the of PLOTTING 2.
     
     "
@@ -1291,21 +1624,38 @@ for(i in 1:numSNeAfterCutoff){
   # Removing the extension ".txt" to the filename.
   NameSN_copy <- substrRight(paste('', list_SNeAfterCutoff$V1[i],'', sep = ''), 4)
   
-  #      Copy the files
+  #      Copy files of the "good" SNe Ia to the Good folder
   # file.copy(paste(NameSN_copy, '_CovMatData.dat', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''), to=DirSaveOutputGood)
+  file.copy(paste(NameSN_copy, '_GP_mean_sigma_norma.dat', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''), to=DirSaveOutputGood)
+  file.copy(paste(NameSN_copy, '_GP_plot_norma.png', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_plot.png', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GPResidual.png', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '.txt', sep = ''), to=DirSaveOutputGood)
+  if (plotAbsMagDataOnly == TRUE) {
+    file.copy(paste(NameSN_copy, '_GP_plot_data.png', sep = ''), to=DirSaveOutputGood) }
+  if (plotNormaGPFitOnly == TRUE) {
+    file.copy(paste(NameSN_copy, '_GP_plot_norma_GPOnly.png', sep = ''), to=DirSaveOutputGood) }
+  if (plotResidualDataOnly == TRUE) {
+    file.copy(paste(NameSN_copy, '_GPResidual_data.png', sep = ''), to=DirSaveOutputGood) }
   
   #      Now remove the originals to avoid to have duplicates
   # file.remove(paste(NameSN_copy, '_CovMatData.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''))
+  file.remove(paste(NameSN_copy, '_GP_mean_sigma_norma.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''))
+  file.remove(paste(NameSN_copy, '_GP_plot_norma.png', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_plot.png', sep = ''))
   file.remove(paste(NameSN_copy, '_GPResidual.png', sep = ''))
   file.remove(paste(NameSN_copy, '.txt', sep = ''))
+  if (plotAbsMagDataOnly == TRUE) {
+    file.remove(paste(NameSN_copy, '_GP_plot_data.png', sep = '')) }
+  if (plotNormaGPFitOnly == TRUE) {
+    file.remove(paste(NameSN_copy, '_GP_plot_norma_GPOnly.png', sep = '')) }
+  if (plotResidualDataOnly == TRUE) {
+    file.remove(paste(NameSN_copy, '_GPResidual.png', sep = '')) }
+
 }
 
 file.copy('List_SN_afterCutoffs_.txt', to=DirSaveOutputGood)
@@ -1366,13 +1716,10 @@ if(sample == 'AllSamples'){
   getwd() 
   file.copy(list_SNe, DirLCData)
 }
-
+ 
 #---------------------------------------
 
 cat('--- All done:', i, 'fitted and good (passed the cutoffs) SNe were copied/pasted/removed to the Goods folder---')
 
 #---------------------------------------
-
-
-
 
