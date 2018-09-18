@@ -1,9 +1,9 @@
-
+#
 # Hierarchical Bayesian model
 # Author: Arturo Avelino
 
-# Inspired from Gelman, Andrew (2013-11-01). Bayesian Data Analysis, 
-# Third Edition (Chapman & Hall/CRC Texts in Statistical Science) (Page 595). 
+# Inspired from Gelman's book, Bayesian Data Analysis, 
+# Third Edition (Chapman & Hall/CRC Texts in Statistical Science). 
 # Chapman and Hall/CRC. Kindle Edition. 
 
 # DESCRIPTION
@@ -17,7 +17,6 @@
 #   "NormalizedTemp <- FALSE"
 # Template_phase_mu_stdError_FromR.dat:
 # Template_phase_mu_tau_FromR.dat:
-
 
 # Note that this code doesn't say, know, or need, anything about the peculiar velocity uncertainty.
 
