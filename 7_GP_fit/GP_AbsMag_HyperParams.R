@@ -539,7 +539,7 @@ list_SNeAfterCutoff$V1[1] # show the first entry
 # class(list_SNeAfterCutoff)
 
 numSNeAfterCutoff <- dim(list_SNeAfterCutoff)[1]
-numSNeAfterCutoff
+# numSNeAfterCutoff
 
 
 #############################################################
@@ -1031,7 +1031,7 @@ for(i in 1:numSNe){
     
     #===============================================================
     
-    # NORMALIZATION OF THE LIGHT CURVE
+    # NORMALIZATION OF THE GP FIT LIGHT CURVE
     # Following Kaisey's notes
   
     # Dimension
@@ -1046,61 +1046,65 @@ for(i in 1:numSNe){
     # nrow(I_matrix)
     # class(I_matrix)
     # [1] "matrix"
-    
     #----------------------------------------------
     
     # Create the "Vk" matrix (Kaisey's notation)
     
     # Find the index of the phase=0. 
+    phaseZeroIndex <- 0 # reset
     for (i1 in 1:ndim1) {
       if (x.star[i1] == 0) {phaseZeroIndex <- i1} }
     # cat(phaseZeroIndex) 
     
-    # Define the value of the residual LC at phase = 0 
-    residLC_phase0 <- f.bar.star[phaseZeroIndex]
-    # residLC_phase0
-    
-    # Create a matrix of zeros:
-    Vk_matrix <- matrix(0, nrow=ndim1, ncol=ndim1)
-    
-    # Vk_matrix
-    # dim(Vk_matrix)
-    # class(Vk_matrix)
-    # [1] "matrix"
-    
-    # Add a column of "1"s to the "Vk_matrix":
-    for (i2 in 1:ndim1) {Vk_matrix[i2,phaseZeroIndex] <- 1 }
-    
-    #----------------------------------------------
-    
-    # Create the "K" matrix (Kaisey's notation)
-    KK <- I_matrix - Vk_matrix
-    
-    KK
-    # class(KK)
-    # [1] "matrix"
-    
-    #----------------------------------------------
-    
-    # MEAN OF THE NORMALIZED LIGHT CURVE
-    mu_norma <- KK %*% f.bar.star
-    
-    # mu_norma
-    # f.bar.star
-    
-    # COVARIANCE OF THE NORMALIZED LIGHT CURVE
-    cov_norma <- KK %*% cov.f.star %*% t(KK)   # correct
-    # cov_norma_test <- KK %*% cov.f.star %*% KK
-    
-    # cov_norma
-    # write.table(cov_norma,'cov_norma.csv', sep=" , ", row.names = FALSE, col.names = FALSE)
-
-    #  THE STANDARD ERROR OF EACH PREDICTED POINT
-    # Extracting the diagonal elements of the covariance matrix = variances of the predicted data
-    varianceCovMatrix_norma <- diag(cov_norma)
-    
-    # Converting the variance to standard error for the mean predicted data
-    StdErrorMean_norma <- sqrt(varianceCovMatrix_norma)
+    # Normalize the GP LC only if the GP fit determined a value at a 
+    # given phase (usually at Bmax or NIR max) that I'm going to use as the reference to normalize the GP LC.
+    if (phaseZeroIndex > 0){
+        
+      # Define the value of the residual LC at phase = 0 
+      residLC_phase0 <- f.bar.star[phaseZeroIndex]
+      # residLC_phase0
+      
+      # Create a matrix of zeros:
+      Vk_matrix <- matrix(0, nrow=ndim1, ncol=ndim1)
+      
+      # Vk_matrix
+      # dim(Vk_matrix)
+      # class(Vk_matrix)
+      # [1] "matrix"
+      
+      # Add a column of "1"s to the "Vk_matrix":
+      for (i2 in 1:ndim1) {Vk_matrix[i2,phaseZeroIndex] <- 1 }
+      
+      #----------------------------------------------
+      
+      # Create the "K" matrix (Kaisey's notation)
+      KK <- I_matrix - Vk_matrix
+      
+      # KK
+      # class(KK)
+      # [1] "matrix"
+      #----------------------------------------------
+      
+      # MEAN OF THE NORMALIZED LIGHT CURVE
+      mu_norma <- KK %*% f.bar.star
+      
+      # mu_norma
+      # f.bar.star
+      
+      # COVARIANCE OF THE NORMALIZED LIGHT CURVE
+      cov_norma <- KK %*% cov.f.star %*% t(KK)   # correct
+      # cov_norma_test <- KK %*% cov.f.star %*% KK
+      
+      # cov_norma
+      # write.table(cov_norma,'cov_norma.csv', sep=" , ", row.names = FALSE, col.names = FALSE)
+  
+      #  THE STANDARD ERROR OF EACH PREDICTED POINT
+      # Extracting the diagonal elements of the covariance matrix = variances of the predicted data
+      varianceCovMatrix_norma <- diag(cov_norma)
+      
+      # Converting the variance to standard error for the mean predicted data
+      StdErrorMean_norma <- sqrt(varianceCovMatrix_norma)
+    }
     
     ################################################################
     
@@ -1108,8 +1112,6 @@ for(i in 1:numSNe){
     
     # Array (phase, mean, stdErrorMean)
     phase_mu_stdError <- 0
-    phase_mu_stdError_norma <- 0
-    
     #--------------
     
     # Adding the mean prior ('meanPriorFix' or template) to go back to the actual values of magnitude. 
@@ -1122,18 +1124,33 @@ for(i in 1:numSNe){
     
     # Combing (phase, mean, stdErrorMean) arrays in just one array.
     phase_mu_stdError <- cbind(x.star, MagPlusTemp, StdErrorMean)
-    phase_mu_stdError_norma <- cbind(x.star, mu_norma, StdErrorMean_norma)
-    
+
     # Adding a name to each column:
     colnames(phase_mu_stdError) <- c("phase", "mean", "std error")
-    colnames(phase_mu_stdError_norma) <- c("phase", "mean", "std error")
-    
+
     MyPathAndName <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma.dat', sep = ''))
-    MyPathAndName_norma <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_norma.dat', sep = ''))
-    
     # Writting the data to a file
     write.table(phase_mu_stdError, file=MyPathAndName, sep="   ", row.names = FALSE, col.names = FALSE)
-    write.table(phase_mu_stdError_norma, file=MyPathAndName_norma, sep="   ", row.names = FALSE, col.names = FALSE)
+
+    #--------------------------------------------------------
+    
+    #    Normalized GP LC
+    
+    if (phaseZeroIndex > 0){
+      # Array (phase, mean, stdErrorMean)
+      phase_mu_stdError_norma <- 0
+      #--------------
+  
+      # Combing (phase, mean, stdErrorMean) arrays in just one array.
+      phase_mu_stdError_norma <- cbind(x.star, mu_norma, StdErrorMean_norma)
+      
+      # Adding a name to each column:
+      colnames(phase_mu_stdError_norma) <- c("phase", "mean", "std error")
+      
+      # Writting the data to a file
+      MyPathAndName_norma <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_norma.dat', sep = ''))
+      write.table(phase_mu_stdError_norma, file=MyPathAndName_norma, sep="   ", row.names = FALSE, col.names = FALSE)
+    }
     
     #========================================================
     
@@ -1141,9 +1158,7 @@ for(i in 1:numSNe){
     
     # The actual predicted values from GP
     df_GPfit <- data.frame(phase=x.star, mean=MagPlusTemp, stdErr=StdErrorMean)
-    df_GPfit_norma <- data.frame(phase=x.star, mean=mu_norma, stdErr=StdErrorMean_norma)
-
-    #----------------------------
+    #--------------
     
     #   The filling dummy values for early phases.
     xFillDown <- seq(phase_lowerLimit, round(x[1])-StepSizeTestPoints, by=StepSizeTestPoints)
@@ -1155,7 +1170,7 @@ for(i in 1:numSNe){
     dfFill.down <- data.frame(phase = xFillDown, mean = yFillDown, stdErr = yErrorFillDown)
     
     #   The filling dummy values for late phases.
-    if(round(x[nn]) < phase_upperLimit ){
+    if (round(x[nn]) < phase_upperLimit ){
     xFillUp <- seq(round(x[nn])+StepSizeTestPoints, phase_upperLimit, by=StepSizeTestPoints)
     # xFillUp
     yFillUp <- rep(40,length(xFillUp))
@@ -1163,24 +1178,56 @@ for(i in 1:numSNe){
     yErrorFillUp <- rep(41,length(xFillUp))
     # yErrorFillUp
     dfFill.up <- data.frame(phase = xFillUp, mean = yFillUp, stdErr = yErrorFillUp)
-    
-    #----------------------------
+    #--------------
     
     # Putting together the filled data.
     df_GPfit_Filled <- rbind(dfFill.down, df_GPfit, dfFill.up)
-    df_GPfit_Filled_norma <- rbind(dfFill.down, df_GPfit_norma, dfFill.up)
     } else { # Putting together the filled data.
-      df_GPfit_Filled <- rbind(dfFill.down, df_GPfit) 
-      df_GPfit_Filled_norma <- rbind(dfFill.down, df_GPfit_norma)
-      }
+        df_GPfit_Filled <- rbind(dfFill.down, df_GPfit) }
     
     # Writting the file
     MyPathAndName2 <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_Filled.dat', sep = ''))
-    MyPathAndName2_norma <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_Filled_norma.dat', sep = ''))
-    
     write.table(df_GPfit_Filled, file=MyPathAndName2, sep='  ', row.names = FALSE, col.names = FALSE)
-    write.table(df_GPfit_Filled_norma, file=MyPathAndName2_norma, sep='  ', row.names = FALSE, col.names = FALSE)
+
+    #--------------------------------------------------------
     
+    #    Normalized GP LC
+    
+    if (phaseZeroIndex > 0){
+      # The actual predicted values from GP
+      df_GPfit_norma <- data.frame(phase=x.star, mean=mu_norma, stdErr=StdErrorMean_norma)
+      #--------------
+  
+      #   The filling dummy values for early phases.
+      xFillDown <- seq(phase_lowerLimit, round(x[1])-StepSizeTestPoints, by=StepSizeTestPoints)
+      # xFillDown
+      yFillDown <- rep(40,length(xFillDown))
+      # yFillDown
+      yErrorFillDown <- rep(41,length(xFillDown))
+      # yErrorFillDown
+      dfFill.down <- data.frame(phase = xFillDown, mean = yFillDown, stdErr = yErrorFillDown)
+      
+      #   The filling dummy values for late phases.
+      if (round(x[nn]) < phase_upperLimit ){
+        xFillUp <- seq(round(x[nn])+StepSizeTestPoints, phase_upperLimit, by=StepSizeTestPoints)
+        # xFillUp
+        yFillUp <- rep(40,length(xFillUp))
+        # yFillUp
+        yErrorFillUp <- rep(41,length(xFillUp))
+        # yErrorFillUp
+        dfFill.up <- data.frame(phase = xFillUp, mean = yFillUp, stdErr = yErrorFillUp)
+        #--------------
+        
+      # Putting together the filled data.
+      df_GPfit_Filled_norma <- rbind(dfFill.down, df_GPfit_norma, dfFill.up)
+      } else { # Putting together the filled data.
+          df_GPfit_Filled_norma <- rbind(dfFill.down, df_GPfit_norma) }
+      
+      # Writting the file
+      MyPathAndName2_norma <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_Filled_norma.dat', sep = ''))
+      write.table(df_GPfit_Filled_norma, file=MyPathAndName2_norma, sep='  ', row.names = FALSE, col.names = FALSE)
+    }
+  
     #========================================================
     
     # COVARIANCE MATRIX OF THE -DATA- (i.e., training data) only.
@@ -1229,7 +1276,7 @@ for(i in 1:numSNe){
     #=================================================================
     
 
-    #     PLOTTING 1
+    #     PLOTTING 1: The absolute or apparent magnituded data and GP fit.
     
     if (FitAppMag == TRUE){
       ymin_plot <- meanPriorFix + 3.5; 
@@ -1380,64 +1427,13 @@ for(i in 1:numSNe){
     # This is basically a copy of the section PLOTTING 1
     # In this section I plot the normalized light curve.
     
-    ymin_plot <- 4.5; 
-    ymax_plot <- -1.2; 
-    yText_2 <- yText + 18 + residLC_phase0 # location text on top of plot
-    ylabel <- 'Magnitude'
-
-    # The error bars of the data
-    errorBars_data <- sqrt( (sigma.n)^2 )
-    
-    # Putting the predicted values of the mean function in a data frame:
-    d <- 0  # reset, it's important.
-    d <- data.frame(phase=x.star,   mean=(mu_norma), 
-                    lower = (mu_norma)-StdErrorMean_norma,
-                    upper = (mu_norma)+StdErrorMean_norma)
-    
-    # Path and name of the figure to be saved
-    MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot_norma.png', sep = ''))
-    # MyPathAndNamePlot
-    
-    # Plotting the data, the mean function and its standard error
-    gg2 <- ggplot() +
-      # PLOT THE GP VARIANCE BAND
-      geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
-      # PLOT THE GP MEAN FUNCTION
-      geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
-      theme_bw() + # Making the plot with white background
-      ggtitle(NameSN) +
-      labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y=ylabel) +
-      # Characteristics of the text of the title and axis labels
-      theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
-      theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
-      scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
-      xlim(-7,57) +
-      # PLOT THE ERROR BARS OF THE DATA
-      geom_errorbar(data=f, aes(x=x,y=(y-residLC_phase0), ymin=(y-residLC_phase0)-errorBars_data, ymax=(y-residLC_phase0)+errorBars_data), width=0.5, color='red') +
-      # PLOT THE MEAN VALUE OF THE DATA
-      geom_point(data=f,aes(x=x,y=(y-residLC_phase0)), size=0.5, color='red')
-    
-    # Adding text to the plot
-    # COMMENTED TEMPORAL:
-    # gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
-    
-    # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
-    ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
-    # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
-
-    #--------------------------------------------------------
-    
-    #     PLOTTING 2 B: NORMALIZED LC.
-    
-    # A copy/paste of section "PLOTTING 2"
-    
-    if (plotNormaGPFitOnly == TRUE) {
+    if (phaseZeroIndex > 0){
         
       ymin_plot <- 4.5; 
       ymax_plot <- -1.2; 
       yText_2 <- yText + 18 + residLC_phase0 # location text on top of plot
       ylabel <- 'Magnitude'
-      
+  
       # The error bars of the data
       errorBars_data <- sqrt( (sigma.n)^2 )
       
@@ -1448,7 +1444,7 @@ for(i in 1:numSNe){
                       upper = (mu_norma)+StdErrorMean_norma)
       
       # Path and name of the figure to be saved
-      MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot_norma_GPOnly.png', sep = ''))
+      MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot_norma.png', sep = ''))
       # MyPathAndNamePlot
       
       # Plotting the data, the mean function and its standard error
@@ -1466,9 +1462,9 @@ for(i in 1:numSNe){
         scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
         xlim(-7,57) +
         # PLOT THE ERROR BARS OF THE DATA
-        # keep commented. geom_errorbar(data=f, aes(x=x,y=(y-residLC_phase0), ymin=(y-residLC_phase0)-errorBars_data, ymax=(y-residLC_phase0)+errorBars_data), width=0.5, color='red') +
+        geom_errorbar(data=f, aes(x=x,y=(y-residLC_phase0), ymin=(y-residLC_phase0)-errorBars_data, ymax=(y-residLC_phase0)+errorBars_data), width=0.5, color='red') +
         # PLOT THE MEAN VALUE OF THE DATA
-        # keep commented. geom_point(data=f,aes(x=x,y=(y-residLC_phase0)), size=0.5, color='red')
+        geom_point(data=f,aes(x=x,y=(y-residLC_phase0)), size=0.5, color='red')
       
       # Adding text to the plot
       # COMMENTED TEMPORAL:
@@ -1478,9 +1474,67 @@ for(i in 1:numSNe){
       ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
       # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
     }
+  
+    #--------------------------------------------------------
+      
+    #     PLOTTING 2 B: NORMALIZED LC.
+    
+    # A copy/paste of section "PLOTTING 2"
+      
+    if (phaseZeroIndex > 0){
+      
+      if (plotNormaGPFitOnly == TRUE) {
+          
+        ymin_plot <- 4.5; 
+        ymax_plot <- -1.2; 
+        yText_2 <- yText + 18 + residLC_phase0 # location text on top of plot
+        ylabel <- 'Magnitude'
+        
+        # The error bars of the data
+        errorBars_data <- sqrt( (sigma.n)^2 )
+        
+        # Putting the predicted values of the mean function in a data frame:
+        d <- 0  # reset, it's important.
+        d <- data.frame(phase=x.star,   mean=(mu_norma), 
+                        lower = (mu_norma)-StdErrorMean_norma,
+                        upper = (mu_norma)+StdErrorMean_norma)
+        
+        # Path and name of the figure to be saved
+        MyPathAndNamePlot <- file.path(DirSaveOutput, paste(NameSN, '_GP_plot_norma_GPOnly.png', sep = ''))
+        # MyPathAndNamePlot
+        
+        # Plotting the data, the mean function and its standard error
+        gg2 <- ggplot() +
+          # PLOT THE GP VARIANCE BAND
+          geom_errorbar(data=d, mapping=aes(x=phase, ymin=upper, ymax=lower), width=1.1, size=1, color='chartreuse4', alpha=0.5) + 
+          # PLOT THE GP MEAN FUNCTION
+          geom_line(data=d, aes(x=phase, y=mean), colour='black', size=0.7, alpha=0.7) + 
+          theme_bw() + # Making the plot with white background
+          ggtitle(NameSN) +
+          labs(x=expression(Phase = (MJD - T[Bmax])/(1 + z[hel])), y=ylabel) +
+          # Characteristics of the text of the title and axis labels
+          theme(plot.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=10)) +
+          theme(axis.title = element_text(family = 'Trebuchet MS', color='#666666', face='bold', size=9)) +
+          scale_y_reverse(lim=c(ymin_plot, ymax_plot)) + 
+          xlim(-7,57) +
+          # PLOT THE ERROR BARS OF THE DATA
+          # keep commented. geom_errorbar(data=f, aes(x=x,y=(y-residLC_phase0), ymin=(y-residLC_phase0)-errorBars_data, ymax=(y-residLC_phase0)+errorBars_data), width=0.5, color='red') +
+          # PLOT THE MEAN VALUE OF THE DATA
+          # keep commented. geom_point(data=f,aes(x=x,y=(y-residLC_phase0)), size=0.5, color='red')
+        
+        # Adding text to the plot
+        # COMMENTED TEMPORAL:
+        # gg2 + annotate('text', x = xText, y = yText_2, label = c('dm15 = ', round(delta15,3), '+-', round(delta15_error,3), 'z_CMB =', round(redshiftSN, 4), 'l =', round(l_Fix,3), 'sigma_kern =', round(sqrt(sigma2kern_fix),3), 'distance mu=', round(DistanceMu,3), '+-', round(DistanceMu_error,3), '68.3% confidence interval' ), size = 2, hjust = 0)
+        
+        # ggsave(MyPathAndNamePlot, width = 12, height = 9, units = 'cm')
+        ggsave(MyPathAndNamePlot, width = 10, height = 7.5, units = 'cm')
+        # ggsave(MyPathAndNamePlot, width = 8, height = 6, units = 'cm'')
+      }
+
+    }
     #--------------------------------------------------------
     
-    #     PLOTTING 3
+    #     PLOTTING 3: The residual data and GP fit
     
     # This is basically a copy of the section PLOTTING 1
     # In this section I plot the actual residual data (data minus moving window template) that
@@ -1645,18 +1699,18 @@ for(i in 1:numSNeAfterCutoff){
   
   #      Copy files of the "good" SNe Ia to the Good folder
   # file.copy(paste(NameSN_copy, '_CovMatData.dat', sep = ''), to=DirSaveOutputGood)
-  file.copy(paste(NameSN_copy, '_GP_mean_sigma_Filled_norma.dat', sep = ''), to=DirSaveOutputGood)
-  file.copy(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''), to=DirSaveOutputGood)
+  file.copy(paste(NameSN_copy, '_GP_mean_sigma_Filled_norma.dat', sep = ''), to=DirSaveOutputGood) 
   file.copy(paste(NameSN_copy, '_GP_mean_sigma_norma.dat', sep = ''), to=DirSaveOutputGood)
-  file.copy(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_plot_norma.png', sep = ''), to=DirSaveOutputGood)
+  file.copy(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''), to=DirSaveOutputGood)
+  file.copy(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_plot.png', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GPResidual.png', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '.txt', sep = ''), to=DirSaveOutputGood)
   if (plotAbsMagDataOnly == TRUE) {
     file.copy(paste(NameSN_copy, '_GP_plot_data.png', sep = ''), to=DirSaveOutputGood) }
   if (plotNormaGPFitOnly == TRUE) {
-    file.copy(paste(NameSN_copy, '_GP_plot_norma_GPOnly.png', sep = ''), to=DirSaveOutputGood) }
+    file.copy(paste(NameSN_copy, '_GP_plot_norma_GPOnly.png', sep = ''), to=DirSaveOutputGood) } 
   if (plotResidualDataOnly == TRUE) {
     file.copy(paste(NameSN_copy, '_GPResidual_data.png', sep = ''), to=DirSaveOutputGood) }
   
@@ -1665,10 +1719,10 @@ for(i in 1:numSNeAfterCutoff){
   #      Now remove the originals to avoid to have duplicates
   # file.remove(paste(NameSN_copy, '_CovMatData.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_mean_sigma_Filled_norma.dat', sep = ''))
-  file.remove(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_mean_sigma_norma.dat', sep = ''))
-  file.remove(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_plot_norma.png', sep = ''))
+  file.remove(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''))
+  file.remove(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_plot.png', sep = ''))
   file.remove(paste(NameSN_copy, '_GPResidual.png', sep = ''))
   file.remove(paste(NameSN_copy, '.txt', sep = ''))
