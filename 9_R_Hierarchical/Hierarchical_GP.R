@@ -521,7 +521,7 @@ for(k in 1:numPhases) # Loop over -phases-
 # Adding the column of -phase- to the data frame of (mu, tau) so that I will
 # have an array with columns (phase, mu, tau).
 # Create array of phases using the first SN data:
-phases <- read.table(paste(SN_Name,FilledPath,sep=""))$V1[1:numPhases]
+phases <- read.table(substring(list_SN_names$V1[j],1,100))$V1[1:numPhases]
 # phases <- read.table(paste(list_SN_names[1,1],FilledPath,sep=""))$V1[1:numPhases] # OLD
 length(phases)
 
