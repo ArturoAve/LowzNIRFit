@@ -124,8 +124,9 @@ setwd(DirLCData)
 getwd() # Show the current directory
 
 #--  Read the data files located in the working directory
-# ExtensionName1 <- '*.txt' # old
-ExtensionName1 <- paste('*',Band,'.txt', sep='')
+if (NormalizedTemp == TRUE){
+  ExtensionName1 <- paste('*','Filled_norma.dat', sep='')
+} else {ExtensionName1 <- paste('*','Filled.dat', sep='') }
 
 list_SNe_GP = list.files(pattern=ExtensionName1, all.files=TRUE)
 # list_SNe_GP
@@ -170,19 +171,50 @@ if (NormalizedTemp == TRUE) {
 
 #--------------
 
+# Tests:
+
+# ncharacter2 <- nchar(list_SNe_GP[90])
+# substring(list_SNe_GP[89],1,24)
+# paste(substring(list_SNe_GP[89],1,24),'.txt',sep='')
+# 
+# ncharacter2 <- nchar(list_SNe_GP[3])
+# ncharacter2
+# substring(list_SNe_GP[3],1,(ncharacter2-31))
+# paste(substring(list_SNe_GP[3],1,(ncharacter2-31)),'.txt',sep='')
+# 
+# read.table(paste(DirLCData,substring(list_SNe_GP[3],1,(ncharacter2-31)),'.txt', sep=''))$V1[1] 
+
+#-------------
+
 #     MAKING CUTOFFS: z_cmb, dm15, EBV_host, EBV_mw
 
 NumSNeTemplate <-0
 
 for(j in 1:numSNe){
-  # Set the condition on the redshift: consider SNe with a z_CMB > cutoff only.
-  z_cmb <- read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[1] #
-  dm15par <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[2] #
-  EBV_mw <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[4] #
-  EBVhost <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[5] #
   
+  nchartrim <- 0 # reset
+  if (NormalizedTemp == TRUE) {
+    nchartrim <- 31
+  } else {nchartrim <- 25}
+    
+  # Count the number of characters in the SN name. It will be used to subtract the "_GP_mean_sigma_Filled_norma.dat" text in the name and change it by simply ".txt".
+  ncharacter2 <- nchar(list_SNe_GP[j])
+  # ncharacter2
+
+  # Read the values.
+  z_cmb <- read.table(paste(DirLCData,substring(list_SNe_GP[j],1,(ncharacter2-nchartrim)),'.txt', sep=''))$V1[1] #
+  dm15par <-  read.table(paste(DirLCData,substring(list_SNe_GP[j],1,(ncharacter2-nchartrim)),'.txt', sep=''))$V1[2] #
+  EBV_mw <-  read.table(paste(DirLCData,substring(list_SNe_GP[j],1,(ncharacter2-nchartrim)),'.txt', sep=''))$V1[4] #
+  EBVhost <-  read.table(paste(DirLCData,substring(list_SNe_GP[j],1,(ncharacter2-nchartrim)),'.txt', sep=''))$V1[5] #
+  mag_Bmax <- read.table( paste(DirLCData,list_SNe_GP[j], sep='') )$V2[PhaseIndexZero]
+  
+  # old.
+  # z_cmb <- read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[1] #
+  # dm15par <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[2] #
+  # EBV_mw <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[4] #
+  # EBVhost <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[5] #
   # abs/app magnitude at Bmax:
-  mag_Bmax <- read.table(paste(DirLCData,gsub('.txt', '', list_SNe_GP[j]), '_GP_mean_sigma_Filled_norma.dat', sep=''))$V2[PhaseIndexZero] #
+  # mag_Bmax <- read.table(paste(DirLCData,gsub('.txt', '', list_SNe_GP[j]), '_GP_mean_sigma_Filled_norma.dat', sep=''))$V2[PhaseIndexZero] #
   # mag_Bmax
 
   # tests --->
@@ -190,6 +222,7 @@ for(j in 1:numSNe){
   # read.table(paste(DirLCData,gsub('.txt', '', list_SNe_GP[9]), '_GP_mean_sigma_Filled_norma.dat', sep=''))$V2
   # <-- tests
   
+  # Set the condition on the redshift: consider SNe with a z_CMB > cutoff only.
   if (z_cmb > z_lowerLimit & z_cmb < z_upperLimit & dm15par>dm15LowerLim & dm15par<dm15UpperLim & EBVhost>EBVhost_Min & EBVhost < EBVhost_Max  & EBV_mw < EBV_mw_Max) {
     if (NormalizedTemp == TRUE) {
       if (mag_Bmax < 39) { # "T_Bmax < 39" = use this supernova if it has GP fit at Bmax.
@@ -216,9 +249,10 @@ getwd() # Show the current directory
 set.seed(12345)
 
 # Some useful segments of paths to files
-FilledPath = '_GP_mean_sigma_Filled_norma.dat'
+if (NormalizedTemp == TRUE) {
+  FilledPath = '_GP_mean_sigma_Filled_norma.dat'
+} else {FilledPath = '_GP_mean_sigma_Filled.dat'}
 DiagonalSymb = ''
-# txt_Extension = '.txt' #
 
 # Defining the functions needed to compute mu.
 
@@ -244,15 +278,6 @@ if (NormalizedTemp == TRUE){
   txtFiles <- 'SN_list_template_Norma'
 } else { txtFiles <- 'SN_list_template' }
 
-# txtFiles
-# txtFiles[2]
-
-# OLD. Loop over the normalized and unnormalized lists
-# OLD. This loop finishes at the end of this notebook at the bottom of the page.
-# OLD. for (ii in 1:2){
-  # ii<-1
-  # cat(txtFiles[ii])
-
 # Initializing
 numSNeFinal <- 0
 
@@ -267,7 +292,7 @@ if(inherits(try1, "try-error")) {
   print('Reading data from SN_list_template_Norma_Notes_.txt instead.')
 }
 numSNeFinal <- dim(list_SN_names)[1]
-cat('Number of SNe:',numSNeFinal, ':')
+cat('Number of SNe:',numSNeFinal)
 
 # It runs over all the different epochs.
 #-- IMPORTANT: EVERY TIME THAT I RUN THIS LOOP I HAVE TO RUN FIRST THE FOLLOWING LINES TO INITIALIZE THE VALUES OF "mu_tau_all_df" BECAUSE THE LOOP IS GOING TO APPEND DATA TO IT.
@@ -311,23 +336,30 @@ for(k in 1:numPhases) # Loop over -phases-
   # Loop over the abs. magnitudes at fixed phase for different SNe.
   for(j in 1:numSNeFinal){
 
-    # substr(list_SN_names$V1[10],1,50)
-    CharacterSize <- nchar(substr(list_SN_names$V1[j],1,50))
-    # CharacterSize
-    trim1 <- CharacterSize-4
-    SN_Name <- substring(list_SN_names$V1[j],1,trim1)
-    SN_Name
+    # # Count the number of characters in the name:
+    # CharacterSize <- nchar(substr(list_SN_names$V1[j],1,50))
+    # # CharacterSize
+    # 
+    # trim1 <- CharacterSize-4
+    # SN_Name <- substring(list_SN_names$V1[j],1,trim1)
+    # SN_Name
+    # 
+    # 
+    # # Absolute magnitude at phase k:
+    # ytemp <- read.table(substring(list_SN_names$V1[j],1,100))$V2[k]
 
-    # Read the value of dm15 for a given SNe:
-    # dm15Int <- read.table(paste(SN_Name, '.txt', sep=""))$V1[2]
-
+    # -- tests --->
+    # getwd()
+    # read.table(substring(list_SN_names$V1[1],1,100))$V2[60]
+    # <--- tests --
+    
     # Absolute magnitude at phase k:
-    ytemp <- read.table(paste(SN_Name, FilledPath, sep=""))$V2[k]
+    ytemp <- read.table(substring(list_SN_names$V1[j],1,100))$V2[k]
 
     # Absolute magnitude at phase = 0 (i.e., at T_Bmax):
     if (NormalizedTemp == TRUE) { 
       # For normalized template. Determine the magnitude at phase = 0 to use later to normalize the GP LC.
-      absmag_TBmax <- read.table(paste(SN_Name, FilledPath, sep=""))$V2[PhaseIndexZero]
+      absmag_TBmax <- read.table(substring(list_SN_names$V1[j],1,100))$V2[PhaseIndexZero]
     } else {  # For unnormalized template
       absmag_TBmax <- 0
     }
@@ -336,7 +368,7 @@ for(k in 1:numPhases) # Loop over -phases-
     # I gave "40" to ranges without data in the light curve.
     if (ytemp<39 & absmag_TBmax<39) { # if "True" then the datum at this phase for the given SNe is GOOD.
       y_NA[j] <- ytemp - absmag_TBmax   # Normalizing the abs magnitude if TRUE.
-      sigma_NA[j] <- read.table(paste(SN_Name, FilledPath, sep=""))$V3[k]
+      sigma_NA[j] <- read.table(substring(list_SN_names$V1[j],1,100))$V3[k]
       # sigma_NA[j] <- read.table(paste(list_SN_names[j,1], FilledPath, sep=""))$V3[k] # OLD
     } else { # "else" = then the datum at this phase for the given SNe is BAD.
       y_NA[j] <- NA
