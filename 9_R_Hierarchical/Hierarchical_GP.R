@@ -2,19 +2,15 @@
 # Hierarchical Bayesian model
 # Author: Arturo Avelino
 
-# Inspired from Gelman's book, Bayesian Data Analysis, 
-# Third Edition (Chapman & Hall/CRC Texts in Statistical Science). 
-# Chapman and Hall/CRC. Kindle Edition. 
-
 # DESCRIPTION
 
 # The code will output 2 files:
 
-#   "NormalizedTemp <- TRUE"
+# If "NormalizedTemp <- TRUE" then:
 # Template_phase_mu_tau_FromR_Norma.dat:
 # Template_phase_mu_stdError_FromR_Norma.dat:
 
-#   "NormalizedTemp <- FALSE"
+# If "NormalizedTemp <- FALSE" then:
 # Template_phase_mu_stdError_FromR.dat:
 # Template_phase_mu_tau_FromR.dat:
 
@@ -26,28 +22,23 @@
 
 #--  Choosing the directory
 
-# Band <- 'J'
-Band <- 'Y'
+Band <- 'J'
+# Band <- 'Y'
 # Band <- 'H'
 # Band <- 'K'
 
 # KindOfData <- 'CfA'
-# KindOfData <- 'CSP' 
+# KindOfData <- 'CSP'
 # KindOfData <- 'Others'
 # KindOfData <- 'AllSamples_vpec_0'
 KindOfData <- 'AllSamples_vpec_150'
 
-# NOTE: To construct the normalized template I have to GP fit the light curves 
-# assuming a peculiar velocity uncertainty of vpec = 0, then to compute the 
-# template in this case select "KindOfData <- 'AllSamples_vpec_0'"  
-# and "NormalizedTemp <- FALSE".
-
 # Compute a normalized template?:
 # "FALSE" =  the mean ABS-mag light curve.
-NormalizedTemp <- FALSE   # Options: (TRUE, FALSE)
+NormalizedTemp <- TRUE   # Options: (TRUE, FALSE)
 
 #-- Redshift cutoff. I've set 3 options (z=0, 0.01, anything else).
-z_lowerLimit <- 0.0  
+z_lowerLimit <- 0.0
 # z_lowerLimit = 0.01
 # z_lowerLimit =  # <-- For any other value of redshift cutoff
 
@@ -81,6 +72,7 @@ FilterSyst <- 'Std_filters'
 # FilterSyst = 'CSP_filters'
 
 #   <---- END OF USER INPUTS.
+
 ################################################################
 
 #             AUTOMATIC
@@ -123,7 +115,7 @@ if (NormalizedTemp == TRUE){
 #   CREATE THE LIST OF SNe TO BE USED TO CONSTRUCT THE TEMPLATE ('SN_list_template_Norma.txt')
 
 #- Create the path to the GP data:
-SelectionPath = paste('2_Selection_', Technique, sep= '') 
+SelectionPath = paste('2_Selection_', Technique, sep= '')
 GoodPath = 'Goods/'
 DirLCData <- file.path(MainDir, FilterSyst, SelectionPath, KindOfData, GoodPath) # OK
 DirLCData
@@ -135,7 +127,7 @@ getwd() # Show the current directory
 # ExtensionName1 <- '*.txt' # old
 ExtensionName1 <- paste('*',Band,'.txt', sep='')
 
-list_SNe_GP = list.files(pattern=ExtensionName1, all.files=TRUE) 
+list_SNe_GP = list.files(pattern=ExtensionName1, all.files=TRUE)
 # list_SNe_GP
 list_SNe_GP[1] # Check that 'list_SNe_GP' has data by showing the first entry.
 
@@ -151,13 +143,13 @@ text4 = sprintf('# Cutoff:  %.2f < z_cmb < %.2f', z_lowerLimit, z_upperLimit)
 text5 = sprintf('#  %.2f < dm15 < %.2f | %.2f < EBVhost < %.2f | EBV_mw < %.2f',dm15LowerLim, dm15UpperLim,EBVhost_Min,EBVhost_Max,EBV_mw_Max)
 text6 = sprintf('# Gaussian-Processes LC functions with data at phase=0 only, for the normalized template.')
 text7 = '#	SN								COMMENTS'
-  
+
 # Go back to the '3_template' folder to write the 'SN_list_template_Norma.txt' text file
 setwd(DirTemplate1)
 getwd()
 
 if (NormalizedTemp == TRUE) {
-  # Write to the text file the headers created above:
+  # Write to the text file the headers text created above:
   write.table(text1, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE)
   write.table(text2, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   write.table(text3, file='SN_list_template_Norma_.txt', quote=FALSE, row.names='#',   col.names=FALSE, append=TRUE)
@@ -166,7 +158,7 @@ if (NormalizedTemp == TRUE) {
   # write.table(text6, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   write.table(text7, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 } else {
-  # Write to the text file the headers created above:
+  # Write to the text file the headers text created above:
   write.table(text1, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE)
   write.table(text2, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   write.table(text3, file='SN_list_template_.txt', quote=FALSE, row.names='#',   col.names=FALSE, append=TRUE)
@@ -178,23 +170,29 @@ if (NormalizedTemp == TRUE) {
 
 #--------------
 
-#     MAKING CUTOFFS: z_cmb, dm15, EBV_host, EBV_mw, T_Bmax 
+#     MAKING CUTOFFS: z_cmb, dm15, EBV_host, EBV_mw
 
 NumSNeTemplate <-0
 
-for(j in 1:numSNe){ 
+for(j in 1:numSNe){
   # Set the condition on the redshift: consider SNe with a z_CMB > cutoff only.
-  z_cmb <- read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[1] # 
+  z_cmb <- read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[1] #
   dm15par <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[2] #
   EBV_mw <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[4] #
   EBVhost <-  read.table(paste(DirLCData,list_SNe_GP[j], sep=''))$V1[5] #
-  T_Bmax <- read.table(paste(DirLCData,gsub('.txt', '', list_SNe_GP[j]), '_GP_mean_sigma_Filled.dat', sep=''))$V2[PhaseIndexZero] #
-  # T_Bmax 
-  # list_SNe_GP[j]
   
-  if (z_cmb > z_lowerLimit & z_cmb < z_upperLimit & dm15par>dm15LowerLim & dm15par<dm15UpperLim & EBVhost>EBVhost_Min & EBVhost < EBVhost_Max  & EBV_mw < EBV_mw_Max) { 
-    if (NormalizedTemp == TRUE) { 
-      if (T_Bmax != 20) { # For Normalized template.
+  # abs/app magnitude at Bmax:
+  mag_Bmax <- read.table(paste(DirLCData,gsub('.txt', '', list_SNe_GP[j]), '_GP_mean_sigma_Filled_norma.dat', sep=''))$V2[PhaseIndexZero] #
+  # mag_Bmax
+
+  # tests --->
+  # paste(DirLCData,gsub('.txt', '', list_SNe_GP[9]), '_GP_mean_sigma_Filled_norma.dat', sep='')
+  # read.table(paste(DirLCData,gsub('.txt', '', list_SNe_GP[9]), '_GP_mean_sigma_Filled_norma.dat', sep=''))$V2
+  # <-- tests
+  
+  if (z_cmb > z_lowerLimit & z_cmb < z_upperLimit & dm15par>dm15LowerLim & dm15par<dm15UpperLim & EBVhost>EBVhost_Min & EBVhost < EBVhost_Max  & EBV_mw < EBV_mw_Max) {
+    if (NormalizedTemp == TRUE) {
+      if (mag_Bmax < 39) { # "T_Bmax < 39" = use this supernova if it has GP fit at Bmax.
         write.table(list_SNe_GP[j], file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
         NumSNeTemplate <- NumSNeTemplate + 1 # Simple counter
       }
@@ -202,8 +200,8 @@ for(j in 1:numSNe){
         write.table(list_SNe_GP[j], file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
         NumSNeTemplate <- NumSNeTemplate + 1 # Simple counter
       }
-  } 
-} 
+  }
+}
 
 cat('Number of SNe for this Normalized template:', NumSNeTemplate)
 
@@ -218,7 +216,7 @@ getwd() # Show the current directory
 set.seed(12345)
 
 # Some useful segments of paths to files
-FilledPath = '_GP_mean_sigma_Filled.dat'
+FilledPath = '_GP_mean_sigma_Filled_norma.dat'
 DiagonalSymb = ''
 # txt_Extension = '.txt' #
 
@@ -227,7 +225,7 @@ DiagonalSymb = ''
 # Eq. (5.20a) in Gelman's book
 mu_hat <- function (tau, y, sigma){sum(y/(sigma^2 + tau^2))/sum(1/(sigma^2 + tau^2)) }
 # Eq. (5.20b) in Gelman's book. This is the standard error^2 of the mean hyperparameter mu
-V_mu <- function (tau, y, sigma){1/sum(1/(tau^2 + sigma^2)) } 
+V_mu <- function (tau, y, sigma){1/sum(1/(tau^2 + sigma^2)) }
 
 # Creation of a grid of values of tau (the standard deviation of the hyperpopulation):
 n_grid <- 1500
@@ -297,42 +295,43 @@ names(mu_tau_all_df) <- c("median.mu.", "tau_grid")
 
 for(k in 1:numPhases) # Loop over -phases-
 # for(k in 1:65) # Loop over -phases-
-{ 
+{
   # Initializing some values for sanity:
   mu <- 0
   V <- 0
   log_p_tau <- rep (NA, n_grid)
   p_tau <- 0
-  
+
   # Creating the arrays for y and sigma for a single epoch k:
   y_NA <- numeric(numSNeFinal)
   sigma_NA <- numeric(numSNeFinal)
-  
+
   #---------------------------
   # LOOP OVER SNe.
-  # Loop over the abs. magnitudes at fixed phase for different SNe. 
-  for(j in 1:numSNeFinal){ 
-    
+  # Loop over the abs. magnitudes at fixed phase for different SNe.
+  for(j in 1:numSNeFinal){
+
     # substr(list_SN_names$V1[10],1,50)
     CharacterSize <- nchar(substr(list_SN_names$V1[j],1,50))
     # CharacterSize
     trim1 <- CharacterSize-4
     SN_Name <- substring(list_SN_names$V1[j],1,trim1)
     SN_Name
-    
+
     # Read the value of dm15 for a given SNe:
     # dm15Int <- read.table(paste(SN_Name, '.txt', sep=""))$V1[2]
-    
+
     # Absolute magnitude at phase k:
-    ytemp <- read.table(paste(SN_Name, FilledPath, sep=""))$V2[k] 
-    
+    ytemp <- read.table(paste(SN_Name, FilledPath, sep=""))$V2[k]
+
     # Absolute magnitude at phase = 0 (i.e., at T_Bmax):
-    if (NormalizedTemp == TRUE) { # For normalized template
+    if (NormalizedTemp == TRUE) { 
+      # For normalized template. Determine the magnitude at phase = 0 to use later to normalize the GP LC.
       absmag_TBmax <- read.table(paste(SN_Name, FilledPath, sep=""))$V2[PhaseIndexZero]
     } else {  # For unnormalized template
       absmag_TBmax <- 0
     }
-    
+
     #- "ytemp<40" = if normalized magnitude is smaller than 40
     # I gave "40" to ranges without data in the light curve.
     if (ytemp<39 & absmag_TBmax<39) { # if "True" then the datum at this phase for the given SNe is GOOD.
@@ -344,25 +343,25 @@ for(k in 1:numPhases) # Loop over -phases-
       sigma_NA[j] <- NA
     }
   } # <--- END LOOP OVER SNe FOR A GIVEN PHASE
-  
+
   # create new datasets without the missing data NA:
   y <-na.omit(y_NA)
   # cat(y)
   # cat("  ")
   sigma <- na.omit(sigma_NA)
-  
+
   #~~~~~~~~~~~~~~~~
-  
+
   # if (5>4 & 4>5){
   #   print('hola')
   # }
-  
+
   #~~~~~~~~~~~~~~~~~
-  
+
   #-----
   #- "length(y) > 2" = "if there are data in y", i.e., "if for a given phase k there are magnitude data for at least 3 SNe, then":
   if (length(y) > 2) {
-  
+
   # Loop to compute tau (the standard deviation hyperparameter) from the Eq. (5.21). For that, it is needed to  compute values of "mu_hat" and "V_mu"
   for (i in 1:n_grid){
     mu <- mu_hat (tau_grid[i], y, sigma)
@@ -371,31 +370,31 @@ for(k in 1:numPhases) # Loop over -phases-
     log_p_tau[i] <- .5*log(V) - .5*sum(log(sigma^2 + tau_grid[i]^2)) -
       .5*sum((y-mu)^2/(sigma^2 + tau_grid[i]^2)) # Eq. (5.21)
   }
-  
+
   #-----
-  # Now, we compute the posterior density for tau on the log scale and rescale 
-  # it to eliminate the possibility of computational overflow or 
+  # Now, we compute the posterior density for tau on the log scale and rescale
+  # it to eliminate the possibility of computational overflow or
   # underflow that can occur when multiplying many factors:
   log_p_tau <- log_p_tau - max(log_p_tau) #
   p_tau <- exp(log_p_tau)
-  
+
   # The final PDF for tau:
   p_tau <- p_tau/sum(p_tau) # Normalizing the posterior PDF.
   # plot(tau_grid, p_tau)
-  # dev.copy(png, 'p_tau_PDF.png') 
+  # dev.copy(png, 'p_tau_PDF.png')
   # dev.off()
-  
+
   # OLD  --->>
   # Creation of a data frame combining (tau_grid, p_tau), to look for the maximum and its corresponding value of tau.
   # p_tau_df <- data.frame(tau_grid, p_tau)
   # Plotting the PDF of tau at a given phase
   # uptodata <- 12
   # plot(tau_grid[1:uptodata], p_tau[1:uptodata])
-  # plot(p_tau_df[1:uptodata]) 
-  # dev.copy(png, 'p_tau_PDF.png') 
+  # plot(p_tau_df[1:uptodata])
+  # dev.copy(png, 'p_tau_PDF.png')
   # dev.off()
   # class(p_tau_df)
-  # p_tau_df 
+  # p_tau_df
   # Finding the maximum likelihood estimate (MLE) (the mode of the PDF of tau) and its corresponding value of tau:
   # tau_MLE <- p_tau_df[which(p_tau_df$p_tau == max(p_tau_df$p_tau)), ]
   # tau_MLE
@@ -403,68 +402,68 @@ for(k in 1:numPhases) # Loop over -phases-
   # dim(tau_MLE[1])
   # class(tau_MLE[1])
   # <<--- End OLD
-  
+
   #------- So far, all the calculations have been deterministics -------
-  
+
   n_sims <- 3000 # Number of simulations per MJD day
   # Sampling from tau's PDF.
-  tau <- sample (tau_grid, n_sims, replace=TRUE, prob=p_tau)  
-  
+  tau <- sample (tau_grid, n_sims, replace=TRUE, prob=p_tau)
+
   #-- Plotting the histogram of tau PDF --
   phase_int <- ((k-PhaseIndexZero)/2)
   # phase_int
   hist(tau, 25, xlab='Sample std dev (mag)') # Histogram of tau
-  
+
   if (NormalizedTemp == TRUE){
     dev.copy(png, paste(DirTemplate1,'/','Plots_histo_Norma/','Plot_hist_phase_', phase_int, '.png', sep=''))
   } else {
     dev.copy(png, paste(DirTemplate1,'/','Plots_histo/','Plot_hist_phase_', phase_int, '.png', sep=''))
   }
-  
+
   dev.off()
-  
+
   # The median of the PDF of tau: this is the value that I write down in the text file and that I will use as the standard deviation for my NIR templates.
   tau_Median <- data.frame(median(tau))
   # Rename the column of data for consistency with 'mu_tau_all_df' (see the last definitions before the main loop). Otherwise I obtain an error and the loops breaks
-  names(tau_Median) <- c('tau_grid') 
+  names(tau_Median) <- c('tau_grid')
   tau_Median
   # dim(tau_Median)
   # class(tau_Median)
 
   J <-numSNeFinal
-  
+
   # Computing the mean hyperparameter "mu":
   mu <- rep (NA, n_sims)
   # theta <- array (NA, c(n_sims,J))
   for (i in 1:n_sims){
     # PDF of mu. Equation above of Eq. (5.20): Sampling from a normal distribution for mu.
     mu[i] <- rnorm (1, mu_hat(tau[i],y,sigma), sqrt(V_mu(tau[i],y,sigma)))
-    
+
     # PDF of theta's. Eqs. (5.17)
     # theta_mean <- (mu[i]/tau[i]^2 + y/sigma^2)/(1/tau[i]^2 + 1/sigma^2)
     # theta_sd <- sqrt(1/(1/tau[i]^2 + 1/sigma^2))
     # theta[i,] <- rnorm (J, theta_mean, theta_sd)
   }
   #-----
-  
+
   # Creation of some data frames to append the data (median of "mu", standard error of "mu")
   mu_stdError_df <- data.frame(median(mu), sd(mu))
   # Creation of some data frames to append the data (mean "mu", tau)
   # mu_tau_df <- data.frame(median(mu), tau_MLE[1]) # OLD
   mu_tau_df <- data.frame(median(mu), tau_Median)
-  
+
   median(mu)
   sd(mu)
   tau_Median
-  
+
   # Relabeling the index of the data frame so that the first entry is equal to 1.
   # rownames(mu_stdError_df) <- 1:nrow(mu_stdError_df)
   rownames(mu_tau_df) <- 1:nrow(mu_tau_df)
-  
+
   # Final data frame where the (mu, tau) is appending
   mu_stdError_all_df <- rbind(mu_stdError_all_df, mu_stdError_df)
   mu_tau_all_df <- rbind(mu_tau_all_df, mu_tau_df)
-  
+
   # if (k<2){cat("Print loop with data")}
   cat(k) # Print on the screen the current loop
   cat(" ")
@@ -487,7 +486,7 @@ for(k in 1:numPhases) # Loop over -phases-
 # end loop over phases
 #===============================================================
 
-# Adding the column of -phase- to the data frame of (mu, tau) so that I will 
+# Adding the column of -phase- to the data frame of (mu, tau) so that I will
 # have an array with columns (phase, mu, tau).
 # Create array of phases using the first SN data:
 phases <- read.table(paste(SN_Name,FilledPath,sep=""))$V1[1:numPhases]

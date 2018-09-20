@@ -126,8 +126,13 @@ set.seed(randomSeed)
 #------------------------------------------
 # Plotting options
 
+# Create the plot that shows only the absolute magnitude data?  
 plotAbsMagDataOnly <- TRUE
+
+# Create the plot that shows only the normalized GP fit? 
 plotNormaGPFitOnly <- TRUE
+
+# Create the plot that shows only the residual data? This is the data that I actually fit using GP. 
 plotResidualDataOnly <- TRUE
 
 #------------------------------------------
@@ -1105,12 +1110,15 @@ for(i in 1:numSNe){
     phase_mu_stdError <- 0
     phase_mu_stdError_norma <- 0
     
-    # Adding the mean prior ('meanPriorFix' or template) to go back to the actual values of magnitude. 
+    #--------------
     
+    # Adding the mean prior ('meanPriorFix' or template) to go back to the actual values of magnitude. 
     if (GP_prior == 'flat'){
       MagPlusTemp <-  f.bar.star + meanPriorFix
     } else if (GP_prior == 'template'){
       MagPlusTemp <-  f.bar.star + TempInterpol(x.star)}
+    
+    #--------------
     
     # Combing (phase, mean, stdErrorMean) arrays in just one array.
     phase_mu_stdError <- cbind(x.star, MagPlusTemp, StdErrorMean)
@@ -1127,15 +1135,17 @@ for(i in 1:numSNe){
     write.table(phase_mu_stdError, file=MyPathAndName, sep="   ", row.names = FALSE, col.names = FALSE)
     write.table(phase_mu_stdError_norma, file=MyPathAndName_norma, sep="   ", row.names = FALSE, col.names = FALSE)
     
-    #----------------------------
+    #========================================================
     
     #     CREATING AND SAVING THE 'FILLED' FILE TO BE USED IN THE HIERARCHICAL CODE
     
     # The actual predicted values from GP
     df_GPfit <- data.frame(phase=x.star, mean=MagPlusTemp, stdErr=StdErrorMean)
-    df_GPfit_norma <- data.frame(phase=x.star, mean=MagPlusTemp, stdErr=StdErrorMean)
+    df_GPfit_norma <- data.frame(phase=x.star, mean=mu_norma, stdErr=StdErrorMean_norma)
 
-    #   The filling values
+    #----------------------------
+    
+    #   The filling dummy values for early phases.
     xFillDown <- seq(phase_lowerLimit, round(x[1])-StepSizeTestPoints, by=StepSizeTestPoints)
     # xFillDown
     yFillDown <- rep(40,length(xFillDown))
@@ -1144,7 +1154,7 @@ for(i in 1:numSNe){
     # yErrorFillDown
     dfFill.down <- data.frame(phase = xFillDown, mean = yFillDown, stdErr = yErrorFillDown)
     
-    # In case of there are GP predicted values with high phase:
+    #   The filling dummy values for late phases.
     if(round(x[nn]) < phase_upperLimit ){
     xFillUp <- seq(round(x[nn])+StepSizeTestPoints, phase_upperLimit, by=StepSizeTestPoints)
     # xFillUp
@@ -1154,17 +1164,25 @@ for(i in 1:numSNe){
     # yErrorFillUp
     dfFill.up <- data.frame(phase = xFillUp, mean = yFillUp, stdErr = yErrorFillUp)
     
+    #----------------------------
+    
     # Putting together the filled data.
     df_GPfit_Filled <- rbind(dfFill.down, df_GPfit, dfFill.up)
+    df_GPfit_Filled_norma <- rbind(dfFill.down, df_GPfit_norma, dfFill.up)
     } else { # Putting together the filled data.
-      df_GPfit_Filled <- rbind(dfFill.down, df_GPfit)  }
+      df_GPfit_Filled <- rbind(dfFill.down, df_GPfit) 
+      df_GPfit_Filled_norma <- rbind(dfFill.down, df_GPfit_norma)
+      }
     
     # Writting the file
     MyPathAndName2 <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_Filled.dat', sep = ''))
-    # OLD. MyPathAndName2 <- file.path(MainDir, paste(KindOfData, '/', NameSN, '_GP_mean_sigma_Filled', '.dat', sep = ''))
-    write.table(df_GPfit_Filled, file=MyPathAndName2, sep='  ', row.names = FALSE, col.names = FALSE)
+    MyPathAndName2_norma <- file.path(DirSaveOutput, paste(NameSN, '_GP_mean_sigma_Filled_norma.dat', sep = ''))
     
-    #----------------------------
+    write.table(df_GPfit_Filled, file=MyPathAndName2, sep='  ', row.names = FALSE, col.names = FALSE)
+    write.table(df_GPfit_Filled_norma, file=MyPathAndName2_norma, sep='  ', row.names = FALSE, col.names = FALSE)
+    
+    #========================================================
+    
     # COVARIANCE MATRIX OF THE -DATA- (i.e., training data) only.
     "
     CovMatrix_Data <- k.xx
@@ -1627,6 +1645,7 @@ for(i in 1:numSNeAfterCutoff){
   
   #      Copy files of the "good" SNe Ia to the Good folder
   # file.copy(paste(NameSN_copy, '_CovMatData.dat', sep = ''), to=DirSaveOutputGood)
+  file.copy(paste(NameSN_copy, '_GP_mean_sigma_Filled_norma.dat', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_mean_sigma_norma.dat', sep = ''), to=DirSaveOutputGood)
   file.copy(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''), to=DirSaveOutputGood)
@@ -1641,8 +1660,11 @@ for(i in 1:numSNeAfterCutoff){
   if (plotResidualDataOnly == TRUE) {
     file.copy(paste(NameSN_copy, '_GPResidual_data.png', sep = ''), to=DirSaveOutputGood) }
   
+#---------------------------------------------------
+  
   #      Now remove the originals to avoid to have duplicates
   # file.remove(paste(NameSN_copy, '_CovMatData.dat', sep = ''))
+  file.remove(paste(NameSN_copy, '_GP_mean_sigma_Filled_norma.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_mean_sigma_Filled.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_mean_sigma_norma.dat', sep = ''))
   file.remove(paste(NameSN_copy, '_GP_mean_sigma.dat', sep = ''))
@@ -1655,14 +1677,13 @@ for(i in 1:numSNeAfterCutoff){
   if (plotNormaGPFitOnly == TRUE) {
     file.remove(paste(NameSN_copy, '_GP_plot_norma_GPOnly.png', sep = '')) }
   if (plotResidualDataOnly == TRUE) {
-    file.remove(paste(NameSN_copy, '_GPResidual.png', sep = '')) }
-
+    file.remove(paste(NameSN_copy, '_GPResidual_data.png', sep = '')) }
 }
 
 file.copy('List_SN_afterCutoffs_.txt', to=DirSaveOutputGood)
 file.copy('Settings_GPFit_.txt', to=DirSaveOutputGood)
 
-#---------------------------------------
+#=====================================================
 
 #    COPY AND DELETE THE SNe OUTSIDE THE CUTOFFS
 
