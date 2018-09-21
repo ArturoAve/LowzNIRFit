@@ -33,7 +33,7 @@ bandname <- 'J'     # ( Y , J , H , K )
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max and B_max.
-FitAppMag <- FALSE
+FitAppMag <- TRUE
 
 #----------------
 
@@ -99,6 +99,8 @@ TemplateName <- 'TempWeightedSmooth_Box7_Step05_Window21_Poly3_.dat'
 # ( TRUE, FALSE ). 'FALSE' is the way I was using  in the low-z paper so far. But
 # now I'm using the full correct formula for the posterior mean, that means to set to TRUE this variable.
 ComputeMeanUsingPecMatrix <- TRUE
+
+if (FitAppMag == TRUE){ComputeMeanUsingPecMatrix <- FALSE}
 
 #--------------------------
 
@@ -620,8 +622,8 @@ sigma2muPecu <- function(vpec, z, zerror){
 
 #############################################################
 
-
 #   GLOBAL LOG MARGINAL LIKELIHOOOD FUNCTION
+
 # Using ALL the light curves (that passed the cutoffs) simultaneously to determine the GP hyperparameters
 
 LogMargLikelFuncAll <- function(hyperpars) {
@@ -789,6 +791,8 @@ if (ComputeHyperpars == TRUE){ # SEARCHING THE MINIMUM SETTING LIMITS TO THE PAR
 #############################################################
 #############################################################
 
+#     MAIN LOOP
+
 #     LOOP to fit the individual light curves but using the hyperparameter values computed above.
 # The loop is over the good SN LCs after the quality cutoffs.
 
@@ -800,7 +804,6 @@ for(i in 1:numSNe){
   # Reset some important values
   k.xx <- 0; k.xx_mean <- 0
   
-  # OLD. DataLC <- read.table(paste('', list_SNeAfterCutoff$V1[i],'', sep = ''))
   DataLC = read.table(list_SNe[i])
   # DataLC
   # list_SNe[i]
@@ -834,7 +837,8 @@ for(i in 1:numSNe){
     # when fitting the app-mag light curves, then mean prior is given by DistanceMu + AbsMag_TBmax.
 
     if (FitAppMag == TRUE){
-      meanPriorFix <- DistanceMu + AbsMag_TBmax
+      # old. meanPriorFix <- DistanceMu + AbsMag_TBmax
+      meanPriorFix <- mean(DataLC$V4[9:LengthData])
     }
     
     # The "training set", i.e., the observed data.
@@ -1058,7 +1062,7 @@ for(i in 1:numSNe){
     
     # Normalize the GP LC only if the GP fit determined a value at a 
     # given phase (usually at Bmax or NIR max) that I'm going to use as the reference to normalize the GP LC.
-    if (phaseZeroIndex > 0){
+    if (FitAppMag == FALSE & phaseZeroIndex > 0){
         
       # Define the value of the residual LC at phase = 0 
       residLC_phase0 <- f.bar.star[phaseZeroIndex]
@@ -1136,7 +1140,7 @@ for(i in 1:numSNe){
     
     #    Normalized GP LC
     
-    if (phaseZeroIndex > 0){
+    if (FitAppMag == FALSE & phaseZeroIndex > 0){
       # Array (phase, mean, stdErrorMean)
       phase_mu_stdError_norma <- 0
       #--------------
@@ -1193,7 +1197,7 @@ for(i in 1:numSNe){
     
     #    Normalized GP LC
     
-    if (phaseZeroIndex > 0){
+    if (FitAppMag == FALSE & phaseZeroIndex > 0){
       # The actual predicted values from GP
       df_GPfit_norma <- data.frame(phase=x.star, mean=mu_norma, stdErr=StdErrorMean_norma)
       #--------------
@@ -1273,14 +1277,15 @@ for(i in 1:numSNe){
     write.table(k.xsx, file=MyPathAndName1, sep='   ', row.names = FALSE, col.names = FALSE)  
     "
   
-    #=================================================================
-    
+    ################################################################
 
-    #     PLOTTING 1: The absolute or apparent magnituded data and GP fit.
+    #     PLOTTING
+
+    # PLOTTING 1: The absolute or apparent magnitude data and GP fit.
     
     if (FitAppMag == TRUE){
-      ymin_plot <- meanPriorFix + 3.5; 
-      ymax_plot <- meanPriorFix - 1.5; 
+      ymin_plot <- meanPriorFix + 2.7; 
+      ymax_plot <- meanPriorFix - 2.2; 
       yText_2 <- yText + meanPriorFix + 18 # location text on top of plot
       ylabel <- 'apparent magnitude'
     } else {
@@ -1347,15 +1352,15 @@ for(i in 1:numSNe){
 
     #--------------------------------------------------------
     
-    #     PLOTTING 1 B
+    #     PLOTTING 1 B: The absolute or apparent magnitude data only, i.e., without the GP fit.
     
     # A copy/paste of "PLOTTING 1"
     
     if (plotAbsMagDataOnly == TRUE) {
       
       if (FitAppMag == TRUE){
-        ymin_plot <- meanPriorFix + 3.5; 
-        ymax_plot <- meanPriorFix - 1.5; 
+        ymin_plot <- meanPriorFix + 2.7; 
+        ymax_plot <- meanPriorFix - 2.2; 
         yText_2 <- yText + meanPriorFix + 18 # location text on top of plot
         ylabel <- 'apparent magnitude'
       } else {
@@ -1427,7 +1432,7 @@ for(i in 1:numSNe){
     # This is basically a copy of the section PLOTTING 1
     # In this section I plot the normalized light curve.
     
-    if (phaseZeroIndex > 0){
+    if (FitAppMag == FALSE & phaseZeroIndex > 0){
         
       ymin_plot <- 4.5; 
       ymax_plot <- -1.2; 
@@ -1481,7 +1486,7 @@ for(i in 1:numSNe){
     
     # A copy/paste of section "PLOTTING 2"
       
-    if (phaseZeroIndex > 0){
+    if (FitAppMag == FALSE & phaseZeroIndex > 0){
       
       if (plotNormaGPFitOnly == TRUE) {
           
