@@ -24,7 +24,7 @@ require(ggplot2)
 #     USER DEFINITIONS
 
 # Band to fit:
-bandname <- 'J'     # ( Y , J , H , K )
+bandname <- 'Y'     # ( Y , J , H , K )
 
 #----------------
 
@@ -33,7 +33,7 @@ bandname <- 'J'     # ( Y , J , H , K )
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max and B_max.
-FitAppMag <- TRUE
+FitAppMag <- FALSE
 
 #----------------
 
@@ -41,7 +41,7 @@ FitAppMag <- TRUE
 # or assume a fixed value set by hand ('ComputeHyperpars <- FALSE')?
 # I use 'TRUE' for the paper, however, when I need to remake the GP fit for some individual LCs, then I use 'FALSE' and then set up the values of hyperparameters by hand. I use 'FALSE' also when fitting the apparent-magnitude light curves.
 # ( TRUE , FALSE ). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
-ComputeHyperpars <- FALSE
+ComputeHyperpars <- TRUE
 
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
 #----------------
