@@ -24,7 +24,7 @@ require(ggplot2)
 #     USER DEFINITIONS
 
 # Band to fit:
-bandname <- 'Y'     # ( Y , J , H , K )
+bandname <- 'K'     # ( Y , J , H , K )
 
 #----------------
 
@@ -33,7 +33,7 @@ bandname <- 'Y'     # ( Y , J , H , K )
 # "FALSE" is also the option to create the -normalized- template.
 # TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
 # "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max and B_max.
-FitAppMag <- FALSE
+FitAppMag <- TRUE
 
 #----------------
 
@@ -168,7 +168,7 @@ if (bandname == 'J'){
   if (velPecuFix==0) {
     HyperByHand <- c(7.0885, 0.9845) # when velPecuFix <- 0 km/s
   } else if (velPecuFix==150){
-    HyperByHand <- c(7.4790, 0.9918) # when velPecuFix <- 150 km/s 
+    HyperByHand <- c(7.0199, 0.9547) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
     HyperByHand <- c(7.4343, 0.9726) # when velPecuFix <- 300 km/s
   }
@@ -209,7 +209,7 @@ if (bandname == 'Y'){
   if (velPecuFix==0){
     HyperByHand <- c(7.9586, 0.7197) # when velPecuFix <- 0 km/s 
   } else if (velPecuFix==150){
-    HyperByHand <- c(7.9308, 0.6973) # when velPecuFix <- 150 km/s 
+    HyperByHand <- c(7.9002, 0.7012) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
     HyperByHand <- c(8.4647, 0.7224) # when velPecuFix <- 300 km/s
   }
@@ -249,7 +249,7 @@ if (bandname == 'H'){
   if (velPecuFix==0){
     HyperByHand <- c(10.0205, 0.7902) # when velPecuFix <- 0 km/s
   } else if (velPecuFix==150){
-    HyperByHand <- c(9.1412, 0.8227) # when velPecuFix <- 150 km/s 
+    HyperByHand <- c(9.8131, 0.7545) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
     HyperByHand <- c(8.9101, 0.7666) # when velPecuFix <- 300 km/s
   }
@@ -288,7 +288,7 @@ if (bandname == 'K'){
   if (velPecuFix==0){
     HyperByHand <- c(8.2101, 0.5561) # when velPecuFix <- 0 km/s 
   } else if (velPecuFix==150){
-    HyperByHand <- c(8.0240, 0.6533) # when velPecuFix <- 150 km/s 
+    HyperByHand <- c(8.1853, 0.5509) # when velPecuFix <- 150 km/s 
   } else if (velPecuFix==300) {
   HyperByHand <- c(7.9214, 0.6325) # when velPecuFix <- 300 km/s
   }
@@ -376,10 +376,15 @@ text1_1  <- sprintf('# SN sample to interpolate using the GP: %s', sample)
 text2 <- '# They have been selected based on the following criteria:'
 text3 <- sprintf('# %.2f < zcmb < %.2f, %.2f < dm15 < %.2f,  %.2f < EBVhost < %.2f, EBVmw < %.2f', zMin, zMax, delta15Min, delta15Max, EBVhostMin, EBVhostMax, EBVmwMax)
 text3_1 <- sprintf('# Number of LC data points >= %.f', MinNumDataForTempl)
-
 text4 <- '# Location of the LC files used:'
 text5 <- KindOfData
+
+# Define author, date, script's name:
 textLine <- '#-------------------------------------'
+text_author <- '# Data table created by: Arturo Avelino'
+text_time <- sprintf('# On date: %s',Sys.time())
+text_script <- "# Script used: GP_AbsMag_HyperParams.R"
+
 text7 <- '#------- Settings of the GP fitting--------'
 text7_0_1 <- sprintf('# GP_prior = %s', GP_prior)
 if (FitAppMag == FALSE){
@@ -414,6 +419,13 @@ write.table(text3,   file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FA
 write.table(text3_1, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 write.table(text4, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 write.table(text5, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names='#',   col.names=FALSE, append=TRUE)
+
+# Write author, date, script's name:
+write.table(textLine, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+write.table(text_author, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+write.table(text_time, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+write.table(text_script, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+
 write.table('# ', file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 write.table(text7,     file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 write.table(text7_0_1, file='List_SN_afterCutoffs_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)

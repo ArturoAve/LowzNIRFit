@@ -22,7 +22,7 @@
 
 #--  Choosing the directory
 
-Band <- 'J'
+Band <- 'K'
 # Band <- 'Y'
 # Band <- 'H'
 # Band <- 'K'
@@ -145,6 +145,12 @@ text5 = sprintf('#  %.2f < dm15 < %.2f | %.2f < EBVhost < %.2f | EBV_mw < %.2f',
 text6 = sprintf('# Gaussian-Processes LC functions with data at phase=0 only, for the normalized template.')
 text7 = '#	SN								COMMENTS'
 
+# Define author, date, script's name:
+textLine <- '#-------------------------------------'
+text_author <- '# Data table created by: Arturo Avelino'
+text_time <- sprintf('# On date: %s',Sys.time())
+text_script <- "# Script used: GP_AbsMag_HyperParams.R"
+
 # Go back to the '3_template' folder to write the 'SN_list_template_Norma.txt' text file
 setwd(DirTemplate1)
 getwd()
@@ -157,6 +163,14 @@ if (NormalizedTemp == TRUE) {
   write.table(text4, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   write.table(text5, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   # write.table(text6, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  
+  # Write author, date, script's name:
+  write.table(textLine, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(text_author, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(text_time, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(text_script, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(textLine, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  
   write.table(text7, file='SN_list_template_Norma_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 } else {
   # Write to the text file the headers text created above:
@@ -166,6 +180,14 @@ if (NormalizedTemp == TRUE) {
   write.table(text4, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   write.table(text5, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
   # write.table(text6, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+
+  # Write author, date, script's name:
+  write.table(textLine, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(text_author, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(text_time, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(text_script, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  write.table(textLine, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
+  
   write.table(text7, file='SN_list_template_.txt', quote=FALSE, row.names=FALSE, col.names=FALSE, append=TRUE)
 }
 
