@@ -1,18 +1,13 @@
 #
 # GAUSSIAN-PROCESSES FITTING OF NIR LIGHT CURVES OF SNe Ia.
-# Author: Arturo Avelino
+#--------------------------------------------------------60
+code_created_by <- 'Arturo_Avelino'
+# On date: 2017.01.10 (yyyy.mm.dd)
+code_name <- 'GP_AbsMag_HyperParams.R'
+version_code <- '0.1.15'
+last_update <- '2019.01.28'
+#--------------------------------------------------------60
 
-#     DESCRIPTION
-# - The hyperparameters are computed using all the LCs that pass the qualities cutoff on dm15, z_cmb, EBVhost, EBV_mw.
-# - Once the hyperparameters are determined I fit -all- (i.e., no restrictions in the qualities cutoff) the LCs using those hyperparameters
-# - The covariance matrix is computed taking into account the uncertainty in the peculiar velocity (default, by setting UsePecMatrix <- TRUE), velPecuFix, or ignoring velPecuFix by setting UsePecMatrix <- FALSE.
-# - The mean GP function is computed -ignoring- velPecuFix (default, by setting ComputeMeanUsingPecMatrix <- FALSE), but can be instead used if ComputeMeanUsingPecMatrix <- TRUE and UsePecMatrix <- TRUE.
-
-# For more information about the theory see Chapter 2 of Rasmussen and Williams's 
-# book `Gaussian Processes for Machine Learning' provides a detailed explanation of the
-# math for Gaussian process regression. 
-
-# - implementation of the previous template as a PRIOR for the GP fitting 
 
 ####################################################
 
@@ -29,18 +24,12 @@ bandname <- 'K'     # ( Y , J , H , K )
 #----------------
 
 # Fit the absolute-magnitude or apparent-magnitude light-curves?
-# FALSE = fit the absolute-magnitude light-curves. This has to be the option used the very first time fitting the LCs.
-# "FALSE" is also the option to create the -normalized- template.
-# TRUE  = fit the apparent-magnitude light-curves. In this case, the values of the GP kernel hyperparameters computed during the fitting to the ABS-mag light curves are (and must be) used automatically. Also, the covariance matrix "k.xx" is used  without the peculiar velocity, i.e., with k.xx_mean by default.
-# "TRUE" is the option to derive distance moduli from the GP fitted LCs at NIR_max and B_max.
 FitAppMag <- TRUE
 
 #----------------
 
 # Compute the GP hyperparameters from the global likelihood PDF ('ComputeHyperpars <- TRUE')?
 # or assume a fixed value set by hand ('ComputeHyperpars <- FALSE')?
-# I use 'TRUE' for the paper, however, when I need to remake the GP fit for some individual LCs, then I use 'FALSE' and then set up the values of hyperparameters by hand. I use 'FALSE' also when fitting the apparent-magnitude light curves.
-# ( TRUE , FALSE ). 'TRUE' is the option that I use for the paper when fitting the abs. mag. light curves for the Template Method. 
 ComputeHyperpars <- TRUE
 
 if (FitAppMag == TRUE){ComputeHyperpars <- FALSE}
@@ -84,8 +73,7 @@ MinNumDataForTempl <- 3 # Minimal number of data points in a given LC to be use 
 # GP_prior = 'flat': assuming a abs mag value for GP  mean function prior, specified by 'meanPriorFix'. We will use this method for the paper.
 # GP_prior = 'template': assuming an existing LC template as the GP  mean function prior, usually determined by a moving window average method.
 
-GP_prior <- 'flat' # I use this option for the paper.
-# GP_prior <- 'template'
+GP_prior <- 'flat' # 
 
 # Location of the template (run this line even if I'm using a flat prior):
 # DirTemplate <- 'Std_filters/3_Template/AllSamples/z_gr_001'
@@ -95,9 +83,6 @@ TemplateName <- 'TempWeightedSmooth_Box7_Step05_Window21_Poly3_.dat'
 #--------------------------
 
 # Use the peculiar velocity covariance matrix in the 'k.xx' to compute the mean function?
-
-# ( TRUE, FALSE ). 'FALSE' is the way I was using  in the low-z paper so far. But
-# now I'm using the full correct formula for the posterior mean, that means to set to TRUE this variable.
 ComputeMeanUsingPecMatrix <- TRUE
 
 if (FitAppMag == TRUE){ComputeMeanUsingPecMatrix <- FALSE}
@@ -105,11 +90,7 @@ if (FitAppMag == TRUE){ComputeMeanUsingPecMatrix <- FALSE}
 #--------------------------
 
 # Use the peculiar velocity covariance matrix in the k.xsx, k.xxs, kxsxs terms?
-
-# Note that this option does NOT have any effect on the k.xx term. 
-# When fitting the apparent magnitude light curves, the covariance matrix "k.xx" is used  without the peculiar velocity uncertainty, i.e., it is used k.xx_mean instead by default
-UsePecMatrix <- FALSE # (TRUE, FALSE). 'FALSE' is the CORRECT way and it is what I use for the paper.
-# About this option. Initially I didn't include the peculiar velocity cov matrix on the k.xsx, k.xxs, kxsxs terms, only on k.xx, however then Kaisey suggested that the peculiar velocity cov matrix should also be included on those terms (i.e., k.xsx, k.xxs, kxsxs). So I did several tests and I realized that I obtained very narrow 'snakes' for each light curve fit. After discussing again with Kaisey we realized that the peculiar velocity cov matrix should NOT be included in k.xsx, k.xxs, kxsxs terms, only on k.xx, in this way I obtain snakes that make sense, i.e., the width of the snake is no narrower than the peculiar velocity uncertainty for each SN. So, this option was implemented to easily explore Kaisey's idea, however, the CORRECT option for this variable MUST be UsePecMatrix <- FALSE.
+UsePecMatrix <- FALSE # (TRUE, FALSE). 
 
 #--------------------------
 
@@ -615,22 +596,6 @@ sigma2muPecu <- function(vpec, z, zerror){
   ( (5/(z*log(10))) * sqrt((vpec/cc)**2 + zerror**2) )^2
 }
 
-# Testing that it works:
-# sigma2muPecu(150, 0.0109942726, 0.0010420420)
-# 0.05212504
-
-# sigma2muPecu(150, 0.00299206993393, 1.33425638079e-05)
-# 0.1319517
-
-# sigma2muPecu(0, 0.00299206993393, 1.33425638079e-05)
-# 9.376564e-05
-
-# sigma2muPecu(150, 0.00299206993393, 0.001)
-# 0.6585602
-
-# sigma2muPecu(0, 0.00299206993393, 0.001)
-# 0.5267022
-
 
 #############################################################
 
@@ -727,9 +692,6 @@ LogMargLikelFuncAll <- function(hyperpars) {
     
     # WITH THE COVARIANCE MATRIX OF PECULIAR VELOCITY CORRELATION. ORIGINAL AND CORRECT WAY TO COMPUTE
     logMarLikelSingle <- logMarLikelSingle - (-0.5*t(f$y)%*%solve(k_xx + (sigma.n^2)*diag(1,ncol(k_xx)) + sigma2PecuMatrix_xx)%*%f$y - 0.5*log(det(k_xx + (sigma.n^2)*diag(1,ncol(k_xx)) + sigma2PecuMatrix_xx)) - 0.5*nn*log(2*pi) )[1]
-    
-    # WITHOUT THE COVARIANCE MATRIX OF PECULIAR VELOCITY CORRELATION
-    # logMarLikelSingle <- logMarLikelSingle -(-0.5*t(f$y)%*%solve(k_xx + (sigma.n^2)*diag(1,ncol(k_xx)))%*%f$y - 0.5*log(det(k_xx + (sigma.n^2)*diag(1,ncol(k_xx)))) - 0.5*nn*log(2*pi) )[1]
   }
   logMarLikelSingle # Report the final sum 
 } # End definition of the global log marginal likelihood
@@ -942,7 +904,6 @@ for(i in 1:numSNe){
     # Covariance matrix  K(X, X):
     k.xx <- kernelFunc(x, x, l_Fix, sigma2kern_fix) + (sigma.n^2)*diag(1,nn) + sigma2PecuMatrix_xx
     
-    # k.xx_mean matrix to be used to determine the -mean- function based on the data and ignoring the pec vel matrix
     k.xx_mean <- kernelFunc(x, x, l_Fix, sigma2kern_fix) + (sigma.n^2)*diag(1,nn)
     # k.xx
     # dim(k.xx)
@@ -1001,19 +962,12 @@ for(i in 1:numSNe){
     
     # MEAN AND VARIANCE
 
-    # THE MEAN [EQ. (2.23)].
-    
-    # In the following equation I have removed the correlated matrix of the noise in order to obtain a better determination of the mean function, otherwise, I will obtain something shifted upward or downward when the error bars are big (usually when peculiar vel uncertainty is big) and the LC is not centered with respect to the mean template.
-    # f.bar.star <- k.xsx %*% solve(k.xx) %*% f$y # pec vel
-    # f.bar.star <- k.xsx %*% solve(k.xx_mean) %*% f$y # no pec vel
+    # THE MEAN
     
     if (ComputeMeanUsingPecMatrix == FALSE) {
       f.bar.star <- k.xsx %*% solve(k.xx_mean) %*% f$y 
     } else if (ComputeMeanUsingPecMatrix == TRUE) {
       f.bar.star <- k.xsx %*% solve(k.xx) %*% f$y }
-    
-    # if (MeanTrick == FALSE) {f.bar.star <- k.xsx %*% solve(k.xx) %*% f$y}
-    # else if (MeanTrick == TRUE) {f.bar.star <- k.xsx %*% solve(k.xx_mean) %*% f$y}
     
     # THE COVARIANCE [EQ. (2.24)]:
     

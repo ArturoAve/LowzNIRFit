@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python
 # coding: utf-8
 
 # # Create text files of:
@@ -6,54 +6,6 @@
 # # - (phase, apparent mag, error mag)
 #
 # ### User interface
-
-# In[2]:
-
-# USER
-
-# To read arguments in command line
-# Used in the ".py" version of this notebook.
-import sys
-
-#----- For command line --------
-# Comment this portion if running this script from
-# this notebook.
-
-bandName = '%s'%sys.argv[1]
-Sample = '%s'%sys.argv[2]
-
-#-------- For notebook----------
-# Comment this portion if running this script from
-# command line or other notebook
-
-# bandName = 'J'  # (Y, J, H, K)
-
-# Sample = 'CfA'
-# Sample = 'CSP'
-# Sample = 'Others'
-# Sample = 'CfA_CSP'
-
-#-------------------------------
-
-# The value HoFix = 73.24 is what we use in the
-# low-z paper.
-HoFix = 73.24 # Hubble constant (km/(s Mpc))
-
-# HoFix = 72.78  # TEMPORAL: value reported by Dhawan et al 2017.
-
-OmMFix = 0.28
-OmLFix = 0.72
-wFix = -1
-
-# Print some marks to debug the code?
-debug = False
-
-
-# --------
-
-# ### Automatic
-
-# In[3]:
 
 from snpy import *
 # from numpy import *
@@ -68,10 +20,57 @@ import glob # To read file names in a directory
 # the end of the plot because it will show the figure and instantaneously
 # close the windows too.
 
-5+6
+#--------------------------------------------------------60
+code_created_by = 'Arturo_Avelino'
+# On date: 2017.01.10 (yyyy.mm.dd)
+code_name = '06_Canopy_AbsAppMag_Phase_ForEachBand_Main.ipynb'
+version_code = '0.7.19'
+last_update = '2019.01.28'
+#--------------------------------------------------------60
 
+##############################################################################80
 
-# In[4]:
+# USER
+
+# To read arguments in command line
+# Used in the ".py" version of this notebook.
+import sys
+
+#----- For command line --------
+# Comment this portion if running this script from
+# this notebook.
+
+# bandName = '%s'%sys.argv[1]
+# Sample = '%s'%sys.argv[2]
+
+#-------- For notebook----------
+# Comment this portion if running this script from
+# command line or other notebook
+
+bandName = 'J'  # (Y, J, H, K)
+
+Sample = 'CfA'
+# Sample = 'CSP'
+# Sample = 'Others'
+# Sample = 'CfA_CSP'
+
+#-------------------
+# The value HoFix = 73.24 is what we use in the
+# low-z paper.
+HoFix = 73.24 # Hubble constant (km/(s Mpc))
+
+# HoFix = 72.78  # TEMPORAL: value reported by Dhawan et al 2017.
+
+OmMFix = 0.28
+OmLFix = 0.72
+wFix = -1
+
+# Print some marks to debug the code?
+debug = False
+
+##############################################################################80
+
+# # Automatic
 
 #-------- BAND --------------------
 
@@ -87,8 +86,7 @@ if bandName == 'H':
 if bandName == 'K':
     filterNames = ['Ks2m', 'KANDI', 'K', 'Kd']
 
-#--------------------
-
+#-------------------
 DataType = 'OpticalNIR' # OpticalNIR, Optical
 
 # The kcorr uncertainties were computed during the snoopy fitting
@@ -98,26 +96,20 @@ error_kcorr = False
 # Comment the CfA photometric observations flagged by Andrew Friedmann?
 CommentFlaggedCfAData = True
 
-
 ######## (usually fixed) ########
 #   Filter system
 FilterSyst = 'Std_filters/'
 # FilterSyst = 'CSP_filters/'
 
-
-# In[5]:
-
 # Range of redshift data to be considered
 zMinCuttoff = 0.
 zMaxCuttoff = 0.1
 
-#-----------------------------------------
-
+#--------------------------------------------------
 # In CfA sample, remove the photometric data with the following error bars.
 flag1 = 0.175; flag2 = 0.25 # OK
 
-#-----------------------------------------
-
+#--------------------------------------------------
 #-- Consider the light curves with -at least- the following number of data:
 MinNumberOfDataInLCs=1
 
@@ -128,28 +120,20 @@ MinNumberOfDataInLCs=1
 phase_min = 50
 phase_max = -15
 
-#-----------------------------------------
-
+#--------------------------------------------------
 #   Some fixed constants
 
 cc = 299792.458  # Speed of light (km/s)
 
 # Peculiar velocity
-# old. vpecFix = 150 # km/s. # Not used anymore
 
 ##################################3
 
 # MainDir = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/'
 
-
-# In[5]:
-
-
-
+#--------------------------------------------------------60
 
 # ### Metadata: (zhel, zcmb)
-
-# In[6]:
 
 DirMetadata = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/'
 
@@ -175,22 +159,15 @@ print infoSNe_dict['sn1991T']
 #    3.19220839e-03   2.00138457e-05   6.60456908e-03   5.00346143e-04
 #    2.00000000e+00]
 
-
-# In[6]:
-
-
-
+#--------------------------------------------------------60
 
 # ### Uploading the SED of Hsiao to compute the extinction
 
-# In[7]:
-
 Ia_w, Ia_f = kcorr.get_SED(0,'H3')
 
+#--------------------------------------------------------60
 
 # ### Cosmology theory for $\mu(z)$
-
-# In[8]:
 
 from scipy.integrate import quad as intquad
 
@@ -207,7 +184,6 @@ def LumDistance(z, OmM, wde, Ho):
     LumDistanceVecInt = cc*(1.+z)*intquad(InvEHubblePar, 0., z, args=(OmM, wde))[0]/Ho
     return LumDistanceVecInt
 
-
 # ---- Distance modulus ----
 def DistanceMu(z, OmM, wde, Ho):
     "Distance modulus"
@@ -215,17 +191,12 @@ def DistanceMu(z, OmM, wde, Ho):
     return DistanceMuInt
 
 #--------------------------------------------------
-
 ztest1 = 0.1
 print DistanceMu(ztest1, OmMFix, wFix, HoFix)
 # 38.2572823409
 # 38.2202031449
 
-
-# In[8]:
-
-
-
+#--------------------------------------------------------60
 
 # ### Generating a table of data (phase[TBmax], M, error_M) including the info of the SNe, from the "snpy" files
 #
@@ -233,8 +204,6 @@ print DistanceMu(ztest1, OmMFix, wFix, HoFix)
 # - k-correction
 # - extinction by Milky Way dust
 # - time dilation using the z_helio
-
-# In[9]:
 
 #- Directory to save the data
 
@@ -256,20 +225,13 @@ list_SN = glob.glob('*_StdFilt.snpy')
 
 print len(list_SN),"SNe read with extension '_StdFilt.snpy.'"
 
-
-# In[ ]:
-
-
-
+##############################################################################80
 
 # ### Main Loop
-
-# In[10]:
 
 # AUTOMATIC: THIS DOES NOT NEED USER INTERACTION
 
 # Create a list of the the "kcorr_Mean_Std.json" file names:
-# old. list_JSON = glob.glob('*_kcorr_Mean_Std.json')
 
 log_text = open(DirSaveFiles+'Log_ListSNeWithData_in_'+bandName+'_band_'+Sample+'.log', 'w')
 # log_tex2 = open(DirSavAppMag+'Log_ListSNeWithData_in_'+bandName+'_band_'+Sample+'.log', 'w')
@@ -417,9 +379,7 @@ for sn in list_SN: # Loop over the SNe.
 
                     SN_txtfile.write("-1  -1  -1  -1  -1  -1  -1 # Free slot \n")
 
-
                     SN_txtfile.write("-1  -1  -1  -1  -1  -1  -1 # Free slot \n")
-
 
                     SN_txtfile.write("# Assuming flat LCDM with (Om={0}, OL={1}, w={2}, \
 Ho={3}) \n".format(OmMFix, OmLFix, wFix, HoFix))
@@ -602,14 +562,4 @@ print "# %s SNe read with extension '_StdFilt.snpy.'"%len(list_SN)
 # print "# %s SNe with no data in %s band or less than %s observations."%(
 #         count_nodata, bandName, MinNumberOfDataInLCs)
 # print "# The SNe are:"
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
 

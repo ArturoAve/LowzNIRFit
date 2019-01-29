@@ -1,6 +1,12 @@
 #
 # Hierarchical Bayesian model
-# Author: Arturo Avelino
+#--------------------------------------------------------60
+code_created_by <- 'Arturo_Avelino'
+# On date: 2017.01.10 (yyyy.mm.dd)
+code_name <- 'Hierarchical_GP_Github.R'
+version_code <- '0.3.14'
+last_update <- '2019.01.28'
+#--------------------------------------------------------60
 
 # DESCRIPTION
 
@@ -404,14 +410,6 @@ for(k in 1:numPhases) # Loop over -phases-
   # cat("  ")
   sigma <- na.omit(sigma_NA)
 
-  #~~~~~~~~~~~~~~~~
-
-  # if (5>4 & 4>5){
-  #   print('hola')
-  # }
-
-  #~~~~~~~~~~~~~~~~~
-
   #-----
   #- "length(y) > 2" = "if there are data in y", i.e., "if for a given phase k there are magnitude data for at least 3 SNe, then":
   if (length(y) > 2) {
@@ -438,24 +436,6 @@ for(k in 1:numPhases) # Loop over -phases-
   # dev.copy(png, 'p_tau_PDF.png')
   # dev.off()
 
-  # OLD  --->>
-  # Creation of a data frame combining (tau_grid, p_tau), to look for the maximum and its corresponding value of tau.
-  # p_tau_df <- data.frame(tau_grid, p_tau)
-  # Plotting the PDF of tau at a given phase
-  # uptodata <- 12
-  # plot(tau_grid[1:uptodata], p_tau[1:uptodata])
-  # plot(p_tau_df[1:uptodata])
-  # dev.copy(png, 'p_tau_PDF.png')
-  # dev.off()
-  # class(p_tau_df)
-  # p_tau_df
-  # Finding the maximum likelihood estimate (MLE) (the mode of the PDF of tau) and its corresponding value of tau:
-  # tau_MLE <- p_tau_df[which(p_tau_df$p_tau == max(p_tau_df$p_tau)), ]
-  # tau_MLE
-  # tau_MLE[1]
-  # dim(tau_MLE[1])
-  # class(tau_MLE[1])
-  # <<--- End OLD
 
   #------- So far, all the calculations have been deterministics -------
 

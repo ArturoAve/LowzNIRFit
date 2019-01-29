@@ -1,9 +1,18 @@
+#------ python -------------
+
+*.ipynb
 *.html
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
-.gitattributes
 
+00_Run_SNooPy_inAnaconda.ipynb
 
+AndersonDarlingTest_KS_HubbleResiduals.py
+Colors.py
+RMS.pyc
+StdError_bootstrap.py
+
+#------- r -----------
 
 .Rproj.user
 .Rapp.history
@@ -11,28 +20,26 @@
 .Rhistory
 *.Rproj
 
+/7_GP_fit/.Rproj.user
+/7_GP_fit/.Rapp.history
+/7_GP_fit/.RData
+/7_GP_fit/.Rhistory
+/7_GP_fit/GP_AbsMag_HyperParams_Main.R
+/7_GP_fit/GP_AbsMag_HyperParams.Rproj
+
+/9_R_Hierarchical/.Rproj.user
+/9_R_Hierarchical/.Rapp.history
+/9_R_Hierarchical/.RData
+/9_R_Hierarchical/.rhistory
+/9_R_Hierarchical/Hierarchical_GP.R
+/9_R_Hierarchical/R_Hierarchical_GP.Rproj
+
+#------- bash ------------
+
+*.sh
+
+#------- diverse ------------
+
+.gitattributes
 .DS_Store
-
-#-------------------
-#   Specific files
-
-0_bash_run_pipeline.txt
-
-00_Canopy_ToRunPythonScripts.ipynb
-03_Canopy_Fitting_Main.py
-03_Conda_Fitting.py
-
-06_Canopy_AbsAppMag_Phase_ForEachBand_Main.ipynb
-
-15_Latex_scatter_Main.ipynb
-15_Latex_scatter_Main.py
-16_TrimAndyTable.ipynb
-
-Colors.ipynb
-
-#-------------------
-
-Scratch/
-scratch_1.py
-scratch_2.py
-Diverse_scratch.R
+*.log
