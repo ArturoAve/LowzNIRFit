@@ -4,7 +4,6 @@
 *.html
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
-*/.ipynb_checkpoints/
 
 00_Run_SNooPy_inAnaconda.ipynb
 00_Run_SNooPy_inAnaconda.py
