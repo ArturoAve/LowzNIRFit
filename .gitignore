@@ -42,6 +42,7 @@ StdError_bootstrap.py
 
 #------- diverse ------------
 
+*.txt
 .gitattributes
 .DS_Store
 *.log
