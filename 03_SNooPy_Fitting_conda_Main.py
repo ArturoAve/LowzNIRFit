@@ -109,7 +109,7 @@ if PythonUsed == "Conda":
     Ode0_user = float(sys.argv[9]) # Omega Lambda
 
 # Debug mode?
-debug = True
+debug = False
 
 #-------------------
 # In k-corr UNCERTAINTIES computation, for dates with no data.
