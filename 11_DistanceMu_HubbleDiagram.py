@@ -43,8 +43,8 @@ import sys
 code_created_by = 'Arturo_Avelino'
 # On date: 2017.01.10 (yyyy.mm.dd)
 code_name = '11_DistanceMu_HubbleDiagram.ipynb'
-version_code = '0.3.6'
-last_update = '2019.01.28'
+version_code = '0.3.7'
+last_update = '2019.02.22'
 #--------------------------------------------------------60
 
 ##############################################################################80
@@ -59,14 +59,14 @@ ScriptVersion = 'terminal' # ( terminal , notebook )
 
 if ScriptVersion == 'terminal':
 
-    # There are 11 "sys.argv[xx]" arguments to set.
+    # There are 13 "sys.argv[xx]" arguments to set.
+
+    # What band to fit:(Y, J, H ,K)
+    BandName = sys.argv[1]
 
     # Peculiar velocity (km/s). Options: (150, 250)
     # This number must be an integer: it is used to name the output folder.
-    vpecFix = int(sys.argv[1])
-
-    # What band to fit:(Y, J, H ,K)
-    BandName = sys.argv[2]
+    vpecFix = int(sys.argv[2])
 
     # Mean Absolute magnitude determined from histogram of 'appMagTmax_s - mu_s'?:
     # First run the notebook with this option with setting the value to
@@ -85,10 +85,15 @@ if ScriptVersion == 'terminal':
     # If 'False' then compute the distance modulus using the template method.
     NotebookToPlotOnly = sys.argv[4] == 'True'
 
-
     # Dir where the "DistanceMu_Good_AfterCutoffs_Main_.txt" files is located.
     # Here will be saved the output too.
     DirSaveOutput = sys.argv[5]
+
+    ## Location of the apparent magnitude light curves:
+    DirAppMag = sys.argv[6]
+
+    ## Location of the NIR template to fit:
+    DirTemplate = sys.argv[7]
 
 #--------------------------------------------------
 #   Notebook version
@@ -116,11 +121,30 @@ elif ScriptVersion == 'notebook':
     # Use all this notebook just to plot the Hubble diagram?
     # Useful to create the HD for other cases  different to the template method.
     # If 'False' then compute the distance modulus using the template method.
-    NotebookToPlotOnly = True # Notebook version.
+    NotebookToPlotOnly = False # Notebook version.
 
-    # Dir where the "DistanceMu_Good_AfterCutoffs_Main_.txt" files is located.
-    # Here will be saved the output too.
-    DirSaveOutput = '/Users/arturo/Dropbox/Research/Articulos/14_RAISINs/Data/raisin12/hubblediagram/SALT2_optical/v2/plots_HD/'
+    ## Dir where I'll save the output, or  dir where the
+    ## "DistanceMu_Good_AfterCutoffs_Main_.txt" files is located.
+    # DirSaveOutput = '/Users/arturo/Dropbox/Research/Articulos/14_RAISINs/Data/\
+# raisin12/hubblediagram/SALT2_optical/v2/plots_HD/'
+
+    DirSaveOutput = '/Users/arturo/Downloads/tmp/SNIRfit/'
+
+    ##----automatic when ScriptVersion=='notebook' ----
+
+    ## Location of the apparent magnitude light curves:
+    # DirAppMag = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/\
+# 10Compute/TheTemplates/%s_band/Std_filters/1_AllData_InitialFit/\
+# AbsMag/AllSamples/'%BandName
+
+    DirAppMag = '/Users/arturo/Downloads/tmp/SNIRfit/AllSamples/'
+
+    ## Location of the NIR template to fit:
+    # DirTemplate = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/\
+# 10Compute/TheTemplates/%s_band/Std_filters/3_Template_FlatPrior/\
+ #AllSamples_vpec_%s/z_gr_0/'%(BandName,vpecFix)
+
+    DirTemplate = '/Users/arturo/Downloads/tmp/SNIRfit/'
 
 ##############################################################################80
 
@@ -222,13 +246,22 @@ if BandName == 'J':
     if zcmbUpperLim == 0.04:
 
         if ScriptVersion == 'notebook':
+
+            # Values used in the low-z paper with the template normalized
+            # at phase=0 days.
             #   J band | vpecFix = 150 km/s | 0 < z < 0.04
             Average_NIRAbsMag_TBmax = -18.339435  # 2018-09-28; 12:50 hrs.
             error_Average_NIRAbsMag_TBmax = 0.174834;
 
+            # ------------------------------
+            # Fitting with a template normalized at phase=+15 days.
+            #   J band | vpecFix = 150 km/s | 0 < z < 0.04
+            # Average_NIRAbsMag_TBmax = -16.832741  # 2019-02-22; 10:48 hrs.
+            # error_Average_NIRAbsMag_TBmax = 0.187574;
+
         elif ScriptVersion == 'terminal':
-            Average_NIRAbsMag_TBmax = float(sys.argv[6])
-            error_Average_NIRAbsMag_TBmax = float(sys.argv[7])
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
     elif zcmbUpperLim == 0.06:
         # Using Foley + Cepheid + Special cases's zcmb:
@@ -292,8 +325,8 @@ if BandName == 'Y':
             error_Average_NIRAbsMag_TBmax = 0.152012;
 
         elif ScriptVersion == 'terminal':
-            Average_NIRAbsMag_TBmax = float(sys.argv[6])
-            error_Average_NIRAbsMag_TBmax = float(sys.argv[7])
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
     elif zcmbUpperLim == 0.06:
         # Using Foley + Cepheid + Special cases's zcmb
@@ -354,8 +387,8 @@ if BandName == 'H':
             error_Average_NIRAbsMag_TBmax = 0.165906;
 
         elif ScriptVersion == 'terminal':
-            Average_NIRAbsMag_TBmax = float(sys.argv[6])
-            error_Average_NIRAbsMag_TBmax = float(sys.argv[7])
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
     elif zcmbUpperLim == 0.06:
         # Using Foley + Cepheid + Special cases's zcmb:
@@ -415,8 +448,8 @@ if BandName == 'K':
             error_Average_NIRAbsMag_TBmax = 0.206866;
 
         elif ScriptVersion == 'terminal':
-            Average_NIRAbsMag_TBmax = float(sys.argv[6])
-            error_Average_NIRAbsMag_TBmax = float(sys.argv[7])
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
     elif zcmbUpperLim == 0.06:
         # Using Foley + Cepheid + Special cases's zcmb
@@ -730,8 +763,6 @@ DirMain_1 = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/Th
 
 DirMain = (DirMain_1+BandName+'_band/'+FilterSyst)
 
-DirHubbleDiag = DirMain+'4_HubbleDiagram_%s/'%(TempType)
-
 if CovMat_MeanMu == True:
     CovMatLabel_MeanMu = 'CovMatMu'
 elif CovMat_MeanMu == False:
@@ -744,6 +775,7 @@ elif CovMat_ErrorMu == False:
 
 #-------------------
 #   Dir Save Output
+# DirHubbleDiag = DirMain+'4_HubbleDiagram_%s/'%(TempType)
 # DirSaveOutput = (DirHubbleDiag + KindOfData4HD +'/Templ_'+KindOfTemp+'_'+
 #                 KindOfTempSubgroup+'/Phase'+LowerLabel+'_'+UpperLabel+'_'+
 #                  residualMax_Label+'_'+
@@ -756,11 +788,6 @@ import os # To use command line like instructions
 if not os.path.exists(DirSaveOutput): os.makedirs(DirSaveOutput)
 
 #-------------------
-DirAppMag = DirMain+'1_AllData_InitialFit/AbsMag/AllSamples/'
-
-# Dir template:
-DirTemplate = DirMain+'3_Template_%s/'%(TempType)+KindOfTemp+'_vpec_%s/'%(150)+KindOfTempSubgroup+'/'
-
 # Dir to save the plots of each fitted SNe
 if NotebookToPlotOnly == False:
     if not os.path.exists(DirSaveOutput+'Plot_Fits/'): os.makedirs(DirSaveOutput+'Plot_Fits/')
@@ -1071,7 +1098,7 @@ if ScriptVersion == 'notebook':
 
 # Test: Uncertainty on distance mu due to uncertainty in pec velocity.
 if ScriptVersion == 'notebook':
-    np.sqrt(sigma2_pec(0.005073733274739549,  0.00020317696892145927 , 0))
+    print np.sqrt(sigma2_pec(0.005073733274739549,  0.00020317696892145927 , 0))
 
 # #### Function to identify string or number
 
@@ -1149,7 +1176,7 @@ if ScriptVersion == 'notebook':
     # sn2005cf (data from Riess+16):
     # (0.006926720004322207, 0.00036461514433908711, 2076.578415973525, 109.3088703454397)
 
-if ScriptVersion == 'notebook': cz_CMB_Cepheid(31.587, 0.070, 73.24, 1.74)
+if ScriptVersion == 'notebook': print cz_CMB_Cepheid(31.587, 0.070, 73.24, 1.74)
 
 if NotebookToPlotOnly == False:
 
@@ -1165,8 +1192,6 @@ if NotebookToPlotOnly == False:
 
 ##############################################################################80
 
-# ## NOTE: I can skip these cells if I want to compute the optimal phase range only.
-#
 # ### Preeliminary writting of  text files
 
 if NotebookToPlotOnly == False:
@@ -2347,7 +2372,7 @@ if ScriptVersion == 'notebook':
     import numpy as np
     import os # To use command line like instructions
 
-    DirMyPyFuncs = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/github/LowzNIRFit/'
+    DirMyPyFuncs = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/github/SNIRfit/'
 
     # Change to this directory
     os.chdir(DirMyPyFuncs)
@@ -2422,13 +2447,13 @@ elif ScriptVersion == 'terminal':
 # Hubble diagrams I must reset this notebook because in each case it
 # is used different values for (Ho, Omega_matter, w).
 
-# ( NIRmax , Bmax_GP , Bmax , Snoopy , SALT2 ).
+# ( Bmax , NIRmax , Bmax_GP , Snoopy , SALT2 ).
 if ScriptVersion == 'notebook':
-    BandMax = 'SALT2'
+    BandMax = 'Bmax'
 elif ScriptVersion == 'terminal':
-    BandMax = sys.argv[8]
+    BandMax = sys.argv[10]
 
-#   LABELS IN THE PLOT'S TITLE
+#   LABELS IN THE PLOT'S TITLE for the OPTICAL
 #      LOW-Z
 # if BandMax == 'SALT2': BandName = 'BVR' # ORIGINAL
 if BandMax == 'SALT2': BandName = 'Optical' # RAISINs
@@ -2453,7 +2478,7 @@ if BandMax == 'Snoopy': BandName = 'BVR'  # ORIGINAL
 if ScriptVersion == 'notebook':
     PlotTotalMu = False
 elif ScriptVersion == 'terminal':
-    PlotTotalMu = sys.argv[9] == 'True'
+    PlotTotalMu = sys.argv[11] == 'True'
 
 
 # "PlotTotalMu = True"  is only valid when BandMax = NIRmax, Bmax, Bmax_GP.
@@ -2473,7 +2498,7 @@ if PlotTotalMu == True:
         BandsCombination = 'AllBands'
 
     elif ScriptVersion == 'terminal':
-        BandsCombination = sys.argv[10]
+        BandsCombination = sys.argv[12]
 
 else: BandsCombination = ''
 
@@ -2484,11 +2509,11 @@ else: BandsCombination = ''
 
 if ScriptVersion == 'notebook':
     # False = plot the low-z sample.
-    plot_raisins = True
+    plot_raisins = False
 
 elif ScriptVersion == 'terminal':
     # False = plot the low-z sample.
-    plot_raisins =  sys.argv[11] == 'True'
+    plot_raisins =  sys.argv[13] == 'True'
 
 #-------------------
 if plot_raisins == True:
@@ -2687,7 +2712,7 @@ SimplexResult_2 = [AverageAbsResidual_Out['x'] ]
 
 if ScriptVersion == 'notebook':
     print WeightedAbsResidual_Out
-    print '# %.6f = value of delta_Mo that minimize the Hubble residual.'%SimplexResult_1
+    print '# %.6f = value of delta_Mo that minimize the Hubble residual.'%SimplexResult_1[0]
 
 # print AverageAbsResidual_Out
 # print '#', SimplexResult_2, ' = value of delta_Mo that minimize the Hubble residual.'
