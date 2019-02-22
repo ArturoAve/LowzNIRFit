@@ -202,7 +202,7 @@ text_timenow = now.strftime("%Y-%m-%d (yyyy-mm-dd); %H:%M hrs.")
 text_Author = '# Data table created by: Arturo Avelino \n'
 text_Date   = '# On date: %s \n'%text_timenow
 text_script = '# Script used: %s (version %s | last update: %s)\n'%(
-    NotebookName, version_code, last_update)
+    code_name, version_code, last_update)
 text_line = '#'+'-'*70 + '\n'
 
 textfile_1.write("#         Fitting settings and results \n")
