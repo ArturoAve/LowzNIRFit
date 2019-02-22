@@ -99,12 +99,13 @@ if ScriptVersion == 'terminal':
 #   Notebook version
 
 elif ScriptVersion == 'notebook':
-    # Peculiar velocity (km/s). Options: (150, 250)
-    # This number must be an integer: it is used to name the output folder.
-    vpecFix = 150
 
     # What band to fit:(Y, J, H ,K)
     BandName = 'J'
+
+    # Peculiar velocity (km/s). Options: (150, 250)
+    # This number must be an integer: it is used to name the output folder.
+    vpecFix = 150
 
     # Mean Absolute magnitude determined from histogram of 'appMagTmax_s - mu_s'?:
     # First run the notebook with this option with setting the value to
