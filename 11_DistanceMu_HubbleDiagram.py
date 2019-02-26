@@ -43,8 +43,8 @@ import sys
 code_created_by = 'Arturo_Avelino'
 # On date: 2017.01.10 (yyyy.mm.dd)
 code_name = '11_DistanceMu_HubbleDiagram.ipynb'
-version_code = '0.3.7'
-last_update = '2019.02.22'
+version_code = '0.3.8'
+last_update = '2019.02.25'
 #--------------------------------------------------------60
 
 ##############################################################################80
@@ -59,7 +59,7 @@ ScriptVersion = 'terminal' # ( terminal , notebook )
 
 if ScriptVersion == 'terminal':
 
-    # There are 13 "sys.argv[xx]" arguments to set.
+    # There are 14 "sys.argv[xx]" arguments to set.
 
     # What band to fit:(Y, J, H ,K)
     BandName = sys.argv[1]
@@ -138,7 +138,7 @@ elif ScriptVersion == 'notebook':
 # 10Compute/TheTemplates/%s_band/Std_filters/1_AllData_InitialFit/\
 # AbsMag/AllSamples/'%BandName
 
-    DirAppMag = '/Users/arturo/Downloads/tmp/SNIRfit/AllSamples/'
+    DirAppMag = '/Users/arturo/Downloads/tmp/SNIRfit/SNLCs/'
 
     ## Location of the NIR template to fit:
     # DirTemplate = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/\
@@ -850,12 +850,12 @@ if NotebookToPlotOnly == False:
     if 'ListSNe_AppMag_Notes_.txt' in Textfiles:
         list_SNe = np.genfromtxt(DirSaveOutput+'ListSNe_AppMag_Notes_.txt', dtype=['S33', int])
         print '# Reading the existing < ListSNe_AppMag_Notes_.txt > file.'
-        print "# %s SNe file names in this list and uploaded to RAM memory."%len(list_SNe)
+        print "# %s SNe file names in this list and uploaded."%len(list_SNe)
 
     elif 'ListSNe_AppMag_.txt' in Textfiles:
         list_SNe = np.genfromtxt(DirSaveOutput+'ListSNe_AppMag_.txt', dtype=['S33', int])
         print '# Reading the existing < ListSNe_AppMag_.txt > file.'
-        print "# %s SNe file names in this list and uploaded to RAM memory."%len(list_SNe)
+        print "# %s SNe file names in this list and uploaded."%len(list_SNe)
 
     #--------------------------------------------------
 
@@ -881,7 +881,8 @@ SNe are ALL those located in: \n')
         text_line = '#'+'-'*50 + '\n'
 
         list_SNe_file.write(text_line);
-        list_SNe_file.write(text_Author); list_SNe_file.write(text_Date); list_SNe_file.write(text_script);
+        list_SNe_file.write(text_Author); list_SNe_file.write(text_Date);
+        list_SNe_file.write(text_script);
         list_SNe_file.write(text_line);
         #------
 
@@ -962,10 +963,6 @@ if NotebookToPlotOnly == False:
                                    kind='linear')
 
     else:
-        #OLD. if Use_CovMat_PecVel == True: Template = np.genfromtxt(DirTemplate +
-        # 'Template_phase_mu_stdError_FromR.dat')
-        #OLD. else: Template = np.genfromtxt(DirTemplate+'Template_phase_mu_tau_FromR.dat')
-
         if Method==1 or Method==2 or Method==3: TemplateFile = 'Template_phase_mu_stdError_FromR.dat'
         elif Method==4 or Method==5 or Method==6: TemplateFile = 'Template_phase_mu_tau_FromR.dat'
         elif Method==7: TemplateFile = 'Template_phase_mu_tau_FromR_Norma.dat'
@@ -985,10 +982,12 @@ if NotebookToPlotOnly == False:
             Average_NIRAbsMag_TBmax = Template[(day2index(0)-1),1] # Abs mag at T_Bmax in the template.
 
             MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
-                                       Template[indexLowerPhase:indexUpperPhase,1]-Average_NIRAbsMag_TBmax , kind='linear')
+                                       Template[indexLowerPhase:indexUpperPhase,1]-Average_NIRAbsMag_TBmax ,
+                                       kind='linear')
 
             TemplateError = np.genfromtxt(DirTemplate+'Template_phase_mu_stdError_FromR.dat')
-            error_Average_NIRAbsMag_TBmax = TemplateError[(day2index(0)-1),2] # Uncertainty int the abs mag at T_Bmax in the template.
+            # Uncertainty int the abs mag at T_Bmax in the template:
+            error_Average_NIRAbsMag_TBmax = TemplateError[(day2index(0)-1),2]
 
         else:
             MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
@@ -997,21 +996,23 @@ if NotebookToPlotOnly == False:
         error_MTemplInt = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
                                    Template[indexLowerPhase:indexUpperPhase,2] , kind='linear')
 
-    print '# Test (%s). Value of the template at phase = -1.2: (%.6f, %.6f). %s band'%(
-        TempType, MTemplInt(-1.2), error_MTemplInt(-1.2), BandName)
+    if ScriptVersion == 'notebook':
+        print '# Test (%s). Value of the template at phase = -1.2: (%.6f, %.6f). %s band'%(
+            TempType, MTemplInt(-1.2), error_MTemplInt(-1.2), BandName)
+
     # Test (FlatPrior). Value of the template at phase = -1.2: (-0.066778, 0.016821). J band
 
-if NotebookToPlotOnly == False:
+if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
 
     # Checking the range of interpolation
-    Template[indexLowerPhase:indexUpperPhase,0]
+    print Template[indexLowerPhase:indexUpperPhase,0]
 
-if NotebookToPlotOnly == False:
+if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
     # Checking the range of interpolation
     print Template[indexLowerPhase][0], Template[indexUpperPhase-1][0]
     # -8.0 31.0
 
-if NotebookToPlotOnly == False:
+if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
 
     # Checking the interpolation at T_Bmax
     print MTemplInt(0)
@@ -1019,7 +1020,7 @@ if NotebookToPlotOnly == False:
     # -0.000032300235868e-05
     # -8.17052766133e-06
 
-if NotebookToPlotOnly == False:
+if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
 
     if Method==6 or Method==7:
         print 'Average_NIRAbsMag_TBmax = ', Average_NIRAbsMag_TBmax
@@ -1120,7 +1121,9 @@ if ScriptVersion == 'notebook':
 
 # ### Cepheid distances
 
-DirSNeWithCepheid = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/MyNotes/'
+if ScriptVersion == 'notebook':
+    DirSNeWithCepheid = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/MyNotes/'
+else: DirSNeWithCepheid = sys.argv[10]
 
 # From the Cepheid SNe list the only part that I use in the entire
 # notebook is the first column, i.e., the SN Name column.
@@ -1179,7 +1182,7 @@ if ScriptVersion == 'notebook':
 
 if ScriptVersion == 'notebook': print cz_CMB_Cepheid(31.587, 0.070, 73.24, 1.74)
 
-if NotebookToPlotOnly == False:
+if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
 
     HoNew = 72.0; err_HoNew = 1.74
 
@@ -2208,9 +2211,10 @@ if NotebookToPlotOnly == False:
         if zcmbInt > 0.01:
             chi2dof_z001_list += [DistMu_array[i][6]]
 
-    print 'len(chi2dof_z0_list) = ', len(chi2dof_z0_list)
-    print 'len(chi2dof_z001_list) = ', len(chi2dof_z001_list)
-    # len(chi2dof_z001_list) =  78
+    if ScriptVersion == 'notebook':
+        print 'len(chi2dof_z0_list) = ', len(chi2dof_z0_list)
+        print 'len(chi2dof_z001_list) = ', len(chi2dof_z001_list)
+        # len(chi2dof_z001_list) =  78
 
 # Plotting the histogram of chi2_dof
 
@@ -2251,10 +2255,11 @@ if NotebookToPlotOnly == False:
         fig = plt.figure(figsize=(12,4))
 
         if  zz==0.0:
-            plt.plot(chi2dof_z0_list, zero_z0_np, ls='None', marker='|', ms=30, markeredgewidth=2, color='r',  alpha=1)
+            plt.plot(chi2dof_z0_list, zero_z0_np, ls='None', marker='|', ms=30,
+                     markeredgewidth=2, color='r',  alpha=1)
         elif zz==0.01:
-            # plt.plot(chi2dof_z001_list, zero_np, ls='None', marker='o', ms=12, color='r',  alpha=0.3)
-            plt.plot(chi2dof_z001_list, zero_z001_np, ls='None', marker='|', ms=30, markeredgewidth=2, color='r',  alpha=1)
+            plt.plot(chi2dof_z001_list, zero_z001_np, ls='None', marker='|', ms=30,
+                     markeredgewidth=2, color='r',  alpha=1)
 
         plt.xlabel(r'$\chi^2_{\rm{d.o.f}}$', fontsize=fontsizeText+2)
         plt.ylabel('No meaning', fontsize=fontsizeText)
@@ -2291,7 +2296,7 @@ if NotebookToPlotOnly == False:
     #------ Plot -----------
 
     # the histogram of the data
-    n, bins, patches = plt.hist(DistMu_array['f12'], 20, normed=True, facecolor='green', alpha=0.5)
+    n, bins, patches = plt.hist(DistMu_array['f12'], 20, density=True, facecolor='green', alpha=0.5)
     # n, bins, patches = plt.hist(DistMu_array['f12'], 20, normed=False, facecolor='green', alpha=0.5)
 
     # add a 'best fit' Gaussian line
@@ -2379,8 +2384,8 @@ if ScriptVersion == 'notebook':
     os.chdir(DirMyPyFuncs)
 
     # Auto -re-load  every given time (in case there are changes)
-    get_ipython().run_line_magic('load_ext', 'autoreload')
-    get_ipython().run_line_magic('autoreload', '1')
+    # %load_ext autoreload
+    # %autoreload 1
 
     # Load my python functions
     get_ipython().run_line_magic('aimport', 'RMS')
@@ -2389,6 +2394,9 @@ if ScriptVersion == 'notebook':
     os.chdir(DirSaveOutput)
 
 elif ScriptVersion == 'terminal':
+    # Change to this directory
+    print os.getcwd()
+    os.chdir(DirSaveOutput)
     import RMS
 
 # Test that my python function works well
@@ -2452,7 +2460,7 @@ elif ScriptVersion == 'terminal':
 if ScriptVersion == 'notebook':
     BandMax = 'Bmax'
 elif ScriptVersion == 'terminal':
-    BandMax = sys.argv[10]
+    BandMax = sys.argv[11]
 
 #   LABELS IN THE PLOT'S TITLE for the OPTICAL
 #      LOW-Z
@@ -2479,7 +2487,7 @@ if BandMax == 'Snoopy': BandName = 'BVR'  # ORIGINAL
 if ScriptVersion == 'notebook':
     PlotTotalMu = False
 elif ScriptVersion == 'terminal':
-    PlotTotalMu = sys.argv[11] == 'True'
+    PlotTotalMu = sys.argv[12] == 'True'
 
 
 # "PlotTotalMu = True"  is only valid when BandMax = NIRmax, Bmax, Bmax_GP.
@@ -2499,7 +2507,7 @@ if PlotTotalMu == True:
         BandsCombination = 'AllBands'
 
     elif ScriptVersion == 'terminal':
-        BandsCombination = sys.argv[12]
+        BandsCombination = sys.argv[13]
 
 else: BandsCombination = ''
 
@@ -2514,7 +2522,7 @@ if ScriptVersion == 'notebook':
 
 elif ScriptVersion == 'terminal':
     # False = plot the low-z sample.
-    plot_raisins =  sys.argv[13] == 'True'
+    plot_raisins =  sys.argv[14] == 'True'
 
 #-------------------
 if plot_raisins == True:
@@ -3460,6 +3468,8 @@ for i3 in range(len(plotErrorBars_list)):
                     #-----------------------------
                     # Define the SN name used to label the outliers
 
+                    snName_2 = '' # reset
+
                     if plot_raisins == 'False':
                         snName_2 = DistMu_array[i][0][2:8]
                     else:
@@ -4051,6 +4061,6 @@ plt.close();plt.close();plt.close();
 textfile7.close();textfile7.close();textfile7.close();
 textfile_8.close();textfile_8.close();textfile_8.close();
 
-print "\n#       All done smootly\n"
+print "\n#       All done smoothly\n"
 print "############################################################\n\n"
 
