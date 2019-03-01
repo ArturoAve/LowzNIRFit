@@ -5,8 +5,8 @@
 code_created_by = 'Arturo_Avelino'
 # On date: 2017-01-30 (yyyy.mm.dd)
 code_name = '03_SNooPy_Fitting_conda_Main.py'
-version_code = '0.1.15'
-last_update = '2019.01.28' # (yyyy.mm.dd)
+version_code = '0.1.16'
+last_update = '2019.02.28' # (yyyy.mm.dd)
 #--------------------------------------------------------60
 #
 #   USE
@@ -103,6 +103,7 @@ Use_k_stretch = sys.argv[6] == 'True' # (True, False)
 # used to derive the distance modulus.
 PythonUsed = "Conda"
 
+# Assumed cosmological parameters:
 if PythonUsed == "Conda":
     H0_user = float(sys.argv[7])  # Hubble constant
     Om0_user = float(sys.argv[8])  # Omega matter
@@ -222,6 +223,9 @@ data to determine colors during the k-corr uncertainty computation? = \
 \%s \n"%LCModel_kcorrError)
 textfile_1.write("# Number of Monte-Carlo simulations to determine the k-corr \
 errors: %r \n"%NumSim)
+textfile_1.write("# Assumed values for the cosmological parameters. These values \
+are used only in the function, s.get_distmod, to get the distance modulus. \n")
+textfile_1.write("# Ho = %s, Omega_M = %s, Omega_Lambda = %s \n"%(H0_user,Om0_user,Ode0_user))
 textfile_1.write("# Directory of the snoopy-format data to be fitted: \n")
 textfile_1.write('# %s \n'%DirSnoopyFiles)
 
@@ -511,7 +515,6 @@ for file in the_list:
         #-------------------------------------------------------------------
 
         #    Write the summary to the global text file
-        #- Open a text file to write the failures on it.
         textfile_1.write('------------------------------------------------\n\n')
         textfile_1.write('%s \n'%NameDataFileToSave)
         textfile_1.write('SN %s \n'%s.name)
