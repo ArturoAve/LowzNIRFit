@@ -6,9 +6,11 @@
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 
-
 00_Run_SNooPy_inAnaconda.ipynb
 00_Run_SNooPy_inAnaconda.py
+
+11_DistanceMu_HubbleDiagram_1band__.sh
+11_DistanceMu_HubbleDiagram_edited.py
 
 AndersonDarlingTest_KS_HubbleResiduals.py
 Colors.py
