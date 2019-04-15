@@ -1,4 +1,5 @@
 # Functions to compute rms,  weighted RMS, and their uncertainty.
+# This is a copy of my original one.
 
 #--------------------------------------------------------60
 code_created_by = 'Arturo_Avelino'
