@@ -1,5 +1,6 @@
 # Functions to compute rms,  weighted RMS, and their uncertainty.
-# This is a copy of my original one.
+# This is a copy of my original one located on
+# /Users/arturo/Dropbox/Research/Codes_Mains/Python/MyFunctions/github/MyPyFuns
 
 #--------------------------------------------------------60
 code_created_by = 'Arturo_Avelino'
