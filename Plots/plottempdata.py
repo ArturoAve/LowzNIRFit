@@ -10,8 +10,8 @@
 code_created_by = 'Arturo_Avelino'
 # On date: 2019.04.23 (yyyy.mm.dd)
 code_name = 'plottempdata.py'
-version_code = '0.1.3'
-last_update = '2019.04.26'
+version_code = '0.1.7'
+last_update = '2019.04.27'
 #--------------------------------------------------------60
 
 from matplotlib import pyplot as plt
@@ -183,8 +183,15 @@ def plot_templates(xt1, yt1, e_yt1, xt2, yt2, e_yt2, xt3, yt3, e_yt3,
 
 def templates_data(xt1, yt1, e_yt1, xt2, yt2, e_yt2, xt3, yt3, e_yt3,
     xt4, yt4, e_yt4,
-    snname_1_np, appmag_1_np, snname_2_np, appmag_2_np,
-    snname_3_np, appmag_3_np, snname_4_np, appmag_4_np,
+    snname_1_np, appmag_1_np,
+    snname_2_np, appmag_2_np,
+    snname_3_np, appmag_3_np,
+    snname_4_np, appmag_4_np,
+    flagsample_1_np = np.array([]),
+    flagsample_2_np = np.array([]),
+    flagsample_3_np = np.array([]),
+    flagsample_4_np = np.array([]),
+
     xlim=[], ylim=[],
     xlim_temp=[0, -1],
 
@@ -214,7 +221,8 @@ AllSamples_appMag_vpec_0/Goods/',
     savefig = True,
     namesavefig = 'plot_templates_data_.png',
     resolution_dpi = 80,
-    dir_save_output = ''   ):
+    dir_save_output = '',
+    opersys='mac'   ):
 
     """
     Function to create a plot with 4 horizontal panels, overlaying a band plot
@@ -289,14 +297,24 @@ AllSamples_appMag_vpec_0/Goods/',
     # Print the LCs for all the SNe Ia.
     for i1 in range(len(snname_1_np)):
         # Define the file name of the SNe.
-        file_lc = '%s.txt'%snname_1_np[i1]
+        # The "except" command is when I run this script in Windows OS.
+        if opersys=='mac': file_lc = '%s.txt'%snname_1_np[i1]
+        else:
+            file_lc = '%s.txt'%snname_1_np[i1].decode('UTF-8')
+        # Upload the data
+        data_lc = np.genfromtxt(dir_lc_1+file_lc, skip_header=9,
+                           usecols=[0, 3, 4])
 
         # Read the apparent magnitude at t_Bmax or any other time.
         appmag = appmag_1_np[i1]
 
-        # Upload the data
-        data_lc = np.genfromtxt(dir_lc_1+file_lc, skip_header=9,
-                           usecols=[0, 3, 4])
+        # Define the color of the points:
+        if len(flagsample_1_np) == 0: color_data=color_data
+        else:
+            if   flagsample_1_np[i1]==1: color_data='red'
+            elif flagsample_1_np[i1]==2: color_data='blue'
+            elif flagsample_1_np[i1]==3: color_data='green'
+            else: color_data=color_data
 
         xx = data_lc[:,0]; yy= data_lc[:,1]-appmag; e_yy=data_lc[:,2];
 
@@ -338,14 +356,24 @@ AllSamples_appMag_vpec_0/Goods/',
     # Print the LCs for all the SNe Ia.
     for i1 in range(len(snname_2_np)):
         # Define the file name of the SNe.
-        file_lc = '%s.txt'%snname_2_np[i1]
+        # The "except" command is when I run this script in Windows OS.
+        if opersys=='mac': file_lc = '%s.txt'%snname_2_np[i1]
+        else:
+            file_lc = '%s.txt'%snname_2_np[i1].decode('UTF-8')
+        # Upload the data
+        data_lc = np.genfromtxt(dir_lc_2+file_lc, skip_header=9,
+                           usecols=[0, 3, 4])
 
         # Read the apparent magnitude at t_Bmax or any other time.
         appmag = appmag_2_np[i1]
 
-        # Upload the data
-        data_lc = np.genfromtxt(dir_lc_2+file_lc, skip_header=9,
-                           usecols=[0, 3, 4])
+        # Define the color of the points:
+        if len(flagsample_2_np) == 0: color_data=color_data
+        else:
+            if   flagsample_2_np[i1]==1: color_data='red'
+            elif flagsample_2_np[i1]==2: color_data='blue'
+            elif flagsample_2_np[i1]==3: color_data='green'
+            else: color_data=color_data
 
         xx = data_lc[:,0]; yy= data_lc[:,1]-appmag; e_yy=data_lc[:,2];
 
@@ -391,16 +419,26 @@ AllSamples_appMag_vpec_0/Goods/',
     # Print the LCs for all the SNe Ia.
     for i1 in range(len(snname_3_np)):
         # Define the file name of the SNe.
-        file_lc = '%s.txt'%snname_3_np[i1]
-
-        # Read the apparent magnitude at t_Bmax or any other time.
-        appmag = appmag_3_np[i1]
-
+        # The "except" command is when I run this script in Windows OS.
+        if opersys=='mac': file_lc = '%s.txt'%snname_3_np[i1]
+        else:
+            file_lc = '%s.txt'%snname_3_np[i1].decode('UTF-8')
         # Upload the data
         data_lc = np.genfromtxt(dir_lc_3+file_lc, skip_header=9,
                            usecols=[0, 3, 4])
 
+        # Read the apparent magnitude at t_Bmax or any other time.
+        appmag = appmag_3_np[i1]
+
         xx = data_lc[:,0]; yy= data_lc[:,1]-appmag; e_yy=data_lc[:,2];
+
+        # Define the color of the points:
+        if len(flagsample_3_np) == 0: color_data=color_data
+        else:
+            if   flagsample_3_np[i1]==1: color_data='red'
+            elif flagsample_3_np[i1]==2: color_data='blue'
+            elif flagsample_3_np[i1]==3: color_data='green'
+            else: color_data=color_data
 
         ax3.errorbar(xx, yy, yerr = e_yy,
                     fmt=fmt, color=color_data, ms=ms, alpha=(alpha_data-0.1),
@@ -444,14 +482,24 @@ AllSamples_appMag_vpec_0/Goods/',
     # Print the LCs for all the SNe Ia.
     for i1 in range(len(snname_4_np)):
         # Define the file name of the SNe.
-        file_lc = '%s.txt'%snname_4_np[i1]
+        # The "except" command is when I run this script in Windows OS.
+        if opersys=='mac': file_lc = '%s.txt'%snname_4_np[i1]
+        else:
+            file_lc = '%s.txt'%snname_4_np[i1].decode('UTF-8')
+        # Upload the data
+        data_lc = np.genfromtxt(dir_lc_4+file_lc, skip_header=9,
+                           usecols=[0, 3, 4])
 
         # Read the apparent magnitude at t_Bmax or any other time.
         appmag = appmag_4_np[i1]
 
-        # Upload the data
-        data_lc = np.genfromtxt(dir_lc_4+file_lc, skip_header=9,
-                           usecols=[0, 3, 4])
+        # Define the color of the points:
+        if len(flagsample_4_np) == 0: color_data=color_data
+        else:
+            if   flagsample_4_np[i1]==1: color_data='red'
+            elif flagsample_4_np[i1]==2: color_data='blue'
+            elif flagsample_4_np[i1]==3: color_data='green'
+            else: color_data=color_data
 
         xx = data_lc[:,0]; yy= data_lc[:,1]-appmag; e_yy=data_lc[:,2];
 
