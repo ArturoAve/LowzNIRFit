@@ -1,29 +1,29 @@
-#!/usr/bin/env python
+
 # coding: utf-8
 
 # # Distance modulus computation using the NIR template
-# 
-# #### I have to run this notebook 2 times: 
+#
+# #### I have to run this notebook 2 times:
 # 1) The first time to determine:
 # - the apparent magnitudes (and their uncertainties, sigma_m) at t_Bmax infered from the template fit.
-# - uncertainty in the photometric distance moduli of the SNe sample defined as: 
+# - uncertainty in the photometric distance moduli of the SNe sample defined as:
 #     error_mu_photometric^2 = sigma_m^2
 # where sigma_m is the uncertainty in the apparent magnitude at t_Bmax computed in this first run.
 # - the absolute magnitude for each SN from AbsMag = appMag - mu_LCDM(z).
 # - the average absolute magnitude at t_Bmax, mean_AbsMag, with its standard deviation of the SNe sample. Write down these values in (AverageAbsMag_atMax, err_AverageAbsMag_atMax).
-# 
+#
 # Run this notebook until the end of section "Determining average Absolute magnitude of the sample".
 # Set: AbsMagFromHisto = False
-# 
-# 2) The second time to determine: 
+#
+# 2) The second time to determine:
 # - the photometric distance moduli of the SNe sample defined as mu_photometric = appMag - mean_AbsMag.
-# - the intrinsic dispersion of the Hubble-diagram residual, sigma_intrinsic. 
-# 
+# - the intrinsic dispersion of the Hubble-diagram residual, sigma_intrinsic.
+#
 # Run the entire notebook
 # Set: AbsMagFromHisto = True
-#     
+#
 # #### Diverse
-# 
+#
 # Relationship between index (a.k.a, row or line) of the "Template_phase_mu_tau_FromR.dat" and the day (= phase):
 # day = (index - 71)/2
 
@@ -40,14 +40,14 @@ import glob # To read the name of the files in a given directory
 
 # To read arguments in command line
 # Used in the ".py" version of this notebook.
-import sys 
+import sys
 
 #--------------------------------------------------------60
 code_created_by = 'Arturo_Avelino'
 # On date: 2017.01.10 (yyyy.mm.dd)
 code_name = '11_DistanceMu_HubbleDiagram.ipynb'
-version_code = '0.3.11'
-last_update = '2019.06.13'
+version_code = '0.3.9'
+last_update = '2019.03.01'
 #--------------------------------------------------------60
 
 
@@ -61,69 +61,34 @@ last_update = '2019.06.13'
 
 # # User interface
 
-# In[ ]:
-
-
-# There are 27 arguments to set in the 'terminal' version. They are:
-
-#  1.- BandName = sys.argv[1]. Options: (Y, J, H ,K)
-#  2.- vpecFix = int(sys.argv[2]). Peculiar velocity (km/s). Options: (150, 250)
-#  3.- AbsMagFromHisto = sys.argv[3] == 'True'. Mean Absolute magnitude 
-#         determined from histogram of 'appMagTmax_s - mu_s'?:
-#  4.- NotebookToPlotOnly = sys.argv[4] == 'True'.
-#  5.- DirSaveOutput = sys.argv[5].
-#  6.- DirAppMag = sys.argv[6].
-#  7.- DirTemplate = sys.argv[7].
-#  8.- HoFix = float(sys.argv[8]).
-#  9.- zcmbUpperLim = float(sys.argv[9]). Redshift cutoff. 
-#         In the low-z paper I use zcmbUpperLim = 0.04.
-# 10.- Average_NIRAbsMag_TBmax = float(sys.argv[10]).
-# 11.- error_Average_NIRAbsMag_TBmax = float(sys.argv[11]).
-# 12.- l_kern = float(sys.argv[12]);.
-# 13.- PhaseMinTemp = int(sys.argv[13]) # -8 days.
-# 14.- PhaseMaxTemp = int(sys.argv[14]) # 30, 41, days.
-# 15.- EBVhostMin = float(sys.argv[15]) # -0.4 # host galaxy.
-# 16.- EBVhostMax = float(sys.argv[16]) # 0.4 # host galaxy..
-# 17.- EBVMWLim = float(sys.argv[17]) # Milky-Way galaxy.
-# 18.- dm15LowerLim = float(sys.argv[18]) # I assume 0.8.
-# 19.- dm15UpperLim = float(sys.argv[19]). # 1.6
-# 20.- Chi2dofPrint = sys.argv[20] == 'True'.
-# 21.- deltamu_print = sys.argv[21] == 'True'.
-# 22.- DirSNeWithCepheid = sys.argv[22].
-# 23.- BandMax = sys.argv[23]. Options: ( Bmax , NIRmax , Bmax_GP , Snoopy , SALT2 ).
-# 24.- PlotTotalMu = sys.argv[24] == 'True'. Plot the "total" distance modulus 
-#         derived from the three distance modulus computed from each band?
-# 25.- BandsCombination = sys.argv[25]. Options: ( AllBands , JH , YJH , JHK ,  YJHK )
-# 26.- plot_raisins =  sys.argv[26] == 'True'.
-# 27.- minimize_residuals = sys.argv[27] == 'True'.
-
-
 # In[3]:
 
 
 
 ## Terminal or notebook version of this script?
-ScriptVersion = 'terminal' # ( terminal , notebook ) 
+ScriptVersion = 'terminal' # ( terminal , notebook )
 
 #-----------------------------------------
 #    Command line version
 
 if ScriptVersion == 'terminal':
-    
+
+    # There are 14 "sys.argv[xx]" arguments to set.
+
     # What band to fit:(Y, J, H ,K)
     BandName = sys.argv[1]
-    
+
     # Peculiar velocity (km/s). Options: (150, 250)
     # This number must be an integer: it is used to name the output folder.
     vpecFix = int(sys.argv[2])
 
     # Mean Absolute magnitude determined from histogram of 'appMagTmax_s - mu_s'?:
-    # First run the notebook with this option with setting the value to 
-    # "False" in order to determine 
-    # the mean abs mag, then once I get that number, run a second time 
+    # First run the notebook with this option with setting the value to
+    # "False" in order to determine
+    # the mean abs mag, then once I get that number, run a second time
     # the notebook with this option as "True"
     # to compute the final tables and results.
-    # If "True" it is generated the final 'DistanceMu_Good_AfterCutoffs_Main_.txt' 
+    # If "True" it is generated the final 'DistanceMu_Good_AfterCutoffs_Main_.txt'
     # text file, otherwise if "False"
     # generate temporal text files.
 
@@ -133,107 +98,96 @@ if ScriptVersion == 'terminal':
     # Useful to create the HD for other cases  different to the template method.
     # If 'False' then compute the distance modulus using the template method.
     NotebookToPlotOnly = sys.argv[4] == 'True'
-    
+
     # Dir where the "DistanceMu_Good_AfterCutoffs_Main_.txt" files is located.
     # Here will be saved the output too.
     DirSaveOutput = sys.argv[5]
-    
+
     ## Location of the apparent magnitude light curves:
     DirAppMag = sys.argv[6]
 
     ## Location of the NIR template to fit:
-    DirTemplate = sys.argv[7]    
+    DirTemplate = sys.argv[7]
 
-    ## Hubble constant:
-    HoFix = float(sys.argv[8])
-    
-    # Redshift cutoff.
-    # In the low-z paper we use zcmbUpperLim = 0.04.
-    zcmbUpperLim = float(sys.argv[9])      
-    
-#--------------------------------------------------------60
+#-----------------------------------------
 #   Notebook version
 
 elif ScriptVersion == 'notebook':
-    
+
     # What band to fit:(Y, J, H ,K)
-    BandName = 'J' 
-    
+    BandName = 'J'
+
     # Peculiar velocity (km/s). Options: (150, 250)
     # This number must be an integer: it is used to name the output folder.
-    vpecFix = 150  
+    vpecFix = 150
 
     # Mean Absolute magnitude determined from histogram of 'appMagTmax_s - mu_s'?:
-    # First run the notebook with this option with setting the value to 
-    # "False" in order to determine 
-    # the mean abs mag, then once I get that number, run a second time 
+    # First run the notebook with this option with setting the value to
+    # "False" in order to determine
+    # the mean abs mag, then once I get that number, run a second time
     # the notebook with this option as "True"
     # to compute the final tables and results.
-    # If "True" it is generated the final 'DistanceMu_Good_AfterCutoffs_Main_.txt' 
+    # If "True" it is generated the final 'DistanceMu_Good_AfterCutoffs_Main_.txt'
     # text file, otherwise if "False"
     # generate temporal text files.
 
-    AbsMagFromHisto = True  
+    AbsMagFromHisto = True
 
     # Use all this notebook just to plot the Hubble diagram?
     # Useful to create the HD for other cases  different to the template method.
     # If 'False' then compute the distance modulus using the template method.
-    NotebookToPlotOnly = False # Notebook version.  
-    
-    ## Dir where I'll save the output, or  dir where the 
+    NotebookToPlotOnly = False # Notebook version.
+
+    ## Dir where I'll save the output, or  dir where the
     ## "DistanceMu_Good_AfterCutoffs_Main_.txt" files is located.
     # DirSaveOutput = '/Users/arturo/Dropbox/Research/Articulos/14_RAISINs/Data/\
 # raisin12/hubblediagram/SALT2_optical/v2/plots_HD/'
-    
+
     DirSaveOutput = '/Users/arturo/Downloads/tmp/SNIRfit/'
-    
+
     ##----automatic when ScriptVersion=='notebook' ----
-    
+
     ## Location of the apparent magnitude light curves:
     # DirAppMag = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/\
 # 10Compute/TheTemplates/%s_band/Std_filters/1_AllData_InitialFit/\
 # AbsMag/AllSamples/'%BandName
-    
+
     DirAppMag = '/Users/arturo/Downloads/tmp/SNIRfit/SNLCs/'
 
     ## Location of the NIR template to fit:
     # DirTemplate = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/\
 # 10Compute/TheTemplates/%s_band/Std_filters/3_Template_FlatPrior/\
  #AllSamples_vpec_%s/z_gr_0/'%(BandName,vpecFix)
-    
+
     DirTemplate = '/Users/arturo/Downloads/tmp/SNIRfit/'
 
-    HoFix = 73.24 # Valued used by default in the paper
-    # HoFix = 72.0 # 72 # 73.24  # Hubble constant (km/(s Mpc))
-    # HoFix = 72.78 # value reported by Dhawan et al 2017.
-    
-    # Redshift cutoff.
-    # In the low-z paper we use zcmbUpperLim = 0.04.
-    zcmbUpperLim = 0.04
-    
 ##############################################################################80
+
+HoFix = 73.24 # Valued used by default in the paper
+# HoFix = 72.0 # 72 # 73.24  # Hubble constant (km/(s Mpc))
+# HoFix = 72.78 # value reported by Dhawan et al 2017.
 
 #--- Fixed values ---
 OmMFix = 0.28 # Omega_Matter
 OmLFix = 0.72 # Omega_Lambda
-wFix = -1.0 # Dark energy EoS
+wFix = -1 # Dark energy EoS
 c = 299792.458  # Speed of light (km/s)
 # In the process to convert all the 'c' to 'cc'
-cc = 299792.458  # Speed of light (km/s) 
+cc = 299792.458  # Speed of light (km/s)
 
 #--- Uncertainty in z_CMB:---
 
 # Used to plot the -theoretical- peculiar velocity uncertanty in the
 # Hubble residual plot.
 
-# Dan Scolnic gave me the value of err_cz_CMB = 150 km/s about the 
+# Dan Scolnic gave me the value of err_cz_CMB = 150 km/s about the
 # collection of z_CMB values he provided me.
 # err_zCMB_fix =  0.0005003461427972281 when err_cz_CMB = 150 km/s
 err_zCMB_fix = 150.0/cc  # 150 has units of km/s
 
-# Just to plot the peculiar velocity uncertainty curve in the 
-# Hubble-diagram residual, 
-# I was using,  err_zCMB_fix = 0.001, that is the average 
+# Just to plot the peculiar velocity uncertainty curve in the
+# Hubble-diagram residual,
+# I was using,  err_zCMB_fix = 0.001, that is the average
 # error_zcmb in Andy's compilation.
 
 #--------------------------------------------
@@ -263,19 +217,19 @@ KindOfTempSubgroup = 'z_gr_0'
 # KindOfTempSubgroup = 'z_gr_001'
 # KindOfTempSubgroup = 'AllGoodData'
 
-# Indicate the technique used to compute the GP fitting in 
+# Indicate the technique used to compute the GP fitting in
 # the '1_AllData_InitialFit' step:
-# TempPrior_Hyper = Using a template prior (computed from 
-# the Moving Windows Average template) for the Gaussian Process 
-# fitting, then determining the hyperparameters using all 
+# TempPrior_Hyper = Using a template prior (computed from
+# the Moving Windows Average template) for the Gaussian Process
+# fitting, then determining the hyperparameters using all
 # the LCs simultaneously.
-# FlatPrior= Assuming a flat prior at ~ -17 Abs mag, then 
+# FlatPrior= Assuming a flat prior at ~ -17 Abs mag, then
 # computing the hyperparameters for each LC independently.
 # MWA = Moving windows average
 
-# TempType = 'TempPrior_Hyper' 
+# TempType = 'TempPrior_Hyper'
 TempType = 'FlatPrior' # I use this option for the paper
-# TempType = 'MWA' 
+# TempType = 'MWA'
 
 # - Smoothed Moving windows average to construct the template
 # TempType = 'MWA' # Moving windows average
@@ -284,9 +238,9 @@ MWATempTypeFile = 'TempWeightedSmooth_Box7_Step05_Window21_Poly3.dat'
 
 # Use a build-in normalized template?:
 # Normalized = True
-# It is, use a template that was constructed assuming 
-# vPec=0 km/s during the GP fitting of the individual LCs, 
-# and then with the option 'NormalizedTemp' in the 
+# It is, use a template that was constructed assuming
+# vPec=0 km/s during the GP fitting of the individual LCs,
+# and then with the option 'NormalizedTemp' in the
 # hierarchical Bayesian code.
 
 
@@ -307,62 +261,43 @@ error_Average_NIRAbsMag_TBmax = None;
 
 if BandName == 'J':
 
+    # Redshift cutoff.
+    # In the low-z paper we use zcmbUpperLim = 0.04.
+    zcmbUpperLim = 0.04      # Options: (0.04,0.06,0.09, 0.65).
+
     # These values have to be computed the first time I run this notebook.
     # NOTE: The values of "Average_NIRAbsMag_TBmax" and
     # "error_Average_NIRAbsMag_TBmax" do NOT depend on the value of "vpecFix".
 
-    if ScriptVersion == 'notebook':
+    if zcmbUpperLim == 0.04:
 
-        # Values used in the low-z paper with the template normalized
-        # at phase=0 days.
-        #   J band | vpecFix = 150 km/s | 0 < z < 0.04
-        Average_NIRAbsMag_TBmax = -18.339435  # 2018-09-28; 12:50 hrs.
-        error_Average_NIRAbsMag_TBmax = 0.174834;
+        if ScriptVersion == 'notebook':
 
-        # Fitting with a template normalized at phase=+15 days.
-        #   J band | vpecFix = 150 km/s | 0 < z < 0.04
-        # Average_NIRAbsMag_TBmax = -16.832741  # 2019-02-22; 10:48 hrs.
-        # error_Average_NIRAbsMag_TBmax = 0.187574;
+            # Values used in the low-z paper with the template normalized
+            # at phase=0 days.
+            #   J band | vpecFix = 150 km/s | 0 < z < 0.04
+            Average_NIRAbsMag_TBmax = -18.339435  # 2018-09-28; 12:50 hrs.
+            error_Average_NIRAbsMag_TBmax = 0.174834;
 
-        # Length hyperparameter from the GP fit.
-        l_kern = 7.0199;
+            # ------------------------------
+            # Fitting with a template normalized at phase=+15 days.
+            #   J band | vpecFix = 150 km/s | 0 < z < 0.04
+            # Average_NIRAbsMag_TBmax = -16.832741  # 2019-02-22; 10:48 hrs.
+            # error_Average_NIRAbsMag_TBmax = 0.187574;
 
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE
-        # THE DISTANCE MODULUS
-        PhaseMinTemp = -8 # -8 days
-        PhaseMaxTemp = 30 # 30, 41, days
+        elif ScriptVersion == 'terminal':
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
-        #-- EBV cutoff
-        EBVhostMin = -0.4 # -0.4 # host galaxy
-        EBVhostMax = 0.4 # 0.4 # host galaxy.
-        EBVMWLim = 1.0 # Milky-Way galaxy
+    elif zcmbUpperLim == 0.06:
+        # Using Foley + Cepheid + Special cases's zcmb:
+        Average_NIRAbsMag_TBmax = -18.3915728254;
+        error_Average_NIRAbsMag_TBmax = 0.177460478042;
 
-        #-- dm15 cutoff
-        dm15LowerLim = 0.8 # I assume 0.79.
-        dm15UpperLim = 1.6
-
-    #------------------------------
-
-    elif ScriptVersion == 'terminal':
-        Average_NIRAbsMag_TBmax = float(sys.argv[10])
-        error_Average_NIRAbsMag_TBmax = float(sys.argv[11])
-
-        # Length hyperparameter from the GP fit.
-        l_kern = float(sys.argv[12]);
-
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE
-        # THE DISTANCE MODULUS
-        PhaseMinTemp = int(sys.argv[13]) # -8 days
-        PhaseMaxTemp = int(sys.argv[14]) # 30, 41, days
-
-        #-- EBV cutoff
-        EBVhostMin = float(sys.argv[15]) # -0.4 # host galaxy
-        EBVhostMax = float(sys.argv[16]) # 0.4 # host galaxy.
-        EBVMWLim = float(sys.argv[17]) # Milky-Way galaxy
-
-        #-- dm15 cutoff
-        dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
-        dm15UpperLim = float(sys.argv[19])
+    elif zcmbUpperLim == 0.09:
+        # Using Foley + Cepheid + Special cases's zcmb
+        Average_NIRAbsMag_TBmax = nan ;
+        error_Average_NIRAbsMag_TBmax = nan ; #
 
 
     # Ignore data with a chi^2_dof larger than a given threshold:
@@ -370,6 +305,26 @@ if BandName == 'J':
     # the first time I run the notebook.
     chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
     # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
+
+    # Length hyperparameter from the GP fit.
+    l_kern = 7.0199;
+
+    # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE
+    # THE DISTANCE MODULUS
+    PhaseMinTemp = -8 # -8 days
+    PhaseMaxTemp = 30 # 30, 41, days
+
+    # Not in use yet. AbsMag_NIRmax= -18.4670;
+    # error_AbsMag_NIRmax=0.02974; phase_NIRmax = -4.5;
+
+    #-- EBV cutoff
+    EBVhostMin = -0.4 # -0.4 # host galaxy
+    EBVhostMax = 0.4 # 0.4 # host galaxy.
+    EBVMWLim = 1 # Milky-Way galaxy
+
+    #-- dm15 cutoff
+    dm15LowerLim = 0.8 # I assume 0.79.
+    dm15UpperLim = 1.6
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
@@ -379,62 +334,58 @@ if BandName == 'J':
 
 if BandName == 'Y':
 
+    # Redshift cutoff.
+    # In the low-z paper we use zcmbUpperLim = 0.04.
+    zcmbUpperLim = 0.65      # Options: (0.04,0.06,0.09, 0.65).
+
     # These values have to be computed the first time I run this notebook.
     # NOTE: The values of "Average_NIRAbsMag_TBmax" and
     # "error_Average_NIRAbsMag_TBmax" do NOT
     # depend on the value of "vpecFix".
 
-    if ScriptVersion == 'notebook':
-        #   Y band | vpecFix = 150 km/s | 0 < z < 0.04
-        Average_NIRAbsMag_TBmax = -18.124377  # 2018-09-29; 12:59 hrs.
-        error_Average_NIRAbsMag_TBmax = 0.152012;
+    if zcmbUpperLim == 0.65:
 
-        # Length hyperparameter from the GP fit.
-        l_kern = 7.9002;
+        if ScriptVersion == 'notebook':
+            #   Y band | vpecFix = 150 km/s | 0 < z < 0.04
+            Average_NIRAbsMag_TBmax = -18.124377  # 2018-09-29; 12:59 hrs.
+            error_Average_NIRAbsMag_TBmax = 0.152012;
 
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE THE DISTANCE MODULUS
-        PhaseMinTemp = -8 # -8 days
-        PhaseMaxTemp = 30 # 30, 41, days
+        elif ScriptVersion == 'terminal':
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
-        #-- EBV cutoff
-        EBVhostMin = -0.4 # -0.4 # host galaxy
-        EBVhostMax = 0.4 # 0.4 # host galaxy.
-        EBVMWLim = 1.0 # Milky-Way galaxy
+    elif zcmbUpperLim == 0.06:
+        # Using Foley + Cepheid + Special cases's zcmb
+        Average_NIRAbsMag_TBmax = -18.2640428698;
+        error_Average_NIRAbsMag_TBmax = 0.145468431004;
 
-        #-- dm15 cutoff
-        dm15LowerLim = 0.8 # I assume 0.8.
-        dm15UpperLim = 1.6
 
-    #------------------------------
-
-    elif ScriptVersion == 'terminal':
-        Average_NIRAbsMag_TBmax = float(sys.argv[10])
-        error_Average_NIRAbsMag_TBmax = float(sys.argv[11])
-
-        # Length hyperparameter from the GP fit.
-        l_kern = float(sys.argv[12]);
-
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE
-        # THE DISTANCE MODULUS
-        PhaseMinTemp = int(sys.argv[13]) # -8 days
-        PhaseMaxTemp = int(sys.argv[14]) # 30, 41, days
-
-        #-- EBV cutoff
-        EBVhostMin = float(sys.argv[15]) # -0.4 # host galaxy
-        EBVhostMax = float(sys.argv[16]) # 0.4 # host galaxy.
-        EBVMWLim = float(sys.argv[17]) # Milky-Way galaxy
-
-        #-- dm15 cutoff
-        dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
-        dm15UpperLim = float(sys.argv[19])
+    elif zcmbUpperLim == 0.09:
+        # Using Foley + Cepheid + Special cases's zcmb
+        Average_NIRAbsMag_TBmax = nan ;
+        error_Average_NIRAbsMag_TBmax = nan ; #
 
 
     # Ignore data with a chi^2_dof larger than a given threshold:
     # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
     # the first time I run the notebook.
     # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
-    # chi2_dof_Max = 3; chi2_dof_Max_Label = 'chi3' # Low-z
-    chi2_dof_Max = 10; chi2_dof_Max_Label = 'chi10' # RAISIN
+    chi2_dof_Max = 3; chi2_dof_Max_Label = 'chi3'
+
+    l_kern = 7.9002;
+
+    # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE THE DISTANCE MODULUS
+    PhaseMinTemp = -8 # -8 days
+    PhaseMaxTemp = 30 # 30, 41, days
+
+    #-- EBV cutoff
+    EBVhostMin = -1.0 # -0.4 # host galaxy
+    EBVhostMax = 1.0 # 0.4 # host galaxy.
+    EBVMWLim = 1 # Milky-Way galaxy
+
+    #-- dm15 cutoff
+    dm15LowerLim = 0.6 # I assume 0.8.
+    dm15UpperLim = 1.8
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
@@ -444,54 +395,39 @@ if BandName == 'Y':
 
 if BandName == 'H':
 
+    # Redshift cutoff.
+    # In the low-z paper we use zcmbUpperLim = 0.04.
+    zcmbUpperLim = 0.04      # Options: (0.04,0.06,0.09, 0.65).
+
     # These values have to be computed the first time I run this notebook.
     # NOTE: The values of "Average_NIRAbsMag_TBmax"
     # and "error_Average_NIRAbsMag_TBmax" do NOT
     # depend on the value of "vpecFix".
 
-    if ScriptVersion == 'notebook':
-        #   H band | vpecFix = 150 km/s | 0 < z < 0.04
-        Average_NIRAbsMag_TBmax = -18.181440  # 2018-09-29; 14:39 hrs.
-        error_Average_NIRAbsMag_TBmax = 0.165906;
+    # The value of 'IntrinsicDisp_GP' comes from the
+    # Gaussian-Process Hubble diagram
 
-        # Length hyperparameter from the GP fit.
-        l_kern = 9.8131;
+    if zcmbUpperLim == 0.04:
 
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE THE DISTANCE MODULUS
-        PhaseMinTemp = -8 # -8 days
-        PhaseMaxTemp = 30 # 30, 41, days
+        if ScriptVersion == 'notebook':
+            #   H band | vpecFix = 150 km/s | 0 < z < 0.04
+            Average_NIRAbsMag_TBmax = -18.181440  # 2018-09-29; 14:39 hrs.
+            error_Average_NIRAbsMag_TBmax = 0.165906;
 
-        #-- EBV cutoff
-        EBVhostMin = -0.4 # -0.4 # host galaxy
-        EBVhostMax = 0.4 # 0.4 # host galaxy.
-        EBVMWLim = 1.0 # Milky-Way galaxy
+        elif ScriptVersion == 'terminal':
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
-        #-- dm15 cutoff
-        dm15LowerLim = 0.8 # I assume 0.78.
-        dm15UpperLim = 1.6
 
-    #------------------------------
+    elif zcmbUpperLim == 0.06:
+        # Using Foley + Cepheid + Special cases's zcmb:
+        Average_NIRAbsMag_TBmax = -18.1365343086;
+        error_Average_NIRAbsMag_TBmax = 0.166013465848 ;
 
-    elif ScriptVersion == 'terminal':
-        Average_NIRAbsMag_TBmax = float(sys.argv[10])
-        error_Average_NIRAbsMag_TBmax = float(sys.argv[11])
 
-        # Length hyperparameter from the GP fit.
-        l_kern = float(sys.argv[12]);
-
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE
-        # THE DISTANCE MODULUS
-        PhaseMinTemp = int(sys.argv[13]) # -8 days
-        PhaseMaxTemp = int(sys.argv[14]) # 30, 41, days
-
-        #-- EBV cutoff
-        EBVhostMin = float(sys.argv[15]) # -0.4 # host galaxy
-        EBVhostMax = float(sys.argv[16]) # 0.4 # host galaxy.
-        EBVMWLim = float(sys.argv[17]) # Milky-Way galaxy
-
-        #-- dm15 cutoff
-        dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
-        dm15UpperLim = float(sys.argv[19])
+    elif zcmbUpperLim == 0.09:
+        # Using Foley + Cepheid + Special cases's zcmb
+        Average_NIRAbsMag_TBmax = nan ;   error_Average_NIRAbsMag_TBmax = nan ; #
 
 
     # Ignore data with a chi^2_dof larger than a given threshold:
@@ -499,6 +435,24 @@ if BandName == 'H':
     # the first time I run the notebook.
     chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
     # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
+
+    l_kern = 9.8131; # From the normalized template (with peculiar velocity 0 km/s).
+
+    # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE THE DISTANCE MODULUS
+    PhaseMinTemp = -8 # -8 days
+    PhaseMaxTemp = 30 # 30, 41, days
+
+    # Not in use yet. AbsMag_NIRmax= -18.4670;
+    # error_AbsMag_NIRmax=0.02974; phase_NIRmax = -4.5;
+
+    #-- EBV cutoff
+    EBVhostMin = -0.4 # -0.4 # host galaxy
+    EBVhostMax = 0.4 # 0.4 # host galaxy.
+    EBVMWLim = 1 # Milky-Way galaxy
+
+    #-- dm15 cutoff
+    dm15LowerLim = 0.8 # I assume 0.78.
+    dm15UpperLim = 1.6
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
@@ -508,61 +462,59 @@ if BandName == 'H':
 
 if BandName == 'K':
 
+    # Redshift cutoff.
+    # In the low-z paper we use zcmbUpperLim = 0.04.
+    zcmbUpperLim = 0.04      # Options: (0.04,0.06,0.09, 0.65).
+
     # These values have to be computed the first time I run this notebook.
     # NOTE: The values of "Average_NIRAbsMag_TBmax" and
     # "error_Average_NIRAbsMag_TBmax" do NOT
     # depend on the value of "vpecFix".
 
-    if ScriptVersion == 'notebook':
-        #   K band | vpecFix = 150 km/s | 0 < z < 0.04
-        Average_NIRAbsMag_TBmax = -18.349367  # 2018-09-29; 14:56 hrs.
-        error_Average_NIRAbsMag_TBmax = 0.206866;
+    if zcmbUpperLim == 0.04: #
 
-        # Length hyperparameter from the GP fit.
-        l_kern = 8.1853;
+        if ScriptVersion == 'notebook':
+            #   K band | vpecFix = 150 km/s | 0 < z < 0.04
+            Average_NIRAbsMag_TBmax = -18.349367  # 2018-09-29; 14:56 hrs.
+            error_Average_NIRAbsMag_TBmax = 0.206866;
 
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE THE DISTANCE MODULUS
-        PhaseMinTemp = -8 # -8 days
-        PhaseMaxTemp = 30 # 30, 41, days
+        elif ScriptVersion == 'terminal':
+            Average_NIRAbsMag_TBmax = float(sys.argv[8])
+            error_Average_NIRAbsMag_TBmax = float(sys.argv[9])
 
-        #-- EBV cutoff
-        EBVhostMin = -0.4 # -0.4 # host galaxy
-        EBVhostMax = 0.4 # 0.4 # host galaxy.
-        EBVMWLim = 1.0 # Milky-Way galaxy
+    elif zcmbUpperLim == 0.06:
+        # Using Foley + Cepheid + Special cases's zcmb
+        Average_NIRAbsMag_TBmax = nan ;
+        error_Average_NIRAbsMag_TBmax = nan ; #
 
-        #-- dm15 cutoff
-        dm15LowerLim = 0.8 # I assume 0.78.
-        dm15UpperLim = 1.6
 
-    #------------------------------
-
-    elif ScriptVersion == 'terminal':
-        Average_NIRAbsMag_TBmax = float(sys.argv[10])
-        error_Average_NIRAbsMag_TBmax = float(sys.argv[11])
-
-        # Length hyperparameter from the GP fit.
-        l_kern = float(sys.argv[12]);
-
-        # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE
-        # THE DISTANCE MODULUS
-        PhaseMinTemp = int(sys.argv[13]) # -8 days
-        PhaseMaxTemp = int(sys.argv[14]) # 30, 41, days
-
-        #-- EBV cutoff
-        EBVhostMin = float(sys.argv[15]) # -0.4 # host galaxy
-        EBVhostMax = float(sys.argv[16]) # 0.4 # host galaxy.
-        EBVMWLim = float(sys.argv[17]) # Milky-Way galaxy
-
-        #-- dm15 cutoff
-        dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
-        dm15UpperLim = float(sys.argv[19])
-
+    elif zcmbUpperLim == 0.09:
+        # Using Foley + Cepheid + Special cases's zcmb
+        Average_NIRAbsMag_TBmax = nan ;
+        error_Average_NIRAbsMag_TBmax = nan ; #
 
     # Ignore data with a chi^2_dof larger than a given threshold:
     # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
     # the first time I run the notebook.
     # chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
     chi2_dof_Max = 4; chi2_dof_Max_Label = 'chi4'
+
+    l_kern = 8.1853;
+
+    # PHASE RANGE IN DAYS OF TEMPLATE TO USE TO COMPUTE THE DISTANCE MODULUS
+    PhaseMinTemp = -8 # -8 days
+    PhaseMaxTemp = 30 # 30, 41, days
+
+    # Not in use yet. AbsMag_NIRmax= -18.2861;  error_AbsMag_NIRmax=0.03908; phase_NIRmax = -4;
+
+    #-- EBV cutoff
+    EBVhostMin = -0.4 # -0.4 # host galaxy
+    EBVhostMax = 0.4 # 0.4 # host galaxy.
+    EBVMWLim = 1 # Milky-Way galaxy
+
+    #-- dm15 cutoff
+    dm15LowerLim = 0.8 # I assume 0.78.
+    dm15UpperLim = 1.6
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
@@ -637,30 +589,22 @@ residualMax = 20; residualMax_Label = 'resid20'
 #---- (FIX) Limits in the plots for the Hubble diagram and residual  ----
 
 # For the Hubble diagram:
-xlimPlots = 0.0015, zcmbUpperLim+0.006 # For low-z only
+xlimPlots = 0.0015, zcmbUpperLim+0.003 # For low-z only
 ylimPlots = 29.8, 38 # For low-z only
 
 # For the Hubble residual
-ylimPlots_residual = -1.1, 1.1
+ylimPlots_residual = -1, 1
 
 #----------------
 
 # Plotting range of the fitted LC figures.
 x_RangePlots = -10, 60;
 
-if ScriptVersion == 'notebook':
-    # In the plots of the individual LC, print the chi2_dof value?:
-    Chi2dofPrint = True
+# In the plots of the individual LC, print the chi2_dof value?:
+Chi2dofPrint = False
 
-    # Print residual value:
-    deltamu_print = False
-
-elif ScriptVersion == 'terminal':
-    # In the plots of the individual LC, print the chi2_dof value?:
-    Chi2dofPrint = sys.argv[20] == 'True'
-
-    # Print residual value:
-    deltamu_print = sys.argv[21] == 'True'
+# Print residual value:
+deltamu_print = False
 
 #--------------------------------------------
 
@@ -680,28 +624,28 @@ FilterSyst = 'Std_filters/'
 
 # Description of the methods
 
-""" 
-- Method 1: 
-	- No use of CovMatrix to determine the best estimate of distance mu (but still optional using 
-    "CovMat_use == True" [default: "CovMat_use == False" ]),  BUT using it (i.e., "CovMat_use == True") 
+"""
+- Method 1:
+	- No use of CovMatrix to determine the best estimate of distance mu (but still optional using
+    "CovMat_use == True" [default: "CovMat_use == False" ]),  BUT using it (i.e., "CovMat_use == True")
     to determine its uncertainty [default: "CovMat_use == True" ].
 	- using the uncertainty in the mean template instead of the population standard deviation
-	- adding the uncertainty in the distance modulus due to the peculiar velocity uncertainty in the total 
+	- adding the uncertainty in the distance modulus due to the peculiar velocity uncertainty in the total
     covariance matrix -before- to compute the distance-modulus uncertainty.
 	- CovMat_MeanMu == False
 	- CovMat_ErrorMu == True
 	- Template = np.genfromtxt('Template_phase_mu_stdError_FromR.dat')
 	- CovMatrix_Mu = CovMatResidualMu + Cov_appmag # Total covariance matrix -before- computing
-	- CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag + Cov_pecvel # Total covariance matrix -before- 
+	- CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag + Cov_pecvel # Total covariance matrix -before-
     computing
 	- sigma2_mu = (1/Denominator_ErrorMu) # Variance mu
-	
 
-- Method 2: 
+
+- Method 2:
 	- using the uncertainty in the mean template instead of the population standard deviation
 	- mean mu: using the CovMat_MeanMu == True and ignoring Cov_pecvel to compute it.
-	- error mu: adding in quadratures the uncertainty in the distance modulus due to the peculiar velocity 
-    uncertainty with the uncertainty in the distance modulus from fitting the template -after- computing 
+	- error mu: adding in quadratures the uncertainty in the distance modulus due to the peculiar velocity
+    uncertainty with the uncertainty in the distance modulus from fitting the template -after- computing
     the distance modulus
     - Apparently, this method gives exactly the same results than Method 3
     - CovMat_MeanMu == True
@@ -712,37 +656,37 @@ FilterSyst = 'Std_filters/'
 	- sigma2_mu = (1/Denominator_ErrorMu) +  sigma2_pec(zcmbInt, err_zcmb, vpecFix) # Variance mu
 
 
-- Method 3: 
+- Method 3:
 	- using the uncertainty in the mean template instead of the population standard deviation
-	- adding the uncertainty in the distance modulus due to the peculiar velocity uncertainty in the total 
+	- adding the uncertainty in the distance modulus due to the peculiar velocity uncertainty in the total
     covariance matrix -before- to compute the mean distance modulus and its uncertainty.
     - Apparently, this method gives exactly the same results than Method 2
 	- CovMat_MeanMu == True
-	- CovMat_ErrorMu == True	
+	- CovMat_ErrorMu == True
 	- Template = np.genfromtxt('Template_phase_mu_stdError_FromR.dat')
 	- CovMatrix_Mu = CovMatResidualMu + Cov_appmag + Cov_pecvel # Total covariance matrix -before- computing
-	- CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag + Cov_pecvel # Total covariance matrix -before- 
+	- CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag + Cov_pecvel # Total covariance matrix -before-
     computing
 	- sigma2_mu = (1/Denominator_ErrorMu) # Variance mu
-	
-	
-- Method 4: 
+
+
+- Method 4:
 	- using the population standard deviation of the template
 	- NOT including the uncertainty in the distance modulus due to the peculiar velocity during the fitting.
 	= It produces very small error bars for the distance-modulus uncertainty
 	- CovMat_MeanMu == True
-	- CovMat_ErrorMu == True	
+	- CovMat_ErrorMu == True
 	- Template = np.genfromtxt('Template_phase_mu_tau_FromR.dat')
 	- CovMatrix_Mu = CovMatResidualMu + Cov_appmag # Total covariance matrix -before- computing
 	- CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag # Total covariance matrix -before- computing
 	- sigma2_mu = (1/Denominator_ErrorMu) # Variance mu
-    
-- Method 5: 
-    - Equal to the method 1 with the difference of using the -population standard deviation- of the template 
-    instead of its uncertainty. The idea of this is that during the fitting of the template to the app mag data 
-    is that it gives more weight to the data around the first NIR peak than the data in the 2nd peak because the 
-    population standard deviation of the template is larger around the 2nd peak, so that my fitting is not 
-    screwed up by the fact that the 2nd peak seems to have an independent variability between the SNe, then 
+
+- Method 5:
+    - Equal to the method 1 with the difference of using the -population standard deviation- of the template
+    instead of its uncertainty. The idea of this is that during the fitting of the template to the app mag data
+    is that it gives more weight to the data around the first NIR peak than the data in the 2nd peak because the
+    population standard deviation of the template is larger around the 2nd peak, so that my fitting is not
+    screwed up by the fact that the 2nd peak seems to have an independent variability between the SNe, then
     biasing my distance mu estimations.
 	- CovMat_MeanMu == False
 	- CovMat_ErrorMu == True
@@ -750,31 +694,31 @@ FilterSyst = 'Std_filters/'
 	- CovMatrix_Mu = CovMatResidualMu + Cov_appmag # Total covariance matrix -before- computing
 	- CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag + Cov_pecvel # Total covariance matrix -before- computing
 	- sigma2_mu = (1/Denominator_ErrorMu) # Variance mu
-	
-    
+
+
 - Method 6:
-    - So far, equal to method 5 but now normalizing the template, then fit it to determine the apparent 
+    - So far, equal to method 5 but now normalizing the template, then fit it to determine the apparent
     magnitude at T_Bmax, then subtract the absolute magnitude at T_Bmax to determine the photometric
     distance modulus.
-    - I take the regular template constructed in the absolute magnitude frame then I normalize it here in this 
-    notebook, so that 
+    - I take the regular template constructed in the absolute magnitude frame then I normalize it here in this
+    notebook, so that
     at T_Bmax I set the magnitude to be equal zero.
-    
+
 - Method 7:
     - I used a normalized template that was normalized by construction in the hierarchical-Bayesian-R script.
     - The rest, same than Method 6.
     - The notebook has to be run twice. The first run is to determine the NIR apparent magnitude at t_Bmax only
-      by fitting the template to the apparent-magnitude light curves, then using the relation, 
+      by fitting the template to the apparent-magnitude light curves, then using the relation,
       AbsMag_s = appMag_TBmax - mu_LCDM, it is determined the NIR absolute magnitude at t_Bmax, AbsMag_s, for
-      each SN. In this run it is created a value of the distance modulus but it is not relevant/reliable. 
-      After the main loop, there is a section to determine <Average_NIRAbsMag_TBmax> from the collection of 
+      each SN. In this run it is created a value of the distance modulus but it is not relevant/reliable.
+      After the main loop, there is a section to determine <Average_NIRAbsMag_TBmax> from the collection of
       {Average_NIRAbsMag_TBmax}
-      
-      In the second run is computed final distance modulus from: 
+
+      In the second run is computed final distance modulus from:
               mu_photo_Analytic = appMag_TBmax - <Average_NIRAbsMag_TBmax>
-      In the second run the following quantities are again re-computed like in the first run: 
+      In the second run the following quantities are again re-computed like in the first run:
       (appMag_TBmax, error_appMagTBmax, mu_LCDM, sigma_muLCDM_vPec, AbsMagTBmax, error_AbsMagTBmax, chi2_dof),
-      so, their values are -exactly- the same as those obtained during the first run. In the second run, the only 
+      so, their values are -exactly- the same as those obtained during the first run. In the second run, the only
       new quantities compared with run 1 are: (mu_photo_Analytic, stdDev_mu, mu_resid)
 
 """
@@ -814,7 +758,7 @@ FilterSyst = 'Std_filters/'
 
 
 # Get the current date and time
-import datetime 
+import datetime
 
 # Read the time and date now
 now = datetime.datetime.now()
@@ -827,7 +771,7 @@ now = datetime.datetime.now()
 
 if TempType=='MWA': shiftNum = 24
 else: shiftNum = 71
-    
+
 #- Function to convert from index to days (phase).
 def index2day(index):
     day = (index-shiftNum)/2.
@@ -866,19 +810,19 @@ if BandName == 'J':
     # MinMagTempPlot = minimum value in the template plot
     if Method==7: MinMagTempPlot = 3.2
     else: MinMagTempPlot = -15
-    
+
 elif BandName == 'Y':
     # For overplotting the template to the fitted LC.
     # MinMagTempPlot = minimum value in the template plot
     if Method==7: MinMagTempPlot = 2
     else: MinMagTempPlot = -15.5
-    
+
 elif BandName == 'H':
     # For overplotting the template to the fitted LC.
     # MinMagTempPlot = minimum value in the template plot
     if Method==7: MinMagTempPlot = 2
     else: MinMagTempPlot = -15.5
-    
+
 elif BandName == 'K':
     # For overplotting the template to the fitted LC.
     # MinMagTempPlot = minimum value in the template plot
@@ -900,15 +844,15 @@ elif BandName == 'K':
 
 # Defining the directories
 
-DirMain_1 = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/TheTemplates/' 
+DirMain_1 = '/Users/arturo/Dropbox/Research/Articulos/10_AndyKaisey/10Compute/TheTemplates/'
 
-DirMain = (DirMain_1+BandName+'_band/'+FilterSyst)  
+DirMain = (DirMain_1+BandName+'_band/'+FilterSyst)
 
 if CovMat_MeanMu == True:
     CovMatLabel_MeanMu = 'CovMatMu'
 elif CovMat_MeanMu == False:
     CovMatLabel_MeanMu = 'NoCovMatMu'
-    
+
 if CovMat_ErrorMu == True:
     CovMatLabel_ErrorMu = 'CovMatErrorMu'
 elif CovMat_ErrorMu == False:
@@ -916,7 +860,7 @@ elif CovMat_ErrorMu == False:
 
 #--------------------------
 #   Dir Save Output
-    
+
 # OLD, OK:
 # DirHubbleDiag = DirMain+'4_HubbleDiagram_%s/'%(TempType)
 # DirSaveOutput = (DirHubbleDiag + KindOfData4HD +'/Templ_'+KindOfTemp+'_'+
@@ -924,7 +868,7 @@ elif CovMat_ErrorMu == False:
 #                  residualMax_Label+'_'+
 #                  chi2_dof_Max_Label+'_EBVh%r'%EBVhostMax+'_Method%r'%Method+
 #                '_MinData%r'%MinNumOfDataInLC+'_vpec%r'%vpecFix+'/plots_HD/')
-    
+
 #- Force the creation of the directory to save the outputs.
 #- "If the subdirectory does not exist then create it"
 import os # To use command line like instructions
@@ -958,14 +902,14 @@ if ScriptVersion == 'notebook':
 
 
 if NotebookToPlotOnly == False:
-    
+
     import os # To use command line like instructions
     import glob # To read the files in my directory
 
     # Change the working directory where the data files are located
     os.chdir(DirAppMag)
 
-    #--- Reading the data files in the app mag folder 
+    #--- Reading the data files in the app mag folder
     if KindOfData4HD == 'CfA':
         list_SNe2 = glob.glob('*'+'CfA_'+BandName+'.txt')
     elif KindOfData4HD == 'CSP':
@@ -983,12 +927,6 @@ if NotebookToPlotOnly == False:
     # Number of -AllSamples- SNe in the APPARENT mag list (FlatPrior): 174
 
 
-# In[ ]:
-
-
-
-
-
 # In[17]:
 
 
@@ -998,7 +936,7 @@ if NotebookToPlotOnly == False:
 
     # Change the working directory where the data files are located
     os.chdir(DirSaveOutput)
-    # Reading the data files in that folder 
+    # Reading the data files in that folder
     Textfiles = glob.glob('ListSNe_AppMag*.txt')
 
     # Reset the variable
@@ -1018,7 +956,7 @@ if NotebookToPlotOnly == False:
 
     # if ListSNe_AppMag_.txt doesn't exist, then create it and read it.
 
-    else: 
+    else:
         # Create a list text file with the name of the SNe of the apparent mag LCs.
         list_SNe_file = open(DirSaveOutput+'ListSNe_AppMag_.txt', 'w')
 
@@ -1037,7 +975,7 @@ SNe are ALL those located in: \n')
                 code_name, version_code, last_update)
         text_line = '#'+'-'*50 + '\n'
 
-        list_SNe_file.write(text_line); 
+        list_SNe_file.write(text_line);
         list_SNe_file.write(text_Author); list_SNe_file.write(text_Date);
         list_SNe_file.write(text_script);
         list_SNe_file.write(text_line);
@@ -1113,18 +1051,18 @@ if NotebookToPlotOnly == False:
     from scipy.interpolate import interp1d # To interpolate
 
     if TempType == 'MWA':
-        Template = np.genfromtxt(DirTemplate+MWATempTypeFile) 
-        # Index of max abs mag in template. It doesn't need to be very precise; 
+        Template = np.genfromtxt(DirTemplate+MWATempTypeFile)
+        # Index of max abs mag in template. It doesn't need to be very precise;
         # it is just to define the plot limit in y-axis
         indexMaxTempl = 17 # --> phase = -3.5
         indexLowerPhase = index_LowerPhase-1
         indexUpperPhase = index_UpperPhase
         #-- Interpolating the template
-        MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] , 
-                                   Template[indexLowerPhase:indexUpperPhase,1] , 
+        MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
+                                   Template[indexLowerPhase:indexUpperPhase,1] ,
                                    kind='linear')
-        error_MTemplInt = interp1d(Template[indexLowerPhase:indexUpperPhase,0] , 
-                                   np.sqrt(Template[indexLowerPhase:indexUpperPhase,3]) , 
+        error_MTemplInt = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
+                                   np.sqrt(Template[indexLowerPhase:indexUpperPhase,3]) ,
                                    kind='linear')
 
     else:
@@ -1134,7 +1072,7 @@ if NotebookToPlotOnly == False:
 
         Template = np.genfromtxt(DirTemplate+TemplateFile)
 
-        # Index of max abs mag in template. It doesn't need to be very precise, 
+        # Index of max abs mag in template. It doesn't need to be very precise,
         # it is just to define the plot limit in y-axis.
         indexMaxTempl = 64 # --> phase = -3.5
 
@@ -1147,21 +1085,21 @@ if NotebookToPlotOnly == False:
         if Method==6: # Normalizing the template
             Average_NIRAbsMag_TBmax = Template[(day2index(0)-1),1] # Abs mag at T_Bmax in the template.
 
-            MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] , 
-                                       Template[indexLowerPhase:indexUpperPhase,1]-Average_NIRAbsMag_TBmax , 
-                                       kind='linear') 
+            MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
+                                       Template[indexLowerPhase:indexUpperPhase,1]-Average_NIRAbsMag_TBmax ,
+                                       kind='linear')
 
             TemplateError = np.genfromtxt(DirTemplate+'Template_phase_mu_stdError_FromR.dat')
             # Uncertainty int the abs mag at T_Bmax in the template:
-            error_Average_NIRAbsMag_TBmax = TemplateError[(day2index(0)-1),2] 
+            error_Average_NIRAbsMag_TBmax = TemplateError[(day2index(0)-1),2]
 
         else:
-            MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] , 
+            MTemplInt       = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
                                        Template[indexLowerPhase:indexUpperPhase,1] , kind='linear')
 
-        error_MTemplInt = interp1d(Template[indexLowerPhase:indexUpperPhase,0] , 
+        error_MTemplInt = interp1d(Template[indexLowerPhase:indexUpperPhase,0] ,
                                    Template[indexLowerPhase:indexUpperPhase,2] , kind='linear')
-    
+
     if ScriptVersion == 'notebook':
         print '# Test (%s). Value of the template at phase = -1.2: (%.6f, %.6f). %s band'%(
             TempType, MTemplInt(-1.2), error_MTemplInt(-1.2), BandName)
@@ -1173,7 +1111,7 @@ if NotebookToPlotOnly == False:
 
 
 if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
-    
+
     # Checking the range of interpolation
     print Template[indexLowerPhase:indexUpperPhase,0]
 
@@ -1191,7 +1129,7 @@ if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
 
 
 if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
-    
+
     # Checking the interpolation at T_Bmax
     print MTemplInt(0)
     # 0.0
@@ -1213,12 +1151,6 @@ if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
 # error_Average_NIRAbsMag_TBmax 0.0247540912503
 
 
-# In[ ]:
-
-
-
-
-
 # ## $\mu_{\rm \Lambda CDM}$
 
 # In[24]:
@@ -1234,21 +1166,21 @@ def InvEHubblePar(z, OmM, wde):
 def LumDistanceVec(z, OmM, wde, Ho):
     "Luminosity distance"
     LumDistanceVecInt = 0.
-    LumDistanceVecInt = c*(1.+z)*intquad(InvEHubblePar, 0., z, args=(OmM, wde))[0]/Ho 
+    LumDistanceVecInt = c*(1.+z)*intquad(InvEHubblePar, 0., z, args=(OmM, wde))[0]/Ho
     return LumDistanceVecInt
 
 # ---- Distance modulus scalar ----
 def DistanceMu(z, OmM, wde, Ho):
-    "Distance modulus"     
+    "Distance modulus"
     DistanceMuInt = 5.0*np.log10(LumDistanceVec(z, OmM, wde, Ho)) + 25.0
     return DistanceMuInt
 
 # ---- Distance modulus Vector ----
 def DistanceMuVector(z, OmM, wde, Ho):
-    "Distance modulus"     
+    "Distance modulus"
     DistanceMuInt= []
     for i in range(len(z)):
-        DistanceMuInt += [5.0*np.log10(LumDistanceVec(z[i], OmM, wde, Ho)) + 25.0] 
+        DistanceMuInt += [5.0*np.log10(LumDistanceVec(z[i], OmM, wde, Ho)) + 25.0]
     return DistanceMuInt
 
 #--------------------------------------------------
@@ -1264,7 +1196,7 @@ if ScriptVersion == 'notebook':
 
 
 # Creation of an array of redshift vs theoretical distance modulus (for Pete Challis)
-""" 
+"""
 z1 = np.linspace(0.01, 0.7, 501)
 DistMu_array = DistanceMuVector(z1, OmMFix, wFix, HoFix)
 
@@ -1275,7 +1207,7 @@ textfile.write('# z        Distance modulus  \n')
 
 for i in range(len(z1)):
     textfile.write('%.6f   %.6f \n'%(z1[i], DistMu_array[i]))
-    
+
 textfile.close()
 """
 0
@@ -1336,11 +1268,11 @@ if ScriptVersion == 'notebook':
 
 if ScriptVersion == 'notebook':
     DirSNeWithCepheid = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/MyNotes/'
-else: DirSNeWithCepheid = sys.argv[22]
+else: DirSNeWithCepheid = sys.argv[10]
 
 # From the Cepheid SNe list the only part that I use in the entire
 # notebook is the first column, i.e., the SN Name column.
-ListSNeCepheid = np.genfromtxt(DirSNeWithCepheid+'SNeWithCepheidDistances.txt', dtype=['S10', 
+ListSNeCepheid = np.genfromtxt(DirSNeWithCepheid+'SNeWithCepheidDistances.txt', dtype=['S10',
                                                 float,float,float,float,float,float])
 if ScriptVersion == 'notebook':
     print "# %s SNe with Cepheid distances in Andy's compilation. "%len(ListSNeCepheid['f0'])
@@ -1351,7 +1283,7 @@ if ScriptVersion == 'notebook':
 
 
 """
-# 13 SNe with Cepheid distances in Andy's compilation. 
+# 13 SNe with Cepheid distances in Andy's compilation.
 Out[23]:
 array(['sn1981B', 'sn1998aq', 'sn2001el', 'sn2002fk', 'sn2003du',
        'sn2005cf', 'sn2007af', 'sn2007sr', 'sn2009ig', 'sn2011by',
@@ -1362,26 +1294,26 @@ array(['sn1981B', 'sn1998aq', 'sn2001el', 'sn2002fk', 'sn2003du',
 
 
 # ### Function to determine $c z_{\rm cmb}$ from Cepheid $\mu$
-# 
+#
 # These functions are NOT used during any part of the computations in the notebook; I have written here just as part of my library of functions.
 
 # In[31]:
 
 
 def cz_CMB_Cepheid(mu, err_mu, Ho, err_Ho):
-    
+
     # Determine cz_cmb, z_cmb:
     cz_int =  Ho * 10**((mu-25)/5)  # cz_cmb
     zcmb_int = cz_int/c  # z_cmb
-    
+
     # Determine error_cz_cmb, error_z_cmb:
     error_cz_int = cz_int * np.sqrt((err_Ho/Ho)**2 + (np.log(10)*err_mu/5)**2) # error_cz_cmb
     error_zcmb_int = error_cz_int/c  # error_z_cmb
-    
+
     # (z_cmb, error_z_cmb, cz_cmb, error_cz_cmb)
     return zcmb_int, error_zcmb_int, cz_int, error_cz_int
 
-    
+
 if ScriptVersion == 'notebook':
     # TEST:
     print '# sn2003du (data from Riess+16):'
@@ -1390,7 +1322,7 @@ if ScriptVersion == 'notebook':
     print ''
     print '# sn2005cf (data from Riess+16):'
     print '#',cz_CMB_Cepheid(32.263, 0.102, 73.24, 1.74)
-    
+
     print ''
     print '# sn2003hv (data from Riess+16):'
     print '#', cz_CMB_Cepheid(31.514,  0.150, 73.24, 0)
@@ -1408,74 +1340,20 @@ if ScriptVersion == 'notebook':
 if ScriptVersion == 'notebook': print cz_CMB_Cepheid(31.587, 0.070, 73.24, 1.74)
 
 
-# In[ ]:
-
-
-
-
-
 # In[33]:
 
 
 if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
-    
+
     HoNew = 72.0; err_HoNew = 1.74
 
-    # err_HoNew = 1.74 comes from assuming the same uncertainty than the 
+    # err_HoNew = 1.74 comes from assuming the same uncertainty than the
     # case of  Ho=73.24 +/- 1.74 km/s/Mpc  (Riess+2016).
-    """ 
+    """
     print '# sn2003du (data from Riess+16):'
     print '#',cz_CMB_Cepheid(32.919, 0.063, HoNew, err_HoNew)
-    """   
+    """
 0
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
 
 # In[34]:
@@ -1491,7 +1369,7 @@ if NotebookToPlotOnly == False and ScriptVersion == 'notebook':
 
 if NotebookToPlotOnly == False:
 
-    # Creation of the datatable text file of (z_CMB, dist_mu, dist_mu_error, delta_mu) 
+    # Creation of the datatable text file of (z_CMB, dist_mu, dist_mu_error, delta_mu)
 
     InfoSN_NumLinesSkip = 8 # Number info lines in LC files
 
@@ -1508,7 +1386,7 @@ if NotebookToPlotOnly == False:
     textfil5 = open(DirSaveOutput+textPrefix+underline+'DistanceMu_SNe_OutCutoffs_.txt', 'w')
     textfil6 = open(DirSaveOutput+textPrefix+underline+'DistanceMu_Good_AfterCutoffs_Main_NamesOnly_.txt', 'w')
     textfil7 = open(DirSaveOutput+textPrefix+underline+'SNe_all_before_any_cutoff_.txt', 'w')
-    
+
     #------------------------------------------------------------------------------------
 
     #       Defining the text
@@ -1545,7 +1423,7 @@ TBmax       Error_TBmax  PhaseB zhelio        err_zhelio   \
 dm15         error_dm15      EBVhost      error_EBVhost   \
 EBV_MW   error_EBV_MW  Alamb       err_Alamb      R_F          \
 mu_Snoopy     error_muSnoopy   TBmax      Error_TBmax  \
-appMag_TBmax  error_appMagTBmax  Notes   \n' 
+appMag_TBmax  error_appMagTBmax  Notes   \n'
 
     text4_1 = "# SN name                        z_CMB         \
 error_zcmb          mu_LCDM  sigma_muLCDM_vPec     TBmax       \
@@ -1553,15 +1431,15 @@ Error_TBmax     zhelio        err_zhelio   dm15         \
 error_dm15      EBVhost      error_EBVhost   EBV_MW   error_EBV_MW  \
 Alamb       err_Alamb      R_F           mu_Snoopy     \
 error_muSnoopy     TBmax           Error_TBmax #  Notes \n"
-    
+
     # text4 = '# SN name                        z_CMB     error_zcmb        mu          error_mu      \
-    # mu_residual     chi2_dof   (1=CfA,2=CSP)   appMag_TBmax   error_appMagTBmax   mu_LCDM   sigma_muLCDM_vPec  
+    # mu_residual     chi2_dof   (1=CfA,2=CSP)   appMag_TBmax   error_appMagTBmax   mu_LCDM   sigma_muLCDM_vPec
     # dm15       error_dm15        EBVhost    error_EBVhost      \
-    # EBV_MW     error_EBV_MW   mu_Snoopy   error_mu_Snoopy    TBmax     Error_TBmax    Notes \n' 
+    # EBV_MW     error_EBV_MW   mu_Snoopy   error_mu_Snoopy    TBmax     Error_TBmax    Notes \n'
 
-    #------------------------------------------------------------------ 
+    #------------------------------------------------------------------
 
-    textMethod = '# Method to determine the distance modulus?: %s \n'%Method 
+    textMethod = '# Method to determine the distance modulus?: %s \n'%Method
     text_CorrMatrix = '# Use the correlation (exponential kernel) matrix in the template to compute the distance moduli?: (answer in the lines below) \n'
     text_CovMat_MeanMu  = '# CovMat_MeanMu = %s  # correlation matrix to compute the -mean-  distance moduli? \n'%CovMat_MeanMu
     text_CovMat_ErrorMu = '# CovMat_ErrorMu = %s # correlation matrix to compute the -error- distance moduli? \n'%CovMat_ErrorMu
@@ -1585,34 +1463,34 @@ error_muSnoopy     TBmax           Error_TBmax #  Notes \n"
 
     textfileMain.write(text_001); textfileMain.write(text01b)
 
-    textfileMain.write(text_line); 
+    textfileMain.write(text_line);
     textfileMain.write(text_Author); textfileMain.write(text_Date); textfileMain.write(text_script);
-    textfileMain.write(text_line); 
+    textfileMain.write(text_line);
 
     textfileMain.write(text01); textfileMain.write(text1); textfileMain.write(text2); textfileMain.write(text3)
     textfileMain.write(text3_0_1)
     textfileMain.write(text3_3); textfileMain.write(text3_4); textfileMain.write(text3_5);
     # if CovMat_MeanMu == True: textfileMain.write(text_lkernel)
-    textfileMain.write(text_line); 
-    textfileMain.write(textMethod); 
-    textfileMain.write(text_CorrMatrix); 
+    textfileMain.write(text_line);
+    textfileMain.write(textMethod);
+    textfileMain.write(text_CorrMatrix);
     textfileMain.write(text_CovMat_MeanMu); textfileMain.write(text_CovMat_ErrorMu); textfileMain.write(text_lkernel)
     textfileMain.write(text_Template)
     if Method==1:
-        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_1); 
-        textfileMain.write(text_sigma2mu_1); 
+        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_1);
+        textfileMain.write(text_sigma2mu_1);
     elif  Method==2:
-        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_2); 
-        textfileMain.write(text_sigma2mu_2); 
+        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_2);
+        textfileMain.write(text_sigma2mu_2);
     elif  Method==3:
-        textfileMain.write(text_CovMatrix_MeanMu_2); textfileMain.write(text_CovMatrix_ErrorMu_1); 
-        textfileMain.write(text_sigma2mu_1); 
+        textfileMain.write(text_CovMatrix_MeanMu_2); textfileMain.write(text_CovMatrix_ErrorMu_1);
+        textfileMain.write(text_sigma2mu_1);
     elif Method==4:
-        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_2); 
+        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_2);
         textfileMain.write(text_sigma2mu_1);
     elif Method==5 or Method==6:
-        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_1); 
-        textfileMain.write(text_sigma2mu_1); 
+        textfileMain.write(text_CovMatrix_MeanMu_1); textfileMain.write(text_CovMatrix_ErrorMu_1);
+        textfileMain.write(text_sigma2mu_1);
     elif Method==7:
         textfileMain.write('#       Distance modulus determination: \n')
         textfileMain.write('# CovMatrix_MeanMu = CovMatCorrData_4MeanMu + Cov_appmag \n')
@@ -1622,14 +1500,14 @@ error_muSnoopy     TBmax           Error_TBmax #  Notes \n"
         textfileMain.write('# CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag \n')
         textfileMain.write('# error_appMag_TBmax = np.sqrt(1/Denominator_ErrorMu)  \n')
         textfileMain.write('# sigma2_mu = (1/Denominator_ErrorMu) \n')
-    if Method==6 or Method==7: 
+    if Method==6 or Method==7:
         textfileMain.write('# Using a NORMALIZED template. Distance mu = m_TBmax - M_TBmax. \n')
         textfileMain.write('#       Assumed values for Average_NIRAbsMag_TBmax and error_Average_NIRAbsMag_TBmax: \n')
         textfileMain.write('# <Average_NIRAbsMag_TBmax> = %r. %s \n'%(Average_NIRAbsMag_TBmax, Notes1))
         textfileMain.write('# error_<Average_NIRAbsMag_TBmax> = %r. %s \n'%(error_Average_NIRAbsMag_TBmax, Notes1))
         # textfileMain.write(text_IntrinsicDisp_1); textfileMain.write(text_IntrinsicDisp_2);
 
-    textfileMain.write(text_line); 
+    textfileMain.write(text_line);
     textfileMain.write(text4)
 
     #----------------------------
@@ -1643,33 +1521,33 @@ error_muSnoopy     TBmax           Error_TBmax #  Notes \n"
     # 'DistanceMu_All_BeforeCutoffs_.txt'
 
     textfile.write(text_001); textfile.write(text02)
-    textfile.write(text_line); 
+    textfile.write(text_line);
     textfile.write(text_Author); textfile.write(text_Date); textfile.write(text_script);
-    textfile.write(text_line); 
+    textfile.write(text_line);
     textfile.write(text01); textfile.write(text1); textfile.write(text2); textfile.write(text3)
     textfile.write('# No restrictions on z_cmb, dm15, EBVhost, EBV_mw, chi2_dof, residuals \n')
     textfile.write(text3_3); textfile.write(text3_4); textfile.write(text3_5)
     # if CovMat_MeanMu == True: textfile.write(text_lkernel)
-    textfile.write(text_line); 
+    textfile.write(text_line);
     textfile.write(textMethod)
-    textfile.write(text_CorrMatrix); 
+    textfile.write(text_CorrMatrix);
     textfile.write(text_CovMat_MeanMu); textfile.write(text_CovMat_ErrorMu); textfile.write(text_lkernel)
     textfile.write(text_Template)
     if Method==1:
-        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_1); 
-        textfile.write(text_sigma2mu_1); 
+        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_1);
+        textfile.write(text_sigma2mu_1);
     elif  Method==2:
-        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_2); 
-        textfile.write(text_sigma2mu_2); 
+        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_2);
+        textfile.write(text_sigma2mu_2);
     elif  Method==3:
-        textfile.write(text_CovMatrix_MeanMu_2); textfile.write(text_CovMatrix_ErrorMu_1); 
-        textfile.write(text_sigma2mu_1); 
+        textfile.write(text_CovMatrix_MeanMu_2); textfile.write(text_CovMatrix_ErrorMu_1);
+        textfile.write(text_sigma2mu_1);
     elif Method==4:
-        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_2); 
+        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_2);
         textfile.write(text_sigma2mu_1);
     elif Method==5 or Method==6:
-        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_1); 
-        textfile.write(text_sigma2mu_1); 
+        textfile.write(text_CovMatrix_MeanMu_1); textfile.write(text_CovMatrix_ErrorMu_1);
+        textfile.write(text_sigma2mu_1);
     elif Method==7:
         textfile.write('#       Distance modulus determination: \n')
         textfile.write('# CovMatrix_MeanMu = CovMatCorrData_4MeanMu + Cov_appmag \n')
@@ -1679,41 +1557,41 @@ error_muSnoopy     TBmax           Error_TBmax #  Notes \n"
         textfile.write('# CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag \n')
         textfile.write('# error_appMag_TBmax = np.sqrt(1/Denominator_ErrorMu)  \n')
         textfile.write('# sigma2_mu = (1/Denominator_ErrorMu) \n')
-    if Method==6 or Method==7: 
+    if Method==6 or Method==7:
         textfile.write('# Using a NORMALIZED template. Distance mu = m_TBmax - M_TBmax. \n')
         textfile.write('#       Assumed values for Average_NIRAbsMag_TBmax and error_Average_NIRAbsMag_TBmax: \n')
         textfile.write('# <Average_NIRAbsMag_TBmax> = %r. %s \n'%(Average_NIRAbsMag_TBmax, Notes1))
         textfile.write('# error_<Average_NIRAbsMag_TBmax> = %r. %s \n'%(error_Average_NIRAbsMag_TBmax, Notes1))
         # textfile.write(text_IntrinsicDisp_1); textfile.write(text_IntrinsicDisp_2);
 
-    textfile.write(text_line); 
+    textfile.write(text_line);
     textfile.write(text4)
 
     #----------------------------
 
-    textfil3.write(text02); textfil3.write(text01); textfil3.write(text1); textfil3.write(text2) 
+    textfil3.write(text02); textfil3.write(text01); textfil3.write(text1); textfil3.write(text2)
     textfil3.write(text3)
     textfil3.write(text3_0_0); textfil3.write(text3_0_1)
     textfil3.write(text3_3); textfil3.write(text3_4); textfil3.write(text3_5)
     # if CovMat_MeanMu == True: textfil3.write(text_lkernel)
-    textfil3.write(text_line); 
-    textfil3.write(textMethod); 
-    textfil3.write(text_CorrMatrix); 
+    textfil3.write(text_line);
+    textfil3.write(textMethod);
+    textfil3.write(text_CorrMatrix);
     textfil3.write(text_CovMat_MeanMu); textfil3.write(text_CovMat_ErrorMu); textfil3.write(text_lkernel)
     textfil3.write(text_Template)
     if Method==1:
-        textfil3.write(text_CovMatrix_MeanMu_1); textfil3.write(text_CovMatrix_ErrorMu_1); 
-        textfil3.write(text_sigma2mu_1); 
+        textfil3.write(text_CovMatrix_MeanMu_1); textfil3.write(text_CovMatrix_ErrorMu_1);
+        textfil3.write(text_sigma2mu_1);
     elif  Method==2:
-        textfil3.write(text_CovMatrix_MeanMu_1); textfil3.write(text_CovMatrix_ErrorMu_2); 
-        textfil3.write(text_sigma2mu_2); 
+        textfil3.write(text_CovMatrix_MeanMu_1); textfil3.write(text_CovMatrix_ErrorMu_2);
+        textfil3.write(text_sigma2mu_2);
     elif  Method==3:
-        textfil3.write(text_CovMatrix_MeanMu_2); textfil3.write(text_CovMatrix_ErrorMu_1); 
-        textfil3.write(text_sigma2mu_1); 
+        textfil3.write(text_CovMatrix_MeanMu_2); textfil3.write(text_CovMatrix_ErrorMu_1);
+        textfil3.write(text_sigma2mu_1);
     elif Method==4:
-        textfil3.write(text_CovMatrix_MeanMu_1); textfil3.write(text_CovMatrix_ErrorMu_2); 
-        textfil3.write(text_sigma2mu_1); 
-    textfil3.write(text_line); 
+        textfil3.write(text_CovMatrix_MeanMu_1); textfil3.write(text_CovMatrix_ErrorMu_2);
+        textfil3.write(text_sigma2mu_1);
+    textfil3.write(text_line);
     textfil3.write(text4)
 
     #----------------------------
@@ -1723,68 +1601,68 @@ error_muSnoopy     TBmax           Error_TBmax #  Notes \n"
 
     #----------------------------
 
-    textfil5.write('# SNe that are OUTSIDE the following cutoffs-criteria: \n')  
+    textfil5.write('# SNe that are OUTSIDE the following cutoffs-criteria: \n')
     textfil5.write(text3_0_0); textfil5.write(text3_0_1)
     textfil5.write(text02); textfil5.write(text01); textfil5.write(text1); textfil5.write(text2)
-    textfil5.write(text3); 
+    textfil5.write(text3);
     textfil5.write(text3_3); textfil5.write(text3_4); textfil5.write(text3_5)
     # if CovMat_MeanMu == True: textfil5.write(text_lkernel)
-    textfil5.write(text_line); 
+    textfil5.write(text_line);
     textfil5.write(textMethod)
-    textfil5.write(text_CorrMatrix); 
+    textfil5.write(text_CorrMatrix);
     textfil5.write(text_CovMat_MeanMu); textfil5.write(text_CovMat_ErrorMu); textfil5.write(text_lkernel)
     textfil5.write(text_Template)
     if Method==1:
-        textfil5.write(text_CovMatrix_MeanMu_1); textfil5.write(text_CovMatrix_ErrorMu_1); 
-        textfil5.write(text_sigma2mu_1); 
+        textfil5.write(text_CovMatrix_MeanMu_1); textfil5.write(text_CovMatrix_ErrorMu_1);
+        textfil5.write(text_sigma2mu_1);
     elif  Method==2:
-        textfil5.write(text_CovMatrix_MeanMu_1); textfil5.write(text_CovMatrix_ErrorMu_2); 
-        textfil5.write(text_sigma2mu_2); 
+        textfil5.write(text_CovMatrix_MeanMu_1); textfil5.write(text_CovMatrix_ErrorMu_2);
+        textfil5.write(text_sigma2mu_2);
     elif  Method==3:
-        textfil5.write(text_CovMatrix_MeanMu_2); textfil5.write(text_CovMatrix_ErrorMu_1); 
-        textfil5.write(text_sigma2mu_1); 
+        textfil5.write(text_CovMatrix_MeanMu_2); textfil5.write(text_CovMatrix_ErrorMu_1);
+        textfil5.write(text_sigma2mu_1);
     elif Method==4:
-        textfil5.write(text_CovMatrix_MeanMu_1); textfil5.write(text_CovMatrix_ErrorMu_2); 
-        textfil5.write(text_sigma2mu_1); 
-    textfil5.write(text_line); 
+        textfil5.write(text_CovMatrix_MeanMu_1); textfil5.write(text_CovMatrix_ErrorMu_2);
+        textfil5.write(text_sigma2mu_1);
+    textfil5.write(text_line);
     textfil5.write(text4)
-    
+
     #----------------------------
-    
+
     # 'SNe_all_before_any_cutoff_.txt'
-    
+
     # Copy/paste of section for 'DistanceMu_Good_AfterCutoffs_Main_.txt'
     textfil7.write(text_001); textfil7.write(text01b)
 
-    textfil7.write(text_line); 
+    textfil7.write(text_line);
     textfil7.write(text_Author); textfil7.write(text_Date); textfil7.write(text_script);
-    textfil7.write(text_line); 
+    textfil7.write(text_line);
 
     textfil7.write(text01); textfil7.write(text1); textfil7.write(text2); textfil7.write(text3)
     # textfil7.write(text3_0_1)
-    textfil7.write(text3_3); 
+    textfil7.write(text3_3);
     textfil7.write(text3_4); textfil7.write(text3_5);
     # if CovMat_MeanMu == True: textfil7.write(text_lkernel)
-    textfil7.write(text_line); 
-    textfil7.write(textMethod); 
-    textfil7.write(text_CorrMatrix); 
+    textfil7.write(text_line);
+    textfil7.write(textMethod);
+    textfil7.write(text_CorrMatrix);
     textfil7.write(text_CovMat_MeanMu); textfil7.write(text_CovMat_ErrorMu); textfil7.write(text_lkernel)
     textfil7.write(text_Template)
     if Method==1:
-        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_1); 
-        textfil7.write(text_sigma2mu_1); 
+        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_1);
+        textfil7.write(text_sigma2mu_1);
     elif  Method==2:
-        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_2); 
-        textfil7.write(text_sigma2mu_2); 
+        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_2);
+        textfil7.write(text_sigma2mu_2);
     elif  Method==3:
-        textfil7.write(text_CovMatrix_MeanMu_2); textfil7.write(text_CovMatrix_ErrorMu_1); 
-        textfil7.write(text_sigma2mu_1); 
+        textfil7.write(text_CovMatrix_MeanMu_2); textfil7.write(text_CovMatrix_ErrorMu_1);
+        textfil7.write(text_sigma2mu_1);
     elif Method==4:
-        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_2); 
+        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_2);
         textfil7.write(text_sigma2mu_1);
     elif Method==5 or Method==6:
-        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_1); 
-        textfil7.write(text_sigma2mu_1); 
+        textfil7.write(text_CovMatrix_MeanMu_1); textfil7.write(text_CovMatrix_ErrorMu_1);
+        textfil7.write(text_sigma2mu_1);
     elif Method==7:
         textfil7.write('#       Distance modulus determination: \n')
         textfil7.write('# CovMatrix_MeanMu = CovMatCorrData_4MeanMu + Cov_appmag \n')
@@ -1794,22 +1672,22 @@ error_muSnoopy     TBmax           Error_TBmax #  Notes \n"
         textfil7.write('# CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag \n')
         textfil7.write('# error_appMag_TBmax = np.sqrt(1/Denominator_ErrorMu)  \n')
         textfil7.write('# sigma2_mu = (1/Denominator_ErrorMu) \n')
-    if Method==6 or Method==7: 
+    if Method==6 or Method==7:
         textfil7.write('# Using a NORMALIZED template. Distance mu = m_TBmax - M_TBmax. \n')
         textfil7.write('#       Assumed values for Average_NIRAbsMag_TBmax and error_Average_NIRAbsMag_TBmax: \n')
         textfil7.write('# <Average_NIRAbsMag_TBmax> = %r. %s \n'%(Average_NIRAbsMag_TBmax, Notes1))
         textfil7.write('# error_<Average_NIRAbsMag_TBmax> = %r. %s \n'%(error_Average_NIRAbsMag_TBmax, Notes1))
         # textfil7.write(text_IntrinsicDisp_1); textfil7.write(text_IntrinsicDisp_2);
 
-    textfil7.write(text_line); 
+    textfil7.write(text_line);
     textfil7.write(text4_1) # Modified
-    
+
 
 
 # In[36]:
 
 
-""" 
+"""
 textfile.close()
 textfileMain.close()
 textfil3.close()
@@ -1828,9 +1706,9 @@ textfil7.close()
 
 
 # # Main loop
-# 
+#
 # ### Moving the template up or down to match the LC data. The amount of moving up or down corresponds to the photometric distance modulus.
-# 
+#
 # ####  In this loop it is used ALL the apparent mag LCs located in "~/1_AllData_InitialFit/AppMag/" through the text file "ListSNe_AppMag_.txt" created and read above.
 
 # In[38]:
@@ -1842,8 +1720,8 @@ ResolutionPlot_HD = 100  # dpi # ORIGINAL
 fontsizePlot = 13
 
 # Settings error bars:
-MyPointSize = 6  
-MyLineWidth = 1  
+MyPointSize = 6
+MyLineWidth = 1
 MyCapeSize = 2
 fmt_int = '.'
 
@@ -1852,18 +1730,18 @@ fmt_int = '.'
 
 
 if NotebookToPlotOnly == False:
-    
+
     # Initializing some quantities
     countGoodSNe = 0; countGoodSNe_z001 = 0; # Counters
     countCfA = 0;     countCSP = 0;     countOthers=0;  countSNe = 0 # Counters
     countCfA_z001= 0; countCSP_z001= 0; countOthers_z001=0 # Counters
     countNoCommented = 0; countCommented = 0;
-    countBadSNe = 0; 
+    countBadSNe = 0;
 
     # To be used to compute the RMS:
-    mu_resid_array = []; mu_resid_z001_array = []; 
-    chi2_list = []; chi2_z001_list = []; 
-    SNeName_list = []; SNeName_z001_list = []; 
+    mu_resid_array = []; mu_resid_z001_array = [];
+    chi2_list = []; chi2_z001_list = [];
+    SNeName_list = []; SNeName_z001_list = [];
 
     # The phase range of the template to be used to determine the distance modulus
     lowerPhase = Template[indexLowerPhase][0]
@@ -1899,29 +1777,29 @@ if NotebookToPlotOnly == False:
         err_TBmax  = magData[5,1]
         zhelio     = magData[0,2]
         err_zhelio = magData[0,3]
-        Alamb      = magData[3,2] 
-        err_Alamb  = magData[3,3] 
+        Alamb      = magData[3,2]
+        err_Alamb  = magData[3,3]
         R_F        = magData[3,4]
 
-        #-------- Peculiar velocity uncertainty -----------------        
-        # Create the variable "snName" containing the first 8 
+        #-------- Peculiar velocity uncertainty -----------------
+        # Create the variable "snName" containing the first 8
         # (or 7) letters of the SNe file name
-        # I use "snName" to compare with the SNe names in 
+        # I use "snName" to compare with the SNe names in
         # 'SNeWithCepheidDistances.txt', so that
         # I will not compute a peculiar velocity uncertainty for those SNe.
         try:
             if   name[7] == '_': snName = name[:7] # To read correctly, e.g., "sn2011B_"
             elif name[7] != '_':
                 # To read correctly, e.g., "snf20080514-002":
-                if is_number(name[7]): snName = name[:15] 
-                else: snName = name[:8]  # To read correctly, e.g., "sn1998bu" 
+                if is_number(name[7]): snName = name[:15]
+                else: snName = name[:8]  # To read correctly, e.g., "sn1998bu"
         except: snName = name[:6]  # To read correctly, e.g., "sn2011B"
 
         sigma_pecInt = 0 # Reset its value:
-        # If this SNe has Cepheid distance, then use vpecFix=0 for it: 
-        if snName in ListSNeCepheid['f0']: 
+        # If this SNe has Cepheid distance, then use vpecFix=0 for it:
+        if snName in ListSNeCepheid['f0']:
             sigma_pecInt = np.sqrt(sigma2_pec(zcmbInt, err_zcmb, 0))
-        else: 
+        else:
             sigma_pecInt = np.sqrt(sigma2_pec(zcmbInt, err_zcmb, vpecFix))
 
         #---------------------------------------
@@ -1930,7 +1808,7 @@ if NotebookToPlotOnly == False:
 
         # Theoretical distance mu from LCDM
         mu_LCDM_2 = DistanceMu(magData[0,0], OmMFix, wFix, HoFix)
-                
+
         textfil7.write('%-30s   %.10f  %.10f        %.10f  %.10f  %13.5f  %13.5f   %.10f  %.8f  %.10f  %.10f  %13.10f  %.10f  %10.7f  %.7f  %.10f  %.10f  %.10f  %.10f  %.10f    %13.5f  %13.5f  # \n'%(
             list_SNe[j][0][:-4],
             zcmbInt, err_zcmb,
@@ -1943,29 +1821,29 @@ if NotebookToPlotOnly == False:
 
 
         #---------------------------------------
-        
-        # If there are at least 3 photometric points in the 
-        # app mag LC text file, then compute. 
+
+        # If there are at least a minumum photometric points in the
+        # app mag LC text file, then compute.
         if len(magData) >= InfoSN_NumLinesSkip + MinNumOfDataInLC:
 
             #---------------------------
-            # Find out if there are at least one datum inside the 
+            # Find out if there are at least one datum inside the
             # interpolated phase range of the template
             NumDataInRange = 0
-            
+
             # Loop over all the phases for a given SNe
-            for i in range(InfoSN_NumLinesSkip, len(magData)): 
+            for i in range(InfoSN_NumLinesSkip, len(magData)):
                 if magData[i,0] >= lowerPhase and magData[i,0] <= upperPhase:
                     NumDataInRange = NumDataInRange + 1
 
             #---------------------------
-            # Fit the LCs with at least one data point within 
+            # Fit the LCs with at least one data point within
             # the phase range defined for the template.
             if NumDataInRange > 0:
 
-                # Analytical minimization of chi2 to find the best 
+                # Analytical minimization of chi2 to find the best
                 # estimate for distance modulus
-                # and computing the uncertainty of distance 
+                # and computing the uncertainty of distance
                 # modulus (analytic expression)
 
                 # Resetting some quantities
@@ -1980,10 +1858,10 @@ if NotebookToPlotOnly == False:
                 CovMatrix_ErrorMu = 0; InvCovMatrix_ErrorMu =0;
                 OffsetToMatchAppMagData = 0; appMag_TBmax = 0;
 
-                #---------------------------    
+                #---------------------------
                 # Using the covariance matrix of the photometry to determine the distance modulus:
 
-                # Create arrays for the data that is inside the interpolation 
+                # Create arrays for the data that is inside the interpolation
                 # range & within the range (lowerPhase, upperPhase).
                 mag_array = [] # apparent magnitude data
                 MagTemp_array = [] # template mean value (absolute magnitude)
@@ -1991,12 +1869,12 @@ if NotebookToPlotOnly == False:
                 error_temp = [] # population standard deviation of the template at different phases.
                 phases = [] # phases inside the interpolation range & within the range (lowerPhase, upperPhase).
                 phaseInt = 0
-                countGoodPhases = 0; countLowerPhase = 0; 
+                countGoodPhases = 0; countLowerPhase = 0;
 
                 # Loop over all the photometry for a given SNe
-                for i in range(InfoSN_NumLinesSkip, len(magData)): 
+                for i in range(InfoSN_NumLinesSkip, len(magData)):
                     # Ignore data outside the phase interpolation range:
-                    if magData[i,0] >= lowerPhase: 
+                    if magData[i,0] >= lowerPhase:
                         if magData[i,0] <= upperPhase:
                             phaseInt = magData[i,0]
                             mag_array += [magData[i,3]]
@@ -2025,12 +1903,12 @@ if NotebookToPlotOnly == False:
                 for i in range(countGoodPhases):
                     if CovMat_MeanMu == True:
                         for k in range(countGoodPhases):
-                            CovMatCorrData_4MeanMu[i,k] = error_temp[i]*error_temp[k]*np.exp( -(((phases[i] - phases[k])/l_kern)**2)/2 ) 
+                            CovMatCorrData_4MeanMu[i,k] = error_temp[i]*error_temp[k]*np.exp( -(((phases[i] - phases[k])/l_kern)**2)/2 )
                     elif CovMat_MeanMu == False:
                         CovMatCorrData_4MeanMu[i,i] = error_temp[i]*error_temp[i]
 
                 # Total covariance matrix
-                if Method==1 or Method==2 or Method==4 or Method==5 or Method==6 or Method==7: 
+                if Method==1 or Method==2 or Method==4 or Method==5 or Method==6 or Method==7:
                     CovMatrix_MeanMu = CovMatCorrData_4MeanMu + Cov_appmag
                 elif Method==3: CovMatrix_MeanMu = CovMatCorrData_4MeanMu + Cov_appmag + Cov_pecvel
 
@@ -2040,19 +1918,19 @@ if NotebookToPlotOnly == False:
                 #---Computing the best estimated photometric distance modulus ---
                 # Loop over all the photometry for a given SNe
                 # Ignore data outside the interpolation range (lowerPhase, upperPhase):
-                for i in range(countGoodPhases): 
+                for i in range(countGoodPhases):
                     # Ignore data outside the interpolation range:
                     Numerator_MeanMu = Numerator_MeanMu + (mag_array[i] - MagTemp_array[i])*np.sum(InvCovMatrix_MeanMu[i,:])
                     Denominator_MeanMu = Denominator_MeanMu + np.sum(InvCovMatrix_MeanMu[i,:])
 
                 # Best estimated distance modulus:
-                if Method==6 or Method==7: 
+                if Method==6 or Method==7:
                     appMag_TBmax = Numerator_MeanMu/Denominator_MeanMu
                     mu_photo_Analytic = appMag_TBmax - Average_NIRAbsMag_TBmax
 
-                else: 
+                else:
                     appMag_TBmax = 0
-                    mu_photo_Analytic = Numerator_MeanMu/Denominator_MeanMu   
+                    mu_photo_Analytic = Numerator_MeanMu/Denominator_MeanMu
 
                 #--------- UNCERTAINTY in the photometric distance modulus -------------
 
@@ -2061,26 +1939,26 @@ if NotebookToPlotOnly == False:
                 for i in range(countGoodPhases):
                     if CovMat_ErrorMu == True:
                         for k in range(countGoodPhases):
-                            CovMatCorrData_4ErrorMu[i,k] = error_temp[i]*error_temp[k]*np.exp( -(((phases[i] - phases[k])/l_kern)**2)/2 ) 
+                            CovMatCorrData_4ErrorMu[i,k] = error_temp[i]*error_temp[k]*np.exp( -(((phases[i] - phases[k])/l_kern)**2)/2 )
                     elif CovMat_ErrorMu == False:
-                        CovMatCorrData_4ErrorMu[i,i] = error_temp[i]*error_temp[i]            
+                        CovMatCorrData_4ErrorMu[i,i] = error_temp[i]*error_temp[i]
 
                 # Total covariance matrix
-                if Method==1 or Method==3 or Method==5 : 
+                if Method==1 or Method==3 or Method==5 :
                     CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag + Cov_pecvel
-                elif Method==2 or Method==4 or Method==6 or Method==7: 
-                    CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag                   
+                elif Method==2 or Method==4 or Method==6 or Method==7:
+                    CovMatrix_ErrorMu = CovMatCorrData_4ErrorMu + Cov_appmag
 
                 # Inverse of the total covariance matrix
-                InvCovMatrix_ErrorMu = np.linalg.inv(CovMatrix_ErrorMu)            
+                InvCovMatrix_ErrorMu = np.linalg.inv(CovMatrix_ErrorMu)
 
                 #--- Uncertainty of the best estimated distance modulus---
                 # Loop over all the photometry for a given SNe
                 # Ignore data outside the interpolation range (lowerPhase, upperPhase):
-                for i in range(countGoodPhases): 
+                for i in range(countGoodPhases):
                     # Ignore data outside the interpolation range:
                     Numerator_ErrorMu = Numerator_ErrorMu + (mag_array[i] - MagTemp_array[i])*np.sum(InvCovMatrix_ErrorMu[i,:])
-                    Denominator_ErrorMu = Denominator_ErrorMu + np.sum(InvCovMatrix_ErrorMu[i,:])            
+                    Denominator_ErrorMu = Denominator_ErrorMu + np.sum(InvCovMatrix_ErrorMu[i,:])
 
                 if Method==7: # uncertainty in the estimated apparent magnitude at T_Bmax
                     error_appMag_TBmax = np.sqrt(1/Denominator_ErrorMu)
@@ -2088,20 +1966,20 @@ if NotebookToPlotOnly == False:
 
 
                 # Uncertainty in the estimated distance modulus
-                if Method==1 or Method==3 or Method==4 or Method==5 or Method==6: 
+                if Method==1 or Method==3 or Method==4 or Method==5 or Method==6:
                     sigma2_mu = (1/Denominator_ErrorMu)
-                elif Method==2: 
+                elif Method==2:
                     sigma2_mu = (1/Denominator_ErrorMu) +  (sigma_pecInt**2)
 
-                elif Method==7: 
+                elif Method==7:
                     # old1. sigma2_mu = (1/Denominator_ErrorMu) + error_Average_NIRAbsMag_TBmax**2
                     # old2. sigma2_mu = (1/Denominator_ErrorMu) + IntrinsicDisp**2
                     sigma2_mu = 1/Denominator_ErrorMu
 
-                stdDev_mu = np.sqrt(sigma2_mu)               
+                stdDev_mu = np.sqrt(sigma2_mu)
 
                 #------------------------------------------------------
-                # The chi2 function: I define it just to compute the goodness-of-fit to data once 
+                # The chi2 function: I define it just to compute the goodness-of-fit to data once
                 # I have computed the best estimated photometric distance modulus.
                 # Note that the following definition need the value of "mu_photo_Analytic" computed above.
                 chi2Int=0; mu_int=0;
@@ -2111,23 +1989,23 @@ if NotebookToPlotOnly == False:
 
                 for i in range(countGoodPhases):
                     product1=0;
-                    for k in range(countGoodPhases): 
+                    for k in range(countGoodPhases):
                         product1 = product1 + InvCovMatrix_MeanMu[i,k]*(mag_array[k] - MagTemp_array[k] - mu_int)
                     chi2Int = chi2Int + (mag_array[i] - MagTemp_array[i] - mu_int)*product1
 
                 # In case of considering the case where I have just one datum in the LC:
-                if countGoodPhases==1: chi2_dof_Int = chi2Int/(countGoodPhases) 
+                if countGoodPhases==1: chi2_dof_Int = chi2Int/(countGoodPhases)
                 else: chi2_dof_Int = chi2Int/(countGoodPhases-1)
 
                 #------------------------------------------------------
 
                 # Theoretical distance mu from LCDM
                 mu_LCDM = DistanceMu(magData[0,0], OmMFix, wFix, HoFix)
-                
+
                 # Compute the residual and absolute magnitude value
                 mu_resid = mu_photo_Analytic - mu_LCDM
 
-                AbsMag_s = appMag_TBmax - mu_LCDM 
+                AbsMag_s = appMag_TBmax - mu_LCDM
                 error_AbsMag_s = np.sqrt(error_appMag_TBmax**2 + sigma_pecInt**2)
 
                 #------------------------------------------------------
@@ -2150,39 +2028,39 @@ if NotebookToPlotOnly == False:
                 else: commentText = '##  '
 
                 # Write the distance modulus for -all- the SNe, no matter any cutoffs.
-                # This data will be used to write down the 
+                # This data will be used to write down the
                 # "DistanceMu_All_BeforeCutoffs_.txt" text file
 
                 textfile.write('%s%-30s   %.10f  %.10f  %.10f  %.10f  %13.10f  %12.7f        %1.f          %12.9f  %.10f  %.10f  %.10f  %.10f  %.10f  %13.5f  %13.5f      0.00   %.10f  %.8f  %.10f  %.10f  %13.10f  %.10f  %10.7f  %.7f  %.10f  %.10f  %.10f  %.10f  %.10f    %13.5f  %13.5f  %.10f  %.10f # \n'%(
                     commentText, list_SNe[j][0][:-4],
-                    zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int, 
-                    indexSample, appMag_TBmax, error_appMag_TBmax, 
+                    zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int,
+                    indexSample, appMag_TBmax, error_appMag_TBmax,
                     mu_LCDM, sigma_pecInt,
                     AbsMag_s, error_AbsMag_s, TBmax, err_TBmax,
-                    zhelio, err_zhelio, dm15Int, err_dm15, 
+                    zhelio, err_zhelio, dm15Int, err_dm15,
                     EBVhost, err_EBVhost, EBV_MW, err_EBVMW, Alamb, err_Alamb, R_F,
                     muSnoopy, err_muSnoopy,
-                    TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))                        
+                    TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))
 
                 countSNe = countSNe + 1 # Counter
 
                 # ------- QUALITY CUTOFFS:  -------
-                # This data will be used to write down the 
+                # This data will be used to write down the
                 # "DistanceMu_Good_AfterCutoffs_Main_.txt" text file
 
-                if (zcmbInt < zcmbUpperLim and dm15Int > dm15LowerLim and dm15Int < dm15UpperLim and 
-                    EBVhost > EBVhostMin and EBVhost < EBVhostMax and EBV_MW < EBVMWLim and 
+                if (zcmbInt < zcmbUpperLim and dm15Int > dm15LowerLim and dm15Int < dm15UpperLim and
+                    EBVhost > EBVhostMin and EBVhost < EBVhostMax and EBV_MW < EBVMWLim and
                     chi2_dof_Int < chi2_dof_Max and mu_resid < residualMax):
                     textfileMain.write('%s%-30s   %.10f  %.10f  %.10f  %.10f  %13.10f  %12.7f        %1.f          %12.9f  %.10f  %.10f  %.10f  %.10f  %.10f  %13.5f  %13.5f      0.00   %.10f  %.8f  %.10f  %.10f  %13.10f  %.10f  %10.7f  %.7f  %.10f  %.10f  %.10f  %.10f  %.10f    %13.5f  %13.5f  %.10f  %.10f # \n'%(
                         commentText, list_SNe[j][0][:-4],
-                        zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int, 
-                        indexSample, appMag_TBmax, error_appMag_TBmax, 
+                        zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int,
+                        indexSample, appMag_TBmax, error_appMag_TBmax,
                         mu_LCDM, sigma_pecInt,
                         AbsMag_s, error_AbsMag_s, TBmax, err_TBmax,
-                        zhelio, err_zhelio, dm15Int, err_dm15, 
+                        zhelio, err_zhelio, dm15Int, err_dm15,
                         EBVhost, err_EBVhost, EBV_MW, err_EBVMW, Alamb, err_Alamb, R_F,
                         muSnoopy, err_muSnoopy,
-                        TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))  
+                        TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))
 
                     textfil6.write('%s \n'%list_SNe[j][0][:-6])
 
@@ -2192,27 +2070,27 @@ if NotebookToPlotOnly == False:
 
                     countGoodSNe = countGoodSNe + 1
                     if mask==0: countNoCommented = countNoCommented + 1;
-                    else: countCommented = countCommented + 1; 
+                    else: countCommented = countCommented + 1;
 
                     if indexSample == 1: countCfA =  countCfA + 1
                     elif indexSample == 2: countCSP =  countCSP + 1
                     elif indexSample == 3: countOthers =  countOthers + 1
 
                     #---- Cutoff redshift: z_CMB > 0.01 ---
-                    # This data will be used to write down 
+                    # This data will be used to write down
                     # the "DistanceMu_Good_AfterCutoffs_z001_.txt"
 
-                    if zcmbInt > 0.01: 
+                    if zcmbInt > 0.01:
                         textfil3.write('%s%-30s   %.10f  %.10f  %.10f  %.10f  %13.10f  %12.7f        %1.f          %12.9f  %.10f  %.10f  %.10f  %.10f  %.10f  %13.5f  %13.5f      0.00   %.10f  %.8f  %.10f  %.10f  %13.10f  %.10f  %10.7f  %.7f  %.10f  %.10f  %.10f  %.10f  %.10f    %13.5f  %13.5f  %.10f  %.10f # \n'%(
                             commentText, list_SNe[j][0][:-4],
-                            zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int, 
-                            indexSample, appMag_TBmax, error_appMag_TBmax, 
+                            zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int,
+                            indexSample, appMag_TBmax, error_appMag_TBmax,
                             mu_LCDM, sigma_pecInt,
                             AbsMag_s, error_AbsMag_s, TBmax, err_TBmax,
-                            zhelio, err_zhelio, dm15Int, err_dm15, 
+                            zhelio, err_zhelio, dm15Int, err_dm15,
                             EBVhost, err_EBVhost, EBV_MW, err_EBVMW, Alamb, err_Alamb, R_F,
                             muSnoopy, err_muSnoopy,
-                            TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))                                        
+                            TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))
 
                         mu_resid_z001_array += [mu_resid]
                         chi2_z001_list += [chi2_dof_Int]
@@ -2227,14 +2105,14 @@ if NotebookToPlotOnly == False:
                     # This data will be used to write down the "DistanceMu_SNe_OutCutoffs_.txt"
                     textfil5.write('%s%-30s   %.10f  %.10f  %.10f  %.10f  %13.10f  %12.7f        %1.f          %12.9f  %.10f  %.10f  %.10f  %.10f  %.10f  %13.5f  %13.5f      0.00   %.10f  %.8f  %.10f  %.10f  %13.10f  %.10f  %10.7f  %.7f  %.10f  %.10f  %.10f  %.10f  %.10f    %13.5f  %13.5f  %.10f  %.10f # \n'%(
                         commentText, list_SNe[j][0][:-4],
-                        zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int, 
-                        indexSample, appMag_TBmax, error_appMag_TBmax, 
+                        zcmbInt, err_zcmb, mu_photo_Analytic, stdDev_mu, mu_resid, chi2_dof_Int,
+                        indexSample, appMag_TBmax, error_appMag_TBmax,
                         mu_LCDM, sigma_pecInt,
                         AbsMag_s, error_AbsMag_s, TBmax, err_TBmax,
-                        zhelio, err_zhelio, dm15Int, err_dm15, 
+                        zhelio, err_zhelio, dm15Int, err_dm15,
                         EBVhost, err_EBVhost, EBV_MW, err_EBVMW, Alamb, err_Alamb, R_F,
                         muSnoopy, err_muSnoopy,
-                        TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))                               
+                        TBmax, err_TBmax, appMag_TBmax, error_appMag_TBmax ))
 
                     countBadSNe = countBadSNe + 1
 
@@ -2249,15 +2127,15 @@ if NotebookToPlotOnly == False:
 
 
                 # Some definitions to plot the template in the range phase
-                x = Template[indexLowerPhase:indexUpperPhase,0] 
+                x = Template[indexLowerPhase:indexUpperPhase,0]
                 y_pred = Template[indexLowerPhase:indexUpperPhase,1] + OffsetToMatchAppMagData
 
                 if TempType == 'MWA':
                     sigma = np.sqrt(Template[indexLowerPhase:indexUpperPhase,3])
-                else: 
+                else:
                     sigma = Template[indexLowerPhase:indexUpperPhase,2]
 
-                # Creating the plot 
+                # Creating the plot
                 plt.figure()
 
                 # Standard deviation
@@ -2273,11 +2151,11 @@ if NotebookToPlotOnly == False:
 
                 #-------------------
 
-                # Plot the photometric LC data (app mag) for the given SNe 
+                # Plot the photometric LC data (app mag) for the given SNe
 
-                plt.errorbar(magData[InfoSN_NumLinesSkip:,0], magData[InfoSN_NumLinesSkip:,3], 
-                             magData[InfoSN_NumLinesSkip:,4], 
-                             fmt=fmt_int, color='red', ms=MyPointSize, 
+                plt.errorbar(magData[InfoSN_NumLinesSkip:,0], magData[InfoSN_NumLinesSkip:,3],
+                             magData[InfoSN_NumLinesSkip:,4],
+                             fmt=fmt_int, color='red', ms=MyPointSize,
                                 elinewidth=MyLineWidth, capsize=MyCapeSize
                              # old. ls='', fmt='r.', alpha=1,  markersize=8
                             )
@@ -2293,31 +2171,31 @@ if NotebookToPlotOnly == False:
                 plt.ylim(y_lowerlim+0.7, y_upperlim-0.5)
                 plt.xlim(x_RangePlots)
 
-                if Method==6 or Method==7:                     
+                if Method==6 or Method==7:
                     plt.text(-7, y_lowerlim-0.7, 'Best fit: $m_{T_{Bmax}}$ = %r $\pm$ %r'%(
-                        round(appMag_TBmax,3),round(np.sqrt(error_appMag_TBmax),3))) 
+                        round(appMag_TBmax,3),round(np.sqrt(error_appMag_TBmax),3)))
 
-                plt.text(-7, y_lowerlim-0.5, '$\mu$ = %r $\pm$ %r'%(round(mu_photo_Analytic,3), 
-                                                                    round(np.sqrt(sigma2_mu),3)))  
+                plt.text(-7, y_lowerlim-0.5, '$\mu$ = %r $\pm$ %r'%(round(mu_photo_Analytic,3),
+                                                                    round(np.sqrt(sigma2_mu),3)))
                 plt.text(-7, y_lowerlim-0.3, '$z_{CMB}$ = %r'%round(magData[0,0],5))
-                
+
                 if deltamu_print:
                     plt.text(-7, y_lowerlim-0.1, '$\Delta \mu$ = %r'%round(mu_resid,3))
                 if Chi2dofPrint:
-                    plt.text(-7, y_lowerlim+0.1, '$\chi^2_{dof}$ = %r'%round(chi2_dof_Int,2))  
+                    plt.text(-7, y_lowerlim+0.1, '$\chi^2_{dof}$ = %r'%round(chi2_dof_Int,2))
 
                 plt.title(list_SNe[j][0][:-4])
 
                 # plt.xlabel(r'phase = (MJD-$T_{Bmax}$)/(1+$z_{\rm hel}$)')
                 plt.xlabel(r'(MJD-$T_{Bmax}$)/(1+$z_{\rm hel}$)', fontsize=fontsizePlot)
                 plt.ylabel('apparent magnitude', fontsize=fontsizePlot)
-                
+
                 plt.tick_params(axis='x', labelsize=fontsizePlot-1)
-                plt.tick_params(axis='y', labelsize=fontsizePlot-1)   
-                
+                plt.tick_params(axis='y', labelsize=fontsizePlot-1)
+
                 plt.tight_layout()
-                
-                if (zcmbInt < zcmbUpperLim and dm15Int > dm15LowerLim and dm15Int < dm15UpperLim and 
+
+                if (zcmbInt < zcmbUpperLim and dm15Int > dm15LowerLim and dm15Int < dm15UpperLim and
                     EBVhost > EBVhostMin and EBVhost < EBVhostMax and EBV_MW < EBVMWLim and
                     chi2_dof_Int < chi2_dof_Max and mu_resid < residualMax):
                     if zcmbInt > 0.01:
@@ -2348,7 +2226,7 @@ if NotebookToPlotOnly == False:
     # rms_z001_chi2_Res = np.sqrt(np.mean(np.square(mu_resid_z001_chi2_Res_array)))
 
     # Write to the RMS text file
-    textfil4.write('%6.2f       %5.2f      %.4f  %3.f     %.4f      %3.f  \n'%(lowerPhase, upperPhase, rms, countGoodSNe, 
+    textfil4.write('%6.2f       %5.2f      %.4f  %3.f     %.4f      %3.f  \n'%(lowerPhase, upperPhase, rms, countGoodSNe,
                      rms_z001, countGoodSNe_z001))
 
     #=======================================================
@@ -2359,9 +2237,9 @@ if NotebookToPlotOnly == False:
         countGoodSNe, countCfA, countCSP, countOthers)
     text8 = '# Total number of SNe with z >0.01: %r (CfA=%r, CSP=%r, Others=%r) \n'%(
         countGoodSNe_z001, countCfA_z001, countCSP_z001, countOthers_z001)
-    text_08_01 = "# %s SNe no commented automatically (##). \n"%countNoCommented 
-    text_08_02 = "# %s SNe were commented automatically (##). \n"%countCommented 
-    text_22 = "# %s SNe were commented automatically (##). \n"%countCommented 
+    text_08_01 = "# %s SNe no commented automatically (##). \n"%countNoCommented
+    text_08_02 = "# %s SNe were commented automatically (##). \n"%countCommented
+    text_22 = "# %s SNe were commented automatically (##). \n"%countCommented
 
     text9  = '# RMS: %r (all the SNe in this file) \n'%round(rms,4)
     text10 = '# RMS: %r (SNe z > 0.01) \n'%round(rms_z001,4)
@@ -2371,7 +2249,7 @@ if NotebookToPlotOnly == False:
     text12 = '# Largest chi2 (z>0.01): %r, SNe: %s \n'%(
         round(max(chi2_z001_list),4),
         SNeName_z001_list[chi2_z001_list.index(max(chi2_z001_list))] )
-    # text12_1 = '# Largest chi2: %r, SNe: %s \n'%(round(max(chi2_z001_chi2_Res_list),4), 
+    # text12_1 = '# Largest chi2: %r, SNe: %s \n'%(round(max(chi2_z001_chi2_Res_list),4),
     #   SNeName_z001_chi2_Res_list[chi2_z001_chi2_Res_list.index(max(chi2_z001_chi2_Res_list))] )
 
     text13 = '# Largest upper residual: %r, SNe: %s \n'%(
@@ -2383,14 +2261,14 @@ if NotebookToPlotOnly == False:
         round(max(mu_resid_z001_array),4),
         SNeName_z001_list[mu_resid_z001_array.index(max(mu_resid_z001_array))]   )
     # text15_1 = '# Largest upper residual: %r, SNe: %s  \n'%(
-    #    round(max(mu_resid_z001_chi2_Res_array),4), 
+    #    round(max(mu_resid_z001_chi2_Res_array),4),
     #   SNeName_z001_chi2_Res_list[mu_resid_z001_chi2_Res_array.index(max(mu_resid_z001_chi2_Res_array))]   )
 
     text16 = '# Largest lower residual (z>0.01): %r, SNe: %s  \n'%(
-        round(min(mu_resid_z001_array),4), 
+        round(min(mu_resid_z001_array),4),
         SNeName_z001_list[mu_resid_z001_array.index(min(mu_resid_z001_array))]   )
     # text16_1 = '# Largest lower residual: %r, SNe: %s  \n'%(
-    #  round(min(mu_resid_z001_chi2_Res_array),4), 
+    #  round(min(mu_resid_z001_chi2_Res_array),4),
     #  SNeName_z001_chi2_Res_list[mu_resid_z001_chi2_Res_array.index(min(mu_resid_z001_chi2_Res_array))]   )
 
 
@@ -2398,10 +2276,10 @@ if NotebookToPlotOnly == False:
 
     #--------------------
     textfileMain.write(text_line);
-    textfileMain.write(text7); textfileMain.write(text8); 
-    textfileMain.write(text_08_01); textfileMain.write(text_08_02); 
+    textfileMain.write(text7); textfileMain.write(text8);
+    textfileMain.write(text_08_01); textfileMain.write(text_08_02);
     textfileMain.write(text9); textfileMain.write(text10)
-    textfileMain.write(text11); textfileMain.write(text12); textfileMain.write(text13); 
+    textfileMain.write(text11); textfileMain.write(text12); textfileMain.write(text13);
     textfileMain.write(text14); textfileMain.write(text15); textfileMain.write(text16);
     #--------------------
 
@@ -2429,78 +2307,6 @@ if NotebookToPlotOnly == False:
     print text7, text_08_01, text_22
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
 # In[40]:
 
 
@@ -2508,7 +2314,7 @@ if NotebookToPlotOnly == False:
 
 
 # # Reading the datatable I've just created above
-# 
+#
 # #### This will be used to determine the cut based on $\chi^2$ and to determine the mean absolute value
 
 # In[41]:
@@ -2529,20 +2335,20 @@ zCMB_Min_Label = ['z0']
 # Change the working directory where the data files are located
 os.chdir(DirSaveOutput)
 
-# Reset the main array container to avoid using the one from 
+# Reset the main array container to avoid using the one from
 # the previous run.
 DistMu_array = np.array([0])
 if ScriptVersion == 'notebook':
     print "# 'DistMu_array' resetted."
 
-# Reading the data files in that folder 
+# Reading the data files in that folder
 DistanceMuFiles = glob.glob('DistanceMu_Good_After*.txt')
 
 # Check if 'DistanceModuli_Notes_.txt' is already there, otherwise read
 # the 'DistanceModuli_.txt' file.
 if 'DistanceMu_Good_AfterCutoffs_Main_Notes_.txt' in DistanceMuFiles:
     DistMu_array = np.genfromtxt(DirSaveOutput+
-                        'DistanceMu_Good_AfterCutoffs_Main_Notes_.txt', 
+                        'DistanceMu_Good_AfterCutoffs_Main_Notes_.txt',
                                  dtype=['S30',
                float,float,float,float,float,float,float,float,float,float,
                float,float,float,float,float,float,float,float,float,float,
@@ -2550,7 +2356,7 @@ if 'DistanceMu_Good_AfterCutoffs_Main_Notes_.txt' in DistanceMuFiles:
                float,float,float])
     if ScriptVersion == 'notebook':
         print 'Reading the file:  < DistanceMu_Good_AfterCutoffs_Main_Notes_.txt >'
-    
+
 elif 'DistanceMu_Good_AfterCutoffs_Main_.txt' in DistanceMuFiles:
     DistMu_array = np.genfromtxt(DirSaveOutput+
                         'DistanceMu_Good_AfterCutoffs_Main_.txt',
@@ -2561,7 +2367,7 @@ elif 'DistanceMu_Good_AfterCutoffs_Main_.txt' in DistanceMuFiles:
                float,float,float])
     if ScriptVersion == 'notebook':
         print '# Reading the file: < DistanceMu_Good_AfterCutoffs_Main_.txt >'
-    
+
 elif 'DistanceMu_Good_AfterCutoffs_Main_TMP_Notes_.txt' in DistanceMuFiles:
     DistMu_array = np.genfromtxt(DirSaveOutput+
                         'DistanceMu_Good_AfterCutoffs_Main_TMP_Notes_.txt',
@@ -2572,7 +2378,7 @@ elif 'DistanceMu_Good_AfterCutoffs_Main_TMP_Notes_.txt' in DistanceMuFiles:
                float,float,float])
     if ScriptVersion == 'notebook':
         print '# Reading the file: < DistanceMu_Good_AfterCutoffs_Main_TMP_Notes_.txt >'
-    
+
 elif 'DistanceMu_Good_AfterCutoffs_Main_TMP_.txt' in DistanceMuFiles:
     DistMu_array = np.genfromtxt(DirSaveOutput+
                         'DistanceMu_Good_AfterCutoffs_Main_TMP_.txt',
@@ -2612,7 +2418,7 @@ print '# Number of SNe in the file = ', len(DistMu_array)
 # Create 2 lists: for z<0 and z<0.01
 
 if NotebookToPlotOnly == False:
-    
+
     chi2dof_z0_list = []
     chi2dof_z001_list = []
 
@@ -2638,7 +2444,7 @@ if NotebookToPlotOnly == False:
 # Plotting the histogram of chi2_dof
 
 if NotebookToPlotOnly == False:
-    
+
     # countChi2dofPlot = countChi2dofPlot + 1
     fontsizeText = 15
 
@@ -2648,7 +2454,7 @@ if NotebookToPlotOnly == False:
         fig = plt.figure()
 
         if zz==0.0: plt.hist(chi2dof_z0_list, BinSize, histtype=u'barstacked')
-        elif zz==0.01: plt.hist(chi2dof_z001_list, BinSize, histtype=u'barstacked')        
+        elif zz==0.01: plt.hist(chi2dof_z001_list, BinSize, histtype=u'barstacked')
 
         plt.xlabel(r'$\chi^2_{\rm{d.o.f}}$', fontsize=fontsizeText+2)
         plt.ylabel('Frequency', fontsize=fontsizeText)
@@ -2673,7 +2479,7 @@ if NotebookToPlotOnly == False: plt.close(); plt.close();
 # Plotting the values of chi2dof as lines
 
 if NotebookToPlotOnly == False:
-    
+
     # Array of zeros just for the y-axis values.
     zero_z0_np = np.zeros(len(chi2dof_z0_list))
     zero_z001_np = np.zeros(len(chi2dof_z001_list))
@@ -2682,10 +2488,10 @@ if NotebookToPlotOnly == False:
         fig = plt.figure(figsize=(12,4))
 
         if  zz==0.0:
-            plt.plot(chi2dof_z0_list, zero_z0_np, ls='None', marker='|', ms=30, 
+            plt.plot(chi2dof_z0_list, zero_z0_np, ls='None', marker='|', ms=30,
                      markeredgewidth=2, color='r',  alpha=1)
         elif zz==0.01:
-            plt.plot(chi2dof_z001_list, zero_z001_np, ls='None', marker='|', ms=30, 
+            plt.plot(chi2dof_z001_list, zero_z001_np, ls='None', marker='|', ms=30,
                      markeredgewidth=2, color='r',  alpha=1)
 
         plt.xlabel(r'$\chi^2_{\rm{d.o.f}}$', fontsize=fontsizeText+2)
@@ -2708,12 +2514,6 @@ if NotebookToPlotOnly == False:
 if NotebookToPlotOnly == False: plt.close(); plt.close();
 
 
-# In[ ]:
-
-
-
-
-
 # In[49]:
 
 
@@ -2730,10 +2530,10 @@ if NotebookToPlotOnly == False: plt.close(); plt.close();
 # Plotting the histogram with the Gaussian estimation
 
 if NotebookToPlotOnly == False:
-    
+
     from scipy.stats import norm
     import matplotlib.mlab as mlab
-    
+
     # best fit of data.
     # 'norm.fit' simply compute the mean and standard devation of the sample.
     (Average_NIRAbsMag_TBmax, error_Average_NIRAbsMag_TBmax) = norm.fit(DistMu_array['f12'])
@@ -2768,11 +2568,11 @@ if NotebookToPlotOnly == False: plt.close(); plt.close();
 
 
 if NotebookToPlotOnly == False:
-    
+
     # The results that I will use now.
     # NOTE: This value is independent of what I have assume about "Average_NIRAbsMag_TBmax" and
     # "error_Average_NIRAbsMag_TBmax" at the top of the notebook in the User section.
-    # NOTE: The values of "Average_NIRAbsMag_TBmax" and "error_Average_NIRAbsMag_TBmax" do NOT 
+    # NOTE: The values of "Average_NIRAbsMag_TBmax" and "error_Average_NIRAbsMag_TBmax" do NOT
     # depend on the value of "vpecFix".
 
     # ------------------------------
@@ -2783,17 +2583,11 @@ if NotebookToPlotOnly == False:
 
     print '#', '-'*30
     print '#  ', BandName, 'band | vpecFix =', vpecFix, 'km/s | 0 < z <', zcmbUpperLim
-    # print '# (mean abs mag, std deviation)\n' 
+    # print '# (mean abs mag, std deviation)\n'
     # print ""
 
     print "# Average_NIRAbsMag_TBmax = %.6f  # %s"%(Average_NIRAbsMag_TBmax, text_timenow)
     print "# error_Average_NIRAbsMag_TBmax = %.6f;"%(error_Average_NIRAbsMag_TBmax)
-
-
-# In[ ]:
-
-
-
 
 
 # #### Weighted averages
@@ -2803,8 +2597,7 @@ if NotebookToPlotOnly == False:
 
 # Inverse-variance weights array
 
-# if NotebookToPlotOnly == False:
-if 3<2:
+if NotebookToPlotOnly == False:
 
     WeightsInvVar = 1/np.square(DistMu_array['f13'])
 
@@ -2825,12 +2618,6 @@ if 3<2:
     error_WeightedAbsMag = np.sqrt(product2/(V1 - (V2/V1)))
 
 
-# In[ ]:
-
-
-
-
-
 # In[54]:
 
 
@@ -2839,7 +2626,7 @@ if 3<2:
 # print '#'+'-'*30
 # print '#   ', BandName, 'band   Pec velocity =', vpecFix, 'km/s'
 # print '#', np.mean(DistMu_array['f12']), '= mean abs mag'
-# print '#', np.median(DistMu_array['f12']), '= median' 
+# print '#', np.median(DistMu_array['f12']), '= median'
 # print '#', WeightedAbsMag, '= Weighted Abs Mag'
 # print '#', np.sqrt(1/np.sum(WeightsInvVar) ), '= uncertainty in the weighted average'
 # print '#', np.std(DistMu_array['f12']), '= population standard deviation'
@@ -2888,10 +2675,10 @@ elif ScriptVersion == 'terminal':
 # xx = np.array([ 2.,  2.,  2.])
 # sigma = np.array([ 2.,  2.,  2.])
 # ww = np.array([ 3.,  3.,  3.])
-# 
+#
 # print RMS.rms(xx), RMS.err_rms(xx,sigma)
 # # 2.0 1.15470053838
-# 
+#
 # print RMS.wrms(xx,ww), RMS.err_wrms(xx,ww,sigma)
 # 2.0 0.816496580928
 
@@ -2925,77 +2712,75 @@ elif ScriptVersion == 'terminal':
 # -------
 
 # # HUBBLE DIAGRAM PLOTS
-# 
-# - Note that in all the rest of the the following cells, it is NOT computed or 
+#
+# - Note that in all the rest of the the following cells, it is NOT computed or
 # used at all the values of (Average_NIRAbsMag_TBmax, error_Average_NIRAbsMag_TBmax).
-# 
-# 
-# -  (SEE UPDATED INFORMATION BELOW) If I need to remove an outlier in any of 
-# the "any YJHK", YJHK, YJH or JHK Gaussian-Process or template Hubble diagrams, then: 
-# 
-# 
-# 1. first I need to "comment" that SN in 'DistanceMu_Good_AfterCutoffs_Main_.txt' in all the bands, 
-# 2. then, rerun the "13_TotalDistanceMu_vXX.ipynb" iPython notebook to 
+#
+#
+# -  (SEE UPDATED INFORMATION BELOW) If I need to remove an outlier in any of
+# the "any YJHK", YJHK, YJH or JHK Gaussian-Process or template Hubble diagrams, then:
+#
+#
+# 1. first I need to "comment" that SN in 'DistanceMu_Good_AfterCutoffs_Main_.txt' in all the bands,
+# 2. then, rerun the "13_TotalDistanceMu_vXX.ipynb" iPython notebook to
 # recompute the covariance matrices and their inverse matrix from the remaining SNe.
 # 3. plot the Hubble diagram using "11_DistanceMu_HubbleDiagram_vXX.ipynb" notebook (this section).
-# 
-# UPDATED INFORMATION ABOUT THE CASE OF REMOVING OUTLIERS IN THE "any YJHK", 
+#
+# UPDATED INFORMATION ABOUT THE CASE OF REMOVING OUTLIERS IN THE "any YJHK",
 # YJHK, YJH or JHK Gaussian-Process or template Hubble diagrams:
-# 
-# The process described above is the correct to remove outliers, however, 
-# for simplicity when making different experiments removing a lot of SNe 
-# (specially when comparing the NIR vs SALT2 Hubble diagrams from SNe that 
-# pass SALT2 cutoffs) I'm recalibrating the Hubble diagram residual by 
-# simply determining the value that allows to minimize the weighted *average* 
-# in the Hubble residual plot (exactly as done for the SALT2 Hubble diagram). 
+#
+# The process described above is the correct to remove outliers, however,
+# for simplicity when making different experiments removing a lot of SNe
+# (specially when comparing the NIR vs SALT2 Hubble diagrams from SNe that
+# pass SALT2 cutoffs) I'm recalibrating the Hubble diagram residual by
+# simply determining the value that allows to minimize the weighted *average*
+# in the Hubble residual plot (exactly as done for the SALT2 Hubble diagram).
 # This is done by using the simple single instruction:
-# 
+#
 # elif BandMax == 'NIRmax' and PlotTotalMu == True:
-# 
+#
 #      delta_Mo = SimplexResult_1[0]
-# 
-# If I want to use the correct procedure to remove outliers in the "GP NIR 
-# any band HD", I simply have to follow the instructions indicated and comment 
+#
+# If I want to use the correct procedure to remove outliers in the "GP NIR
+# any band HD", I simply have to follow the instructions indicated and comment
 # the instruction above.
-# The drawback of this method is that the uncertainties are less consistent 
+# The drawback of this method is that the uncertainties are less consistent
 # with scatter in the Hubble diagram, i.e., chi^2_dof is not close to one.
-# 
-# 
-# 'DistanceModuli_Notes_.txt': The advantage of having a text file listing all 
-# the SNe is that I can easily "comment" the outliers SNe in the Hubble 
+#
+#
+# 'DistanceModuli_Notes_.txt': The advantage of having a text file listing all
+# the SNe is that I can easily "comment" the outliers SNe in the Hubble
 # diagram and residual.
 
-# ### USER 
+# ### USER
 
 # In[60]:
 
 
-# Setting 
+# Setting
 
 # Band to use as the reference peak maximum? Options: (NIRmax, Bmax).
 # For the template method to determine the distance modulus I use BandMax = 'Bmax'
 # For the GP method to determine the distance modulus I use BandMax = 'NIRmax'
 # "Bmax_GP": Determine the distance moduli at B-band max but using the GP method.
 
-# WATCH OUT!: Everytime I change between (NIRmax, Bmax, Snoopy, SALT2) 
-# Hubble diagrams I must reset this notebook because in each case it 
+# WATCH OUT!: Everytime I change between (NIRmax, Bmax, Snoopy, SALT2)
+# Hubble diagrams I must reset this notebook because in each case it
 # is used different values for (Ho, Omega_matter, w).
 
 # ( Bmax , NIRmax , Bmax_GP , Snoopy , SALT2 ).
 if ScriptVersion == 'notebook':
-    BandMax = 'Bmax'  
+    BandMax = 'Bmax'
 elif ScriptVersion == 'terminal':
-    BandMax = sys.argv[23]
+    BandMax = sys.argv[11]
 
-#--------------------
+
 #   LABELS IN THE PLOT'S TITLE for the OPTICAL
+#      LOW-Z
+# if BandMax == 'SALT2': BandName = 'BVR' # ORIGINAL
+if BandMax == 'SALT2': BandName = 'Optical' # RAISINs
 
-if ScriptVersion == 'notebook':
-    if BandMax == 'SALT2': BandNameText = 'Optical' 
-    if BandMax == 'Snoopy': BandNameText = 'Optical' 
-    
-elif ScriptVersion == 'terminal':
-    BandNameText = sys.argv[24]
+if BandMax == 'Snoopy': BandName = 'BVR'  # ORIGINAL
 
 # if BandMax == 'Snoopy': BandName = 'Optical+NIR'  # TEMPORAL
 # if BandMax == 'Snoopy': BandName = 'NIR'  # TEMPORAL
@@ -3007,38 +2792,38 @@ elif ScriptVersion == 'terminal':
 
 #------- "Total" distance modulus ---------
 
-# Plot the "total" distance modulus derived from the three distance modulus computed 
+# Plot the "total" distance modulus derived from the three distance modulus computed
 # from each band?
-# To put TRUE, first I need to have already computed the distance moduli for each SNe 
+# To put TRUE, first I need to have already computed the distance moduli for each SNe
 # in the YJHK bands!
 
 if ScriptVersion == 'notebook':
     PlotTotalMu = False
 elif ScriptVersion == 'terminal':
-    PlotTotalMu = sys.argv[25] == 'True'
+    PlotTotalMu = sys.argv[12] == 'True'
 
-    
+
 # "PlotTotalMu = True"  is only valid when BandMax = NIRmax, Bmax, Bmax_GP.
 # "PlotTotalMu = False" if I'm plotting the SNoopy or SALT2 distance moduli.
 if BandMax == 'Snoopy' or BandMax == 'SALT2':
     PlotTotalMu = False
 
-# - "AllBands": If there is not distance mu estimation for a given SN, then 
+# - "AllBands": If there is not distance mu estimation for a given SN, then
 # use the 3, 2 or 1 band that it was observed
-# - "YJH": Consider the SNe that have distance mu estimation in these 
+# - "YJH": Consider the SNe that have distance mu estimation in these
 # 3 bands ONLY, and so on.
 
 # ( AllBands , JH , YJH , JHK ,  YJHK )
-if PlotTotalMu == True: 
-    
+if PlotTotalMu == True:
+
     if ScriptVersion == 'notebook':
-        BandsCombination = 'AllBands'  
-        
+        BandsCombination = 'AllBands'
+
     elif ScriptVersion == 'terminal':
-        BandsCombination = sys.argv[26]
-        
+        BandsCombination = sys.argv[13]
+
 else: BandsCombination = ''
-    
+
 #####################################################
 
 #    Plot RAISINs?
@@ -3048,18 +2833,18 @@ else: BandsCombination = ''
 if ScriptVersion == 'notebook':
     # False = plot the low-z sample.
     plot_raisins = False
-    
+
 elif ScriptVersion == 'terminal':
     # False = plot the low-z sample.
-    plot_raisins =  sys.argv[27] == 'True'
+    plot_raisins =  sys.argv[14] == 'True'
 
 #--------------------
 
 if plot_raisins == True:
     zcmbUpperLim = 0.65  # (0.6, 0.65, anything else)
-    xlimPlots = 0.2, zcmbUpperLim+0.003 # 
+    xlimPlots = 0.2, zcmbUpperLim+0.003 #
     ylimPlots = 40.0, 44.5
-    
+
 #####################################################
 
 #    Weight definition to compute the wRMS
@@ -3069,7 +2854,7 @@ if plot_raisins == True:
 ## 'wRMS_efit': w = 1/(sigma2_{fit, s})
 
 wRMS_type = 'wRMS_efit_ePec_eInt'
-    
+
 #####################################################
 
 #    PLOT OPTIONS
@@ -3077,8 +2862,8 @@ wRMS_type = 'wRMS_efit_ePec_eInt'
 ResolutionPlot_HD = 150  # dpi
 
 # Settings error bars:
-MyPointSize = 6  
-MyLineWidth = 1  
+MyPointSize = 6
+MyLineWidth = 1
 MyCapeSize = 2
 
 
@@ -3094,53 +2879,54 @@ MyCapeSize = 2
 
 
 # Apparent magnitude, determined from GP interpolation, template, snoopy.?
-    
+
 if BandMax == 'Bmax':
-    AppMag_method = 'Template to compute the app mags'  
-    #old HoFix = 73.24 # Valued used by default in the low-z paper
+    AppMag_method = 'Template to compute the app mags'
+    HoFix = 73.24 # Valued used by default in the low-z paper
     OmMFix = 0.28 # Omega_Matter
     OmLFix = 0.72 # Omega_Lambda
     wFix = -1 # Dark energy EoS
-    
+
 elif BandMax == 'Bmax_GP':
-    AppMag_method = 'Gaussian Process to compute the app mags'  
-    #old HoFix = 73.24 # Valued used by default in the low-z paper
+    AppMag_method = 'Gaussian Process to compute the app mags'
+    HoFix = 73.24 # Valued used by default in the low-z paper
     OmMFix = 0.28 # Omega_Matter
     OmLFix = 0.72 # Omega_Lambda
     wFix = -1 # Dark energy EoS
-    
+
 elif BandMax == 'NIRmax':
     # AppMag_method = 'Gaussian Process to compute app mags'
     AppMag_method = 'Gaussian Process to compute the NIR app mags' # TEMPORAL
-    #old HoFix = 73.24 # Valued used by default in the low-z paper
+    HoFix = 73.24 # Valued used by default in the low-z paper
     OmMFix = 0.28 # Omega_Matter
     OmLFix = 0.72 # Omega_Lambda
     wFix = -1 # Dark energy EoS
-    
+
 elif BandMax == 'Snoopy':
     AppMag_method = 'SNooPy fit'
-    # Redefing some variables: 
+    # Redefing some variables:
     # HoFix = 73.24 # km/s. Ho=72 is Snoopy's default value
-    #old HoFix = 72.0 # km/s. Ho=72 is Snoopy's default value
+    HoFix = 72.0 # km/s. Ho=72 is Snoopy's default value
     OmMFix = 0.28 # Omega_Matter
     OmLFix = 0.72 # Omega_Lambda
     wFix = -1 # Dark energy EoS
-    
+
 # ORIGINAL
 elif BandMax == 'SALT2':
     AppMag_method = 'SALT2 fit'
-    #old HoFix = 73.24 # Valued used by default in the low-z paper
+    HoFix = 73.24 # Valued used by default in the low-z paper
     OmMFix = 0.28 # Omega_Matter
     OmLFix = 0.72 # Omega_Lambda
-    wFix = -1 # Dark energy EoS  
-    
+    wFix = -1 # Dark energy EoS
+
 # TEMPORAL FOR RAISIN DD proposal:
 # elif BandMax == 'SALT2':
 #     AppMag_method = '' # TEMPORAL
-#     HoFix = 70.0 
+#     HoFix = 70.0
 #     OmMFix = 0.3 # Omega_Matter
 #     OmLFix = 0.7 # Omega_Lambda
 #     wFix = -1 # Dark energy EoS
+
 
 #----------------------------------------------
 
@@ -3162,15 +2948,15 @@ if PlotTotalMu and BandMax == 'NIRmax': Method_folder = 'GaussianProcess'
 if PlotTotalMu and BandMax == 'Bmax': Method_folder = 'Template'
 if PlotTotalMu and BandMax == 'Bmax_GP': Method_folder = 'GP_Bmax'
 
-if PlotTotalMu: 
+if PlotTotalMu:
     # Change the working directory where the datafiles are located
     DirSaveOutput = DirMain_1+'AllBands/Plots/HubbleDiagram_vpec%s/%s/%s/'%(
         vpecFix,Method_folder, BandsCombination)
     if not os.path.exists(DirSaveOutput): os.makedirs(DirSaveOutput)
-    
+
     DirDataTotalMu = DirMain_1+'AllBands/Plots/HubbleDiagram_vpec%s/'%vpecFix+Method_folder+'/'
     os.chdir(DirDataTotalMu)
-   
+
 
     try:
         DistMu_array = np.genfromtxt('Table_TotalMu_%s_Notes_.txt'%(
@@ -3179,25 +2965,25 @@ if PlotTotalMu:
                             float,float,float,float])
         print "# File read: 'Table_TotalMu_%s_Notes_.txt'"%(
             BandsCombination)
-    except: 
+    except:
         DistMu_array = np.genfromtxt('Table_TotalMu_%s_.txt'%(
                     BandsCombination),
                     dtype=['S30', float,float,float,
                            float,float,float,float])
         print "# File read: 'Table_TotalMu_%s_.txt'"%BandsCombination
-        
-    BandNameText = 'All'
-    
-    
+
+    BandName = 'All'
+
+
     print "# Location:\n", DirDataTotalMu
     print '# %s SNe in PlotTotalMu file.'%len(DistMu_array)
 # Number of SNe in PlotTotalMu file: 30.
 
 
-# #### Determine the value needed to have a weighted average of zero in the Hubble residual 
-# 
-# Used mainly (but not limited) for SALT2 Hubble diagram
-# 
+# #### Determine the value needed to have a weighted average of zero in the Hubble residual
+#
+# Used for SALT2 Hubble diagram
+#
 
 # In[64]:
 
@@ -3206,41 +2992,41 @@ if PlotTotalMu:
 # These functions are going to be minimized.
 
 # AbsResidual values
-mu_1_np = DistMu_array['f3'] 
+mu_1_np = DistMu_array['f3']
 z_1_np  = DistMu_array['f1']
 res_mu_np_int = mu_1_np - DistanceMuVector(z_1_np, OmMFix, wFix, HoFix)
 
 err_mu_1_np = DistMu_array['f4']
 
-# Inverse-variance weighted average function to be minimized 
+# Inverse-variance weighted average function to be minimized
 def WeightedAbsResidual_fun(deltaMo, UpLimit, LowLimit, AbsResidual_Roof):
     residuals_int = res_mu_np_int +  deltaMo
     WeightedAbsResidual_int = np.average(residuals_int, weights=err_mu_1_np )
-    
-    if deltaMo < UpLimit and deltaMo > LowLimit:  
+
+    if deltaMo < UpLimit and deltaMo > LowLimit:
         # For some unknown reason, simplex is search the maximum instead of
         # the minimimum, so I had to define the average absolute mag as 1/WeightedAbsResidual
         # WeightedAbsResidual_final = 1/WeightedAbsResidual_int
         WeightedAbsResidual_final = WeightedAbsResidual_int
-        
+
     else: WeightedAbsResidual_final = AbsResidual_Roof
-        
+
     return abs(WeightedAbsResidual_final)
 
 #-----------------------------------------------------
 
-# Simple average function to be minimized 
+# Simple average function to be minimized
 def AverageAbsResidual_fun(deltaMo, UpLimit, LowLimit, AbsResidual_Roof):
     residuals_int = res_mu_np_int + deltaMo
     # AverageAbsResidual_int = np.mean(residuals_int)
     AverageAbsResidual_int = np.sum(residuals_int)/len(residuals_int)
-     
-    if deltaMo < UpLimit and deltaMo > LowLimit: 
+
+    if deltaMo < UpLimit and deltaMo > LowLimit:
         # For some unknown reason, simplex is search the maximum instead of
         # the minimimum, so I had to define the average absolute mag as 1/AverageAbsResidual_int
         # AverageAbsResidual_final = 1/AverageAbsResidual_int
         AverageAbsResidual_final = AverageAbsResidual_int
-        
+
     else: AverageAbsResidual_final = AbsResidual_Roof
 
     return abs(AverageAbsResidual_int)
@@ -3260,12 +3046,12 @@ UpLimit = 3; LowLimit = -3
 
 # Assume this value for deltaMo in case of the search is outside the range
 # indicated above.
-Residual_Roof = 10 
+Residual_Roof = 10
 
-WeightedAbsResidual_Out = scipy.optimize.minimize_scalar(WeightedAbsResidual_fun, 
+WeightedAbsResidual_Out = scipy.optimize.minimize_scalar(WeightedAbsResidual_fun,
                                         args=(UpLimit, LowLimit, Residual_Roof))
 
-AverageAbsResidual_Out = scipy.optimize.minimize_scalar(AverageAbsResidual_fun, 
+AverageAbsResidual_Out = scipy.optimize.minimize_scalar(AverageAbsResidual_fun,
                                         args=(UpLimit, LowLimit, Residual_Roof))
 
 # Redefining the values:
@@ -3275,15 +3061,9 @@ SimplexResult_2 = [AverageAbsResidual_Out['x'] ]
 if ScriptVersion == 'notebook':
     print WeightedAbsResidual_Out
     print '# %.6f = value of delta_Mo that minimize the Hubble residual.'%SimplexResult_1[0]
-    
+
 # print AverageAbsResidual_Out
 # print '#', SimplexResult_2, ' = value of delta_Mo that minimize the Hubble residual.'
-
-
-# In[ ]:
-
-
-
 
 
 # In[66]:
@@ -3303,30 +3083,20 @@ if ScriptVersion == 'notebook':
 # In[67]:
 
 
-# Add a value to the theoretical distance modulus so that the weighted 
+# Add a value to the theoretical distance modulus so that the weighted
 # average of the Hubble residual is zero. This is only for the SALT2 Hubble diagram.
 
+if BandMax == 'SALT2': # ORIGINAL
+# if BandMax == 'SALT2' or BandMax == 'Snoopy': # FOR RAISINS OPTICAL FITS
+    delta_Mo = SimplexResult_1[0]
+
+else:
+    delta_Mo_int1 = np.array([0.])
+    delta_Mo = delta_Mo_int1[0]
+
 if ScriptVersion == 'notebook':
-
-    if BandMax == 'SALT2': # ORIGINAL
-    # if BandMax == 'SALT2' or BandMax == 'Snoopy': # FOR RAISINS OPTICAL FITS
-        delta_Mo = SimplexResult_1[0] 
-
-    else: 
-        delta_Mo_int1 = np.array([0.])
-        delta_Mo = delta_Mo_int1[0]
-    
     print '# delta_Mo = %s'%delta_Mo
     # print '# type of variable: %s'%type(delta_Mo)
-    
-elif ScriptVersion == 'terminal':
-    minimize_residuals = sys.argv[27] == 'True'
-    
-    if minimize_residuals:
-        delta_Mo = SimplexResult_1[0] 
-    else: 
-        delta_Mo_int1 = np.array([0.])
-        delta_Mo = delta_Mo_int1[0]
 
 
 # In[68]:
@@ -3361,10 +3131,10 @@ fontsizePlot = 10.5
 
 # To plot the theoretical (spectroscopic) distance modulus
 nbins1= 51
-z1 = np.linspace(xlimPlots[0], xlimPlots[1], nbins1)  
+z1 = np.linspace(xlimPlots[0], xlimPlots[1], nbins1)
 mu1 = DistanceMuVector(z1, OmMFix, wFix, HoFix) + delta_Mo # ORIGINAL
 # FOR RAISINS SNOOPY FIT:
-# mu1 = DistanceMuVector(z1, OmMFix, wFix, HoFix) - delta_Mo 
+# mu1 = DistanceMuVector(z1, OmMFix, wFix, HoFix) - delta_Mo
 
 # Count number of SNe for each subsample
 count_CfA = 0; count_CSP = 0; count_all = 0
@@ -3373,90 +3143,90 @@ count_CfA = 0; count_CSP = 0; count_all = 0
 # Plot
 
 for k in range(len(ColorSamples)): # Loop over the colors
-    
+
     for j in range(len(zCMB_Min)):  # Loop over the 'zCMB_Min' array
 
         #------- Plotting the data -------
         fig = plt.figure()
         # fig = plt.figure(figsize=(8,6), dpi=80)
         # OLD. fig = plt.figure(figsize=(12, 8))
-        
+
         # loop over 'DistanceMu_Good_AfterCutoffs_Main_.txt'
-        for i in range(len(DistMu_array)): 
+        for i in range(len(DistMu_array)):
 
             zzInt = DistMu_array[i][1] # z_CMB for a given SNe
             # chi2dofInt = DistMu_array[i][6] # chi2 by d.o.f.
             # absolute value of the residual value:
-            # residInt = abs(DistMu_array[i][5]) 
-            sampleFlag = DistMu_array[i][7]  # Subsample           
-                
-            # Create the variable "snName" containing the first 8 
+            # residInt = abs(DistMu_array[i][5])
+            sampleFlag = DistMu_array[i][7]  # Subsample
+
+            # Create the variable "snName" containing the first 8
             # (or 7) letters of the SNe file name
-            # I use "snName" to compare with the SNe names in 
+            # I use "snName" to compare with the SNe names in
             # 'SNeWithCepheidDistances.txt', so that
             # I will not compute a peculiar velocity uncertainty for those SNe.
             try:
-                if   DistMu_array[i][0][7] == '_': 
+                if   DistMu_array[i][0][7] == '_':
                     # To read correctly, e.g., "sn2011B_"
-                    snName = DistMu_array[i][0][:7] 
+                    snName = DistMu_array[i][0][:7]
                 elif DistMu_array[i][0][7] != '_':
                     # To read correctly, e.g., "snf20080514-002":
-                    if is_number(DistMu_array[i][0][7]): snName = DistMu_array[i][0][:15] 
+                    if is_number(DistMu_array[i][0][7]): snName = DistMu_array[i][0][:15]
                     # To read correctly, e.g., "sn1998bu"
-                    else: snName = DistMu_array[i][0][:8]     
-            except: 
+                    else: snName = DistMu_array[i][0][:8]
+            except:
                 # To read correctly, e.g., "sn2011B"
-                snName = DistMu_array[i][0][:6]  
-                
-                
+                snName = DistMu_array[i][0][:6]
+
+
             # Make special symbol for SNe with Cepheid.
             if snName in ListSNeCepheid['f0']: fmt_int = '*'
             else: fmt_int = '.'
-            
+
             if ColorSamples[k] and KindOfData4HD == 'AllSamples':
                 # CSP data
-                if sampleFlag == 2 and zzInt > zCMB_Min[j]:   
-                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                        fmt=fmt_int, color='blue', ms=MyPointSize, 
+                if sampleFlag == 2 and zzInt > zCMB_Min[j]:
+                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                        fmt=fmt_int, color='blue', ms=MyPointSize,
                         elinewidth=MyLineWidth, capsize=MyCapeSize)
                 # CfA data
-                elif sampleFlag == 1 and zzInt > zCMB_Min[j]: 
-                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                        fmt=fmt_int, color='red', ms=MyPointSize, 
+                elif sampleFlag == 1 and zzInt > zCMB_Min[j]:
+                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                        fmt=fmt_int, color='red', ms=MyPointSize,
                         elinewidth=MyLineWidth, capsize=MyCapeSize)
                 # Others data
-                elif sampleFlag == 3 and zzInt > zCMB_Min[j]: 
-                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                        fmt=fmt_int, color='green', ms=MyPointSize, 
+                elif sampleFlag == 3 and zzInt > zCMB_Min[j]:
+                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                        fmt=fmt_int, color='green', ms=MyPointSize,
                         elinewidth=MyLineWidth, capsize=MyCapeSize)
                 # Anything else
-                elif zzInt > zCMB_Min[j]: 
-                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                        fmt=fmt_int, color='black', ms=MyPointSize, 
+                elif zzInt > zCMB_Min[j]:
+                    plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                        fmt=fmt_int, color='black', ms=MyPointSize,
                         elinewidth=MyLineWidth, capsize=MyCapeSize)
-                    
+
             else:
-                if zzInt > zCMB_Min[j]:  
+                if zzInt > zCMB_Min[j]:
                     if KindOfData4HD == 'CfA' and sampleFlag == 1:
-                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                            fmt=fmt_int, color='red', ms=MyPointSize, 
+                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                            fmt=fmt_int, color='red', ms=MyPointSize,
                             elinewidth=MyLineWidth, capsize=MyCapeSize)
                         # count_CfA = count_CfA + 1 # Counter
                     elif KindOfData4HD == 'CSP'  and sampleFlag == 2:
-                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                            fmt=fmt_int, color='blue', ms=MyPointSize, 
+                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                            fmt=fmt_int, color='blue', ms=MyPointSize,
                             elinewidth=MyLineWidth, capsize=MyCapeSize)
                         # count_CSP = count_CSP + 1 # Counter
                     elif KindOfData4HD == 'Others'  and sampleFlag == 3:
-                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                            fmt=fmt_int, color='green', ms=MyPointSize, 
+                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                            fmt=fmt_int, color='green', ms=MyPointSize,
                             elinewidth=MyLineWidth, capsize=MyCapeSize)
                     elif KindOfData4HD == 'AllSamples':
-                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4], 
-                            fmt=fmt_int, color='black', ms=MyPointSize, 
+                        plt.errorbar(zzInt, DistMu_array[i][3], yerr=DistMu_array[i][4],
+                            fmt=fmt_int, color='black', ms=MyPointSize,
                             elinewidth=MyLineWidth, capsize=MyCapeSize)
-                        # count_all = count_all + 1 # Counter    
-             
+                        # count_all = count_all + 1 # Counter
+
         # Plotting the theory line
         plt.plot(z1, mu1, color='black')
 
@@ -3465,40 +3235,40 @@ for k in range(len(ColorSamples)): # Loop over the colors
 
         plt.xlabel('Redshift', fontsize=fontsizePlot)
         plt.ylabel(r'Distance modulus $\mu$', fontsize=fontsizePlot)
-        
+
         #--- Plot Title ---
         if PlotTotalMu == False:
-            plt.title('Hubble diagram (%s band)'%(BandNameText), 
+            plt.title('Hubble diagram (%s band)'%(BandName),
                       fontsize=fontsizePlot+2)
         elif PlotTotalMu == True:
             if BandsCombination == 'AllBands':
-                plt.title('Hubble diagram (all YJHK bands)', 
+                plt.title('Hubble diagram (all YJHK bands)',
                           fontsize=fontsizePlot+2)
-            else: plt.title('Hubble diagram (%s bands)'%(BandsCombination), 
+            else: plt.title('Hubble diagram (%s bands)'%(BandsCombination),
                             fontsize=fontsizePlot+2)
-        
+
         # plt.legend(loc='lower right')
         # plt.tick_params(labelsize=fontsizePlot)
         plt.tick_params(axis='x', labelsize=fontsizePlot)
-        plt.tick_params(axis='y', labelsize=fontsizePlot+2)        
+        plt.tick_params(axis='y', labelsize=fontsizePlot+2)
 
         plt.grid(True, ls='--', alpha=0.5)
         plt.tight_layout()
-                
-        # if   PlotTotalMu == True:  
+
+        # if   PlotTotalMu == True:
         #     NIRbandsText_1 = BandsCombination+'_'
         #     NIRbandsText_2 = BandsCombination+'/'
-        # elif PlotTotalMu == False: 
+        # elif PlotTotalMu == False:
         #     NIRbandsText_1 = ''; NIRbandsText_2 = ''
-            
+
         if   PlotTotalMu == True:  NIRbandsText = BandsCombination+'_'
         elif PlotTotalMu == False: NIRbandsText = ''
 
         if ColorSamples[k] and KindOfData4HD == 'AllSamples':
             plt.savefig(DirSaveOutput+'Plot_HD_%s_%s_%s_%s_%s_%s_Color_%s.png'%(
                 KindOfData4HD, KindOfTemp,
-                              KindOfTempSubgroup, 
-                                   chi2_dof_Max_Label, residualMax_Label, 
+                              KindOfTempSubgroup,
+                                   chi2_dof_Max_Label, residualMax_Label,
                                       zCMB_Min_Label[j], NIRbandsText)
                              , dpi=ResolutionPlot_HD, format='png'
                        )
@@ -3506,8 +3276,8 @@ for k in range(len(ColorSamples)): # Loop over the colors
             plt.savefig(DirSaveOutput+'Plot_HD_%s_%s_%s_%s_%s_%s_%s.png'%(
                 KindOfData4HD, KindOfTemp,
                                   KindOfTempSubgroup,
-                                    chi2_dof_Max_Label, residualMax_Label, 
-                                       zCMB_Min_Label[j], NIRbandsText) 
+                                    chi2_dof_Max_Label, residualMax_Label,
+                                       zCMB_Min_Label[j], NIRbandsText)
                                         , dpi=ResolutionPlot_HD, format='png'
                         )
         plt.close()
@@ -3545,74 +3315,74 @@ sigma2_appMagTBmax_z001 = []
 sigma2_pec_z001 = []
 
 # loop over 'DistanceMu_Good_AfterCutoffs_Main_.txt'
-for i in range(len(DistMu_array)): 
-    
+for i in range(len(DistMu_array)):
+
     zcmbInt     = DistMu_array[i][1]  # zcmb
     err_zcmbInt = DistMu_array[i][2]  # error_zcmb
     mu_resid_z0_np[i]   = DistMu_array[i][5] +delta_Mo  # Delta_mu
-    
-    # Create the variable "snName" containing the first 8 (or 7) 
-    # letters of the SNe file name I use "snName" to compare with 
+
+    # Create the variable "snName" containing the first 8 (or 7)
+    # letters of the SNe file name I use "snName" to compare with
     # the SNe names in 'SNeWithCepheidDistances.txt', so that
     # I will not compute a peculiar velocity uncertainty for those SNe.
     try:
-        if   DistMu_array[i][0][7] == '_': 
+        if   DistMu_array[i][0][7] == '_':
             # To read correctly, e.g., "sn2011B_"
-            snName = DistMu_array[i][0][:7]  
+            snName = DistMu_array[i][0][:7]
         elif DistMu_array[i][0][7] != '_':
             # To read correctly, e.g., "snf20080514-002":
-            if is_number(DistMu_array[i][0][7]): 
-                snName = DistMu_array[i][0][:15] 
+            if is_number(DistMu_array[i][0][7]):
+                snName = DistMu_array[i][0][:15]
             # To read correctly, e.g., "sn1998bu"
-            else: snName = DistMu_array[i][0][:8]    
-    except: 
+            else: snName = DistMu_array[i][0][:8]
+    except:
         # To read correctly, e.g., "sn2011B"
-        snName = DistMu_array[i][0][:6]  
-    
-    
-    #--- Determine the uncertainty in distance modulus 
+        snName = DistMu_array[i][0][:6]
+
+
+    #--- Determine the uncertainty in distance modulus
     # due to the peculiar velocity uncertainty.---
-    
+
     #-----------   For z > 0: --------------
-    
+
     if PlotTotalMu == True: # For 'PlotTotalMu' *compute* "sigma_mu_pecVel"
-        if snName in ListSNeCepheid['f0']: 
+        if snName in ListSNeCepheid['f0']:
             sigma2_pec_z0_np[i] = sigma2_pec(zcmbInt, err_zcmbInt, 0)
         else: sigma2_pec_z0_np[i] = sigma2_pec(zcmbInt, err_zcmbInt, vpecFix)
     else: # For 'NIRmax', 'Bmax' 'Snoopy', 'SALT2' reads "sigma_mu_pecVel"
         sigma2_pec_z0_np[i] = (DistMu_array[i][11])**2   # (sigma_mu_pecVel)^2
-    
+
     # Read the uncertainty on the distance mu due only to fitting the LCs:
     # old:
-    # if PlotTotalMu==False and (BandMax == 'NIRmax' or 
+    # if PlotTotalMu==False and (BandMax == 'NIRmax' or
     #                            BandMax == 'Bmax' or BandMax == 'Bmax_GP' or
     #                            BandMax == 'SALT2' or BandMax == 'Snoopy'):
-    
+
     # uncertainty on mu due only to fitting the LC
-    sigma2_appMagTBmax_z0_np[i] = (DistMu_array[i][4])**2.0  
-    
-    
+    sigma2_appMagTBmax_z0_np[i] = (DistMu_array[i][4])**2.0
+
+
     #-----------   For z > 0.01: --------------
-    
+
     if zcmbInt > 0.01:
-        mu_resid_z001 += [DistMu_array[i][5]]  # Delta_mu  
-        
+        mu_resid_z001 += [DistMu_array[i][5]]  # Delta_mu
+
         if PlotTotalMu == True:
-            if snName in ListSNeCepheid['f0']: 
+            if snName in ListSNeCepheid['f0']:
                 sigma2_pec_z001 += [sigma2_pec(zcmbInt, err_zcmbInt, 0)]
             else: sigma2_pec_z001 += [sigma2_pec(zcmbInt, err_zcmbInt, vpecFix)]
-        else:  # For NIRmax', 'Bmax' 'Snoopy', 'SALT2' 
-            sigma2_pec_z001 += [(DistMu_array[i][11])**2]  # (sigma_mu_pecVel)^2        
-        
+        else:  # For NIRmax', 'Bmax' 'Snoopy', 'SALT2'
+            sigma2_pec_z001 += [(DistMu_array[i][11])**2]  # (sigma_mu_pecVel)^2
+
         # Read the uncertainty on the distance mu due only to fitting the LCs:
         # old:
-        # if PlotTotalMu==False and (BandMax == 'NIRmax' or 
+        # if PlotTotalMu==False and (BandMax == 'NIRmax' or
         #                            BandMax == 'Bmax'  or BandMax == 'Bmax_GP' or
         #                            BandMax == 'SALT2'  or BandMax == 'Snoopy'):
-            
+
         # uncertainty on mu due only to fitting the LC
-        sigma2_appMagTBmax_z001 += [(DistMu_array[i][4])**2.0]  
-        
+        sigma2_appMagTBmax_z001 += [(DistMu_array[i][4])**2.0]
+
 # Convert the list to np.arrays:
 mu_resid_z001_np = np.array(mu_resid_z001)
 sigma2_appMagTBmax_z001_np = np.array(sigma2_appMagTBmax_z001)
@@ -3645,9 +3415,9 @@ sigma2_pec_z001_np = np.array(sigma2_pec_z001)
 # in a given row printed below.
 
 if ScriptVersion == 'notebook':
-    print ('#', len(mu_resid_z0_np),   len(sigma2_appMagTBmax_z0_np),   
+    print ('#', len(mu_resid_z0_np),   len(sigma2_appMagTBmax_z0_np),
            len(sigma2_pec_z0_np)   )
-    print ('#', len(mu_resid_z001_np), len(sigma2_appMagTBmax_z001_np), 
+    print ('#', len(mu_resid_z001_np), len(sigma2_appMagTBmax_z001_np),
            len(sigma2_pec_z001_np) )
 
 # 119 119 119
@@ -3665,7 +3435,7 @@ if ScriptVersion == 'notebook':
 # Defining the function to compute the intrinsic dispersion (sigmaPred) instead
 # of the square of the intrinsic dispersion (sigma2Pred): for the case of determining
 # the instrisic dispersion.
-# I obtain an error due to a very small value of sigmaPred, so that during minimizing 
+# I obtain an error due to a very small value of sigmaPred, so that during minimizing
 # the likelihood function to determine sigmaPred, it is sampled some negative values.
 
 # Likelihood to determine the intrinsic dispersion
@@ -3675,8 +3445,8 @@ if ScriptVersion == 'notebook':
 def neg2lnLikeFull(sigmaPred, mu_resid_np, sigma2_pec_np, sigma2_appmagTBmax_np):
     sum1 = 0
     for i in range(len(mu_resid_np)):
-        sum1 = (sum1 + np.log(sigma2_appmagTBmax_np[i] + sigmaPred**2 + sigma2_pec_np[i]) +  
-                (mu_resid_np[i]**2)/(sigma2_appmagTBmax_np[i] + sigmaPred**2 + sigma2_pec_np[i]) )  
+        sum1 = (sum1 + np.log(sigma2_appmagTBmax_np[i] + sigmaPred**2 + sigma2_pec_np[i]) +
+                (mu_resid_np[i]**2)/(sigma2_appmagTBmax_np[i] + sigmaPred**2 + sigma2_pec_np[i]) )
     return sum1
 
 #----
@@ -3685,8 +3455,8 @@ def neg2lnLikeFull(sigmaPred, mu_resid_np, sigma2_pec_np, sigma2_appmagTBmax_np)
 def neg2lnLike(sigmaPred, mu_resid_np, sigma2_pec_np):
     sum1 = 0
     for i in range(len(mu_resid_np)):
-        sum1 = (sum1 + np.log(sigmaPred**2 + sigma2_pec_np[i]) + 
-                (mu_resid_np[i]**2)/(sigmaPred**2 + sigma2_pec_np[i]) ) 
+        sum1 = (sum1 + np.log(sigmaPred**2 + sigma2_pec_np[i]) +
+                (mu_resid_np[i]**2)/(sigmaPred**2 + sigma2_pec_np[i]) )
     return sum1
 
 #-----------------------------------------------------------------
@@ -3699,19 +3469,19 @@ InitialGuess = 0.15
 if Method==7 and (BandMax == 'NIRmax' or BandMax == 'Bmax' or BandMax == 'Bmax_GP' #):
                                          or BandMax == 'SALT2' or BandMax == 'Snoopy'): # ORIGINAL
                                          # or BandMax == 'SALT2'): # FOR RAISINS SNOOPY FIT
-    SimplexResult_z0_2 = simplex(neg2lnLikeFull, InitialGuess, 
+    SimplexResult_z0_2 = simplex(neg2lnLikeFull, InitialGuess,
                                    args=(mu_resid_z0_np, sigma2_pec_z0_np, sigma2_appMagTBmax_z0_np))
 
-    SimplexResult_z001_2 = simplex(neg2lnLikeFull, InitialGuess, 
+    SimplexResult_z001_2 = simplex(neg2lnLikeFull, InitialGuess,
                                    args=(mu_resid_z001_np, sigma2_pec_z001_np, sigma2_appMagTBmax_z001_np))
 
 """
-# old 
+# old
 elif PlotTotalMu==True: # ORIGINAL
 # elif PlotTotalMu==True or BandMax == 'Snoopy' or BandMax == 'SALT2': # FOR RAISINS SNOOPY FIT
-    SimplexResult_z0_2 = simplex(neg2lnLike, InitialGuess, 
+    SimplexResult_z0_2 = simplex(neg2lnLike, InitialGuess,
                               args=(mu_resid_z0_np,   sigma2_pec_z0_np))
-    SimplexResult_z001_2 = simplex(neg2lnLike, InitialGuess, 
+    SimplexResult_z001_2 = simplex(neg2lnLike, InitialGuess,
                               args=(mu_resid_z001_np, sigma2_pec_z001_np)) """
 
 SimplexResult_z0 = SimplexResult_z0_2**2
@@ -3720,19 +3490,13 @@ SimplexResult_z001 = SimplexResult_z001_2**2
 # print 'Best estimated value of sigma_Pred (z>0) =', SimplexResult_z0_2
 # print 'Best estimated value of sigma_Pred (z>0.01) =', SimplexResult_z001_2
 
-if ScriptVersion == 'notebook': 
+if ScriptVersion == 'notebook':
     print 'Best estimated value of sigma^2_Pred (z>0) =', SimplexResult_z0
     print 'Best estimated value of sigma_Pred (z>0) =', SimplexResult_z0_2
 
-    print 
+    print
     print 'Best estimated value of sigma^2_Pred (z>0.01) =', SimplexResult_z001
     print 'Best estimated value of sigma_Pred (z>0.01) =', SimplexResult_z001_2
-
-
-# In[ ]:
-
-
-
 
 
 # In[79]:
@@ -3746,7 +3510,7 @@ if ScriptVersion == 'notebook':
 def FisherFuncFull(sigmaPred, mu_resid_np, sigma2_pec_np, sigma2_appmagTBmax_np):
     sum2 = 0
     for i in range(len(mu_resid_np)):
-        sum2 = (sum2 + (mu_resid_np[i]**2)/(sigma2_appmagTBmax_np[i] + 
+        sum2 = (sum2 + (mu_resid_np[i]**2)/(sigma2_appmagTBmax_np[i] +
                 sigmaPred**2 + sigma2_pec_np[i])**3 -
                1/(2*(sigma2_appmagTBmax_np[i] + sigmaPred**2 + sigma2_pec_np[i])**2)  )
     return sum2
@@ -3763,18 +3527,18 @@ def FisherFunc(sigmaPred, mu_resid_np, sigma2_pec_np):
 #-----------------------------------------------------------------
 
 # The variance error of sigma^2_pred:
-# old if Method==7 and PlotTotalMu==False and (BandMax == 'NIRmax' or BandMax == 'Bmax' or 
-if Method==7 and (BandMax == 'NIRmax' or BandMax == 'Bmax' or 
+# old if Method==7 and PlotTotalMu==False and (BandMax == 'NIRmax' or BandMax == 'Bmax' or
+if Method==7 and (BandMax == 'NIRmax' or BandMax == 'Bmax' or
                                          BandMax == 'Bmax_GP' or
                                         BandMax == 'SALT2'  or BandMax == 'Snoopy'):
-    Var_sigma2_pred_z0 =   1/FisherFuncFull(SimplexResult_z0_2[0],   
+    Var_sigma2_pred_z0 =   1/FisherFuncFull(SimplexResult_z0_2[0],
                                     mu_resid_z0_np,   sigma2_pec_z0_np,
                                     sigma2_appMagTBmax_z0_np)
-    Var_sigma2_pred_z001 = 1/FisherFuncFull(SimplexResult_z001_2[0], 
+    Var_sigma2_pred_z001 = 1/FisherFuncFull(SimplexResult_z001_2[0],
                                     mu_resid_z001_np, sigma2_pec_z001_np,
                                     sigma2_appMagTBmax_z001_np)
-    
-    
+
+
 error_sigma_pred_z0   = np.sqrt(Var_sigma2_pred_z0  /(4*SimplexResult_z0[0]))
 error_sigma_pred_z001 = np.sqrt(Var_sigma2_pred_z001/(4*SimplexResult_z001[0]))
 
@@ -3793,7 +3557,7 @@ if ScriptVersion == 'notebook':
 print '#'+'-'*50
 # print "# %s band, vpecFix = %s km/s"%(Band, vpecFix)
 # print "# Intrinsic dispersion for the case (0 < z < %s):"%(zcmb_Max)
-print '# Intrinsic dispersion = %.6f +/- %.6f'%(np.sqrt(SimplexResult_z0[0]), 
+print '# Intrinsic dispersion = %.6f +/- %.6f'%(np.sqrt(SimplexResult_z0[0]),
                                                 error_sigma_pred_z0)
 
 # ------------------------------
@@ -3805,7 +3569,7 @@ text_Date   = '# On date: %s \n'%text_timenow
 print '# '
 print '# %s | Date: %s '%(AppMag_method, text_timenow)
 print "# IntrinsicDisp = %.5f # %s | vpecFix=%s km/s | 0<z<%s."%(
-    np.sqrt(SimplexResult_z0[0]), BandNameText, vpecFix, zcmbUpperLim)
+    np.sqrt(SimplexResult_z0[0]), BandName, vpecFix, zcmbUpperLim)
 
 
 # In[81]:
@@ -3813,14 +3577,14 @@ print "# IntrinsicDisp = %.5f # %s | vpecFix=%s km/s | 0<z<%s."%(
 
 #--------------------------------------------------
 # Intrinsic dispersion = 0.07517578125 +/- 0.0629356479937
- 
-# Gaussian Process to compute app mags | Date: 2018-05-02; 17:04 hrs. 
+
+# Gaussian Process to compute app mags | Date: 2018-05-02; 17:04 hrs.
 # IntrinsicDisp = 0.07518 # K | vpecFix=150 km/s | 0<z<0.04.
 
 #--------------------------------------------------
 # Intrinsic dispersion = 0.12017578125 +/- 0.016725821387
- 
-# Gaussian Process to compute app mags | Date: 2018-02-22; 16:49 hrs. 
+
+# Gaussian Process to compute app mags | Date: 2018-02-22; 16:49 hrs.
 # IntrinsicDisp = 0.12018 # J | vpecFix=150 km/s | 0<z<0.04.
 
 
@@ -3833,50 +3597,50 @@ print "# IntrinsicDisp = %.5f # %s | vpecFix=%s km/s | 0<z<%s."%(
 # -------
 
 # # $\chi^2_{\rm d.o.f.}$
-# 
+#
 # #### Checking the consistency between the error bars of the residual distance modulus vs the scatter in the Hubble-diagram residual plot
 
 # In[83]:
 
 
-ratio_int = 0;  
+ratio_int = 0;
 
 for i in range(len(DistMu_array)):
     # print i
-    
+
     mu_resid  = DistMu_array[i][5] +delta_Mo
-    
+
     if   BandMax == 'Bmax':   IntrinsicDisp_int = np.sqrt(SimplexResult_z0[0])
     elif BandMax == 'NIRmax': IntrinsicDisp_int = np.sqrt(SimplexResult_z0[0])
     elif BandMax == 'Bmax_GP': IntrinsicDisp_int = np.sqrt(SimplexResult_z0[0])
     elif BandMax == 'SALT2':  IntrinsicDisp_int = np.sqrt(SimplexResult_z0[0])
     elif BandMax == 'Snoopy': IntrinsicDisp_int = np.sqrt(SimplexResult_z0[0])
-     
+
     if  PlotTotalMu == False and (BandMax == 'NIRmax' or BandMax == 'Bmax' or
-    # old. if  (BandMax == 'NIRmax' or BandMax == 'Bmax' or 
+    # old. if  (BandMax == 'NIRmax' or BandMax == 'Bmax' or
                                   BandMax == 'Bmax_GP' or
-                                  BandMax == 'SALT2'  or BandMax == 'Snoopy'): 
+                                  BandMax == 'SALT2'  or BandMax == 'Snoopy'):
         sigma_pecVel = DistMu_array[i][11]
         error_appMag = DistMu_array[i][4]
-        ratio_int = ratio_int + ((mu_resid**2) / (error_appMag**2 + 
-                                                  sigma_pecVel**2 + 
+        ratio_int = ratio_int + ((mu_resid**2) / (error_appMag**2 +
+                                                  sigma_pecVel**2 +
                                                   IntrinsicDisp_int**2) )
 
-    elif PlotTotalMu == True:  
+    elif PlotTotalMu == True:
         sigma_pecVel = np.sqrt(sigma2_pec(zcmbInt, err_zcmbInt, vpecFix))
         error_appMag = DistMu_array[i][4]
-        ratio_int = ratio_int + ((mu_resid**2) / (error_appMag**2 + 
-                                                  sigma_pecVel**2 + 
+        ratio_int = ratio_int + ((mu_resid**2) / (error_appMag**2 +
+                                                  sigma_pecVel**2 +
                                                   IntrinsicDisp_int**2) )
 
-    
+
 chi2_dof_HD    = ratio_int / len(DistMu_array)
 
 
 print '#'+'-'*40
-print "# %s band | vpecFix = %s km/s | 0 < z < %s"%(BandNameText, vpecFix, zcmbUpperLim)
+print "# %s band | vpecFix = %s km/s | 0 < z < %s"%(BandName, vpecFix, zcmbUpperLim)
 print '# %s.'%AppMag_method
-print '# chi^2 = %.6f | Number of data = %s'%(ratio_int, len(DistMu_array)) 
+print '# chi^2 = %.6f | Number of data = %s'%(ratio_int, len(DistMu_array))
 print '# chi^2_dof = %.6f'%chi2_dof_HD
 
 
@@ -3903,27 +3667,27 @@ if (BandMax != 'NIRmax' or PlotTotalMu == True):
     text_line = '#'+'-'*50 + '\n'
 
     textfile_1.write("# Summary of the scatter in the Hubble residual \n")
-    textfile_1.write("# %s band \n"%BandNameText)
+    textfile_1.write("# %s band \n"%BandName)
 
     textfile_1.write(text_line)
-    textfile_1.write(text_Author); textfile_1.write(text_Date); 
-    textfile_1.write(text_script); 
+    textfile_1.write(text_Author); textfile_1.write(text_Date);
+    textfile_1.write(text_script);
     textfile_1.write(text_line)
 
     if (BandMax == 'Bmax' and PlotTotalMu == False):
-        
-        try: 
+
+        try:
             # This section is for the case that I've used 11.ipynb to compute
             # the distance moduli, so that the values above were previously defined
             # during the creation of the "DistanceMu_Good_AfterCutoffs_Main_.txt"
             # text file.
             textfile_1.write(text01); textfile_1.write(text1); textfile_1.write(text2);
             textfile_1.write(text3); textfile_1.write(text3_0_1); textfile_1.write(text3_3);
-            textfile_1.write(text3_4); textfile_1.write(text3_5); 
+            textfile_1.write(text3_4); textfile_1.write(text3_5);
             textfile_1.write(text_line)
-            
+
         except:
-            # This section is for the case that I'm using 11.ipynb just to plot 
+            # This section is for the case that I'm using 11.ipynb just to plot
             # in the template method.
             text01 = '# Apparent mag data used to construct the Hubble diagram: %s \n'%KindOfData4HD
             text1 = '# Template used: \n'
@@ -3933,7 +3697,7 @@ Omega_L=%r, w=%r, Ho=%r) \n'%(OmMFix, OmLFix, wFix, HoFix)
 
             text3_0_0 = '# 0.01 < z_cmb < %r \n'%zcmbUpperLim
             text3_0_1 = '# Cutoffs: z_cmb<%r | %r<dm15<%r | %r<EBVhost<%r \
-| EBV_mw<%r | chi2_dof<%r | Residual<%r \n'%(zcmbUpperLim, dm15LowerLim,  
+| EBV_mw<%r | chi2_dof<%r | Residual<%r \n'%(zcmbUpperLim, dm15LowerLim,
                 dm15UpperLim, EBVhostMin, EBVhostMax, EBVMWLim, chi2_dof_Max, residualMax)
             text3_3 = '# Phase range used of the template: (%r, %r) days \n'%(PhaseMinTemp, PhaseMaxTemp)
             text3_4 = '# Minimal number of data in LC to be considered \
@@ -3942,17 +3706,17 @@ for the Hubble diagram: %r \n'%MinNumOfDataInLC
 
             textfile_1.write(text01); textfile_1.write(text1); textfile_1.write(text2);
             textfile_1.write(text3); textfile_1.write(text3_0_1); textfile_1.write(text3_3);
-            textfile_1.write(text3_4); textfile_1.write(text3_5); 
+            textfile_1.write(text3_4); textfile_1.write(text3_5);
             textfile_1.write(text_line)
-    
+
     textfile_1.write("# %s km/s = peculiar-velocity uncertainty. \n"%vpecFix)
-        
+
     textfile_1.write('# %.5f # = delta_Mo. Valued ADDED to the theoretical distance \n\
 # modulus so that the weighted average of the Hubble residual is zero. \n'%delta_Mo)
-        
+
     textfile_1.write('# Intrinsic dispersion for the case (0 < z < %s) and used to obtain the \n\
 # total photometric distance modulus uncertainty: \n'%zcmbUpperLim)
-    
+
     textfile_1.write('%14.6f  %.6f  0.0  0.0 # Intrinsic dispersion and its uncertainty for the case \
 0 < z_cmb < %s \n'%(np.sqrt(SimplexResult_z0[0]), error_sigma_pred_z0, zcmbUpperLim))
     textfile_1.write('%14.6f  %.6f  0.0  0.0 # Intrinsic dispersion and its uncertainty for the case \
@@ -3967,7 +3731,7 @@ for the Hubble diagram: %r \n'%MinNumOfDataInLC
 
     textfile_1.write(text_line)
     textfile_1.close()
-    
+
 print "# File written."
 
 
@@ -3980,8 +3744,6 @@ print "# File written."
 # # Plot residual
 
 # In[87]:
-
-
 
 
 # Compute the standard errors of RMS from bootstrap:
@@ -4001,13 +3763,12 @@ fontsizePlot = 10.5
 # Label the outliers.
 # In one plot, print the name of those SNe with one value in "label_array"
 # and in another plot, print those SNe with the other value.
-# Best option: "np.array([0.25, 3])"
-label_array = np.array([0.01, 3])
+label_array = np.array([0.3, 3])
 
 #---------------------------------
 #    Text files
 
-if   PlotTotalMu == False: textfile7 = open(DirSaveOutput+'Verbose_%s.txt'%BandNameText, 'w')
+if   PlotTotalMu == False: textfile7 = open(DirSaveOutput+'Verbose_%s.txt'%BandName, 'w')
 elif PlotTotalMu == True:  textfile7 = open(DirSaveOutput+'Verbose_%s.txt'%BandsCombination, 'w')
 
 # Append data to the already existing file 'Summary_HDScatter_.txt', but
@@ -4026,7 +3787,7 @@ text_line = '#'+'-'*50 + '\n'
 textfile7.write('%s # = delta_Mo. Valued ADDED to the theoretical distance modulus so that \
 the weighted average of the Hubble residual is zero: \n'%delta_Mo)
 
-textfile7.write('%s band | vpecFix = %s km/s \n'%(BandNameText, vpecFix))
+textfile7.write('%s band | vpecFix = %s km/s \n'%(BandName, vpecFix))
 textfile7.write(' \n')
 
 textfile7.write('intrinsic dispersion sigma_Pred (z>0): %r +/- %r \n'%
@@ -4141,16 +3902,12 @@ for i3 in range(len(plotErrorBars_list)):
                     if plot_raisins == 'False':
                         try:
                             if   DistMu_array[i][0][7] == '_':
-                                # To read correctly, e.g., "sn2011B_":
-                                snName = DistMu_array[i][0][:7]
+                                snName = DistMu_array[i][0][:7] # To read correctly, e.g., "sn2011B_"
                             elif DistMu_array[i][0][7] != '_':
                                 # To read correctly, e.g., "snf20080514-002":
-                                if is_number(DistMu_array[i][0][7]):
-                                    snName = DistMu_array[i][0][:15]
-                                # To read correctly, e.g., "sn1998bu":
-                                else: snName = DistMu_array[i][0][:8]
-                        # To read correctly, e.g., "sn2011B"
-                        except: snName = DistMu_array[i][0][:6]
+                                if is_number(DistMu_array[i][0][7]): snName = DistMu_array[i][0][:15]
+                                else: snName = DistMu_array[i][0][:8]  # To read correctly, e.g., "sn1998bu"
+                        except: snName = DistMu_array[i][0][:6] # To read correctly, e.g., "sn2011B"
 
                     else:
                         # FOR RAISINS
@@ -4166,12 +3923,11 @@ for i3 in range(len(plotErrorBars_list)):
                     else:
                         # FOR RAISINS SNOOPY
                         snName_2 = DistMu_array[i][0]
-
                     #-----------------------------
 
                     # Define the characters to use to print outliers:
-                    ini_char_outlier = 3
-                    end_char_outlier = 10
+                    ini_char_outlier = 0
+                    end_char_outlier = 9
 
                     #-----------------------------
 
@@ -4209,8 +3965,7 @@ for i3 in range(len(plotErrorBars_list)):
 
                             # Label the SNe with residual larger than a given value.
                             if residInt > labelOutlierLim:
-                                plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                          fontsize=(fontsizePlot-4), color='blue')
 
                         #--- CfA data
@@ -4225,8 +3980,7 @@ for i3 in range(len(plotErrorBars_list)):
 
                             # Label the SNe with residual larger than a given value.
                             if residInt > labelOutlierLim:
-                                plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                          fontsize=(fontsizePlot-4), color='red')
 
                         #--- Others data
@@ -4241,8 +3995,7 @@ for i3 in range(len(plotErrorBars_list)):
 
                             # Label the SNe with residual larger than a given value.
                             if residInt > labelOutlierLim:
-                                plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                          fontsize=(fontsizePlot-4), color='green')
 
                         #--- Any other kind of data
@@ -4257,8 +4010,7 @@ for i3 in range(len(plotErrorBars_list)):
 
                             # Label the SNe with residual larger than a given value.
                             if residInt > labelOutlierLim:
-                                plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                          fontsize=(fontsizePlot-4), color='black')
 
 
@@ -4274,8 +4026,7 @@ for i3 in range(len(plotErrorBars_list)):
                                 sigma2_pec_all += [sigma2_pec_int]
                                 # Label the SNe with residual larger than a given value.
                                 if residInt > labelOutlierLim:
-                                    plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                    DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                    plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                              fontsize=(fontsizePlot-4), color='red')
 
                             elif KindOfData4HD == 'CSP'  and sampleFlag == 2:
@@ -4287,8 +4038,7 @@ for i3 in range(len(plotErrorBars_list)):
                                 sigma2_pec_all += [sigma2_pec_int]
                                 # Label the SNe with residual larger than a given value.
                                 if residInt > labelOutlierLim:
-                                    plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                    DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                    plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                              fontsize=(fontsizePlot-4), color='blue')
 
                             elif KindOfData4HD == 'Others'  and sampleFlag == 3:
@@ -4300,8 +4050,7 @@ for i3 in range(len(plotErrorBars_list)):
                                 sigma2_pec_all += [sigma2_pec_int]
                                 # Label the SNe with residual larger than a given value.
                                 if residInt > labelOutlierLim:
-                                    plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                    DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                    plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                              fontsize=(fontsizePlot-4), color='green')
 
                             elif KindOfData4HD == 'AllSamples':
@@ -4313,8 +4062,7 @@ for i3 in range(len(plotErrorBars_list)):
                                 sigma2_pec_all += [sigma2_pec_int]
                                 # Label the SNe with residual larger than a given value.
                                 if residInt > labelOutlierLim:
-                                    plt.text(zzInt+0.002, mu_resid_int-0.015,
-                                    DistMu_array[i][0][ini_char_outlier:end_char_outlier],
+                                    plt.text(zzInt+0.0005, mu_resid_int-0.015, DistMu_array[i][0][ini_char_outlier:end_char_outlier],
                                              fontsize=(fontsizePlot-4), color='black')
 
                 if ColorSamples[k] and KindOfData4HD == 'AllSamples':
@@ -4671,7 +4419,7 @@ for Others subsamples. Case: z > %s.\n"%(rms_Others_weight, err_Others_wrms, rms
 
                 #---- Label title and axes ------
 
-                if   BandMax == 'NIRmax': BandMaxText = '$T_{%s}$ max'%BandNameText
+                if   BandMax == 'NIRmax': BandMaxText = '$T_{%s}$ max'%BandName
                 elif BandMax == 'Bmax' or BandMax == 'Bmax_GP':   BandMaxText = '$T_B$ max'
                 elif BandMax == 'Snoopy': BandMaxText = 'Snoopy'
                 elif BandMax == 'SALT2':  BandMaxText = 'SALT2'
@@ -4679,7 +4427,7 @@ for Others subsamples. Case: z > %s.\n"%(rms_Others_weight, err_Others_wrms, rms
 
                 plt.xlabel('Redshift', fontsize=fontsizePlot)
                 plt.ylabel(r'$\mu - \mu_{\rm \Lambda CDM}$', fontsize=fontsizePlot) # ORIGINAL
-                # plt.ylabel(r'(B - %s)'%BandNameText, fontsize=fontsizePlot) # TEMPORAL
+                # plt.ylabel(r'(B - %s)'%BandName, fontsize=fontsizePlot) # TEMPORAL
 
                 #--- Plot Title ---
 
@@ -4687,31 +4435,31 @@ for Others subsamples. Case: z > %s.\n"%(rms_Others_weight, err_Others_wrms, rms
 
                     if plot_raisins == True:
                         # ORIGINAL:
-                        plt.title('%s Hubble Residuals from %s'%(BandNameText, BandMaxText),
+                        plt.title('%s-band Hubble Residual from %s'%(BandName, BandMaxText),
                                fontsize=fontsizePlot+2)
                         # TEMPORAL:
                         # plt.title('Preliminary RAISIN Hubble residuals',
                         #       fontsize=fontsizePlot+2)
                     else: # Low-z
-                        plt.title('%s-band Hubble Residuals from %s'%(BandNameText, BandMaxText), # ORIGINAL
-                        # plt.title('(B-%s) colors, from B and %s max'%(BandNameText,BandNameText), # TEMPORAL
+                        plt.title('%s-band Hubble Residual from %s'%(BandName, BandMaxText), # ORIGINAL
+                        # plt.title('(B-%s) colors, from B and %s max'%(BandName,BandName), # TEMPORAL
                               fontsize=fontsizePlot+2)
 
                 elif PlotTotalMu == True:
                     if BandsCombination == 'AllBands':
                         if BandMax == 'Bmax' or BandMax == 'Bmax_GP':
-                            plt.title('Any YJHK bands Hubble Residuals from %s'%(BandMaxText),
+                            plt.title('Any YJHK bands Hubble Residual from %s'%(BandMaxText),
                                       fontsize=fontsizePlot+2)
                         elif BandMax == 'NIRmax':
-                            plt.title(r'Any YJHK bands Hubble Residuals from $T_{\rm NIR}$ max',
+                            plt.title(r'Any YJHK bands Hubble Residual from $T_{\rm NIR}$ max',
                                       fontsize=fontsizePlot+2)
                     else:
                         if BandMax == 'Bmax' or BandMax == 'Bmax_GP':
-                            plt.title('%s bands Hubble Residuals from %s'%(
+                            plt.title('%s bands Hubble Residual from %s'%(
                                 BandsCombination, BandMaxText),
                                       fontsize=fontsizePlot+2)
                         elif BandMax == 'NIRmax':
-                            plt.title(r'%s bands Hubble Residuals from $T_{\rm NIR}$ max'%(
+                            plt.title(r'%s bands Hubble Residual from $T_{\rm NIR}$ max'%(
                                 BandsCombination), fontsize=fontsizePlot+2)
 
                 #--- Axes ---
@@ -4769,7 +4517,6 @@ textfile_8.close()
 if ScriptVersion == 'notebook': print "\n # All done."
 
 
-
 # In[88]:
 
 
@@ -4784,10 +4531,4 @@ textfile_8.close();textfile_8.close();textfile_8.close();
 
 print "\n#       All done smoothly\n"
 print "############################################################\n\n"
-
-
-# In[ ]:
-
-
-
 

@@ -5,8 +5,8 @@
 code_created_by = 'Arturo_Avelino'
 # On date: 2017-01-30 (yyyy.mm.dd)
 code_name = '03_SNooPy_Fitting_conda_Main.py'
-version_code = '0.1.16'
-last_update = '2019.02.28' # (yyyy.mm.dd)
+code_version = '0.1.18'
+code_last_update = '2019.06.13' # (yyyy.mm.dd)
 #--------------------------------------------------------60
 #
 #   USE
@@ -203,7 +203,7 @@ text_timenow = now.strftime("%Y-%m-%d (yyyy-mm-dd); %H:%M hrs.")
 text_Author = '# Data table created by: Arturo Avelino \n'
 text_Date   = '# On date: %s \n'%text_timenow
 text_script = '# Script used: %s (version %s | last update: %s)\n'%(
-    code_name, version_code, last_update)
+    code_name, code_version, code_last_update)
 text_line = '#'+'-'*70 + '\n'
 
 textfile_1.write("#         Fitting settings and results \n")
