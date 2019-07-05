@@ -16,7 +16,7 @@ code_last_update = '2019.06.13' # (yyyy.mm.dd)
 # In the terminal, activate the conda python enviroment where snoopy
 # is installed, go to the directory containing this python script and type:
 #
-#    python  ThisScript.py 'Dir/where/snoopy/files/are/located'
+#    python  ThisScript.py [arguments]
 #
 # where the path is the location of the folder containing the snoopy files.
 # NOTE: Do not put a slash ("/") at the end of the path.
