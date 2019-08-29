@@ -47,7 +47,7 @@ code_created_by = 'Arturo_Avelino'
 # On date: 2017.01.10 (yyyy.mm.dd)
 code_name = '11_DistanceMu_HubbleDiagram.ipynb'
 version_code = '0.3.11'
-last_update = '2019.06.13'
+last_update = '2019.08.06'
 #--------------------------------------------------------60
 
 
@@ -3320,7 +3320,7 @@ if ScriptVersion == 'notebook':
     # print '# type of variable: %s'%type(delta_Mo)
     
 elif ScriptVersion == 'terminal':
-    minimize_residuals = sys.argv[27] == 'True'
+    minimize_residuals = sys.argv[28] == 'True'
     
     if minimize_residuals:
         delta_Mo = SimplexResult_1[0] 
