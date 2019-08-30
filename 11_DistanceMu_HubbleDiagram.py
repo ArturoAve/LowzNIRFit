@@ -3,6 +3,8 @@
 
 # # Distance modulus computation using the NIR template
 # 
+# Python Anaconda 2.7
+# 
 # #### I have to run this notebook 2 times: 
 # 1) The first time to determine:
 # - the apparent magnitudes (and their uncertainties, sigma_m) at t_Bmax infered from the template fit.
@@ -46,8 +48,8 @@ import sys
 code_created_by = 'Arturo_Avelino'
 # On date: 2017.01.10 (yyyy.mm.dd)
 code_name = '11_DistanceMu_HubbleDiagram.ipynb'
-version_code = '0.3.11'
-last_update = '2019.08.06'
+version_code = '0.3.12'
+last_update = '2019.08.29'
 #--------------------------------------------------------60
 
 
@@ -64,19 +66,18 @@ last_update = '2019.08.06'
 # In[ ]:
 
 
-# There are 27 arguments to set in the 'terminal' version. They are:
+# There are 28 arguments to set in the 'terminal' version. They are:
 
-#  1.- BandName = sys.argv[1]. Options: (Y, J, H ,K)
-#  2.- vpecFix = int(sys.argv[2]). Peculiar velocity (km/s). Options: (150, 250)
-#  3.- AbsMagFromHisto = sys.argv[3] == 'True'. Mean Absolute magnitude 
-#         determined from histogram of 'appMagTmax_s - mu_s'?:
+#  1.- BandName = sys.argv[1]. Options: (Y, J, H ,K).
+#  2.- vpecFix = int(sys.argv[2]). Peculiar velocity (km/s). Options: (150, 250).
+#  3.- AbsMagFromHisto = sys.argv[3] == 'True'. Mean Absolute magnitude
+#         determined from histogram of 'appMagTmax_s - mu_s'?.
 #  4.- NotebookToPlotOnly = sys.argv[4] == 'True'.
 #  5.- DirSaveOutput = sys.argv[5].
 #  6.- DirAppMag = sys.argv[6].
 #  7.- DirTemplate = sys.argv[7].
 #  8.- HoFix = float(sys.argv[8]).
-#  9.- zcmbUpperLim = float(sys.argv[9]). Redshift cutoff. 
-#         In the low-z paper I use zcmbUpperLim = 0.04.
+#  9.- zcmbUpperLim = float(sys.argv[9]). Redshift cutoff.
 # 10.- Average_NIRAbsMag_TBmax = float(sys.argv[10]).
 # 11.- error_Average_NIRAbsMag_TBmax = float(sys.argv[11]).
 # 12.- l_kern = float(sys.argv[12]);.
@@ -85,21 +86,27 @@ last_update = '2019.08.06'
 # 15.- EBVhostMin = float(sys.argv[15]) # -0.4 # host galaxy.
 # 16.- EBVhostMax = float(sys.argv[16]) # 0.4 # host galaxy..
 # 17.- EBVMWLim = float(sys.argv[17]) # Milky-Way galaxy.
-# 18.- dm15LowerLim = float(sys.argv[18]) # I assume 0.8.
-# 19.- dm15UpperLim = float(sys.argv[19]). # 1.6
-# 20.- Chi2dofPrint = sys.argv[20] == 'True'.
-# 21.- deltamu_print = sys.argv[21] == 'True'.
-# 22.- DirSNeWithCepheid = sys.argv[22].
-# 23.- BandMax = sys.argv[23]. Options: ( Bmax , NIRmax , Bmax_GP , Snoopy , SALT2 ).
-# 24.- PlotTotalMu = sys.argv[24] == 'True'. Plot the "total" distance modulus 
+# 18.- dm15LowerLim = float(sys.argv[18]) # I assume 0.79..
+# 19.- dm15UpperLim = float(sys.argv[19]).
+# 20.- chi2_dof_Max = float(sys.argv[20]) # Chi^2_dof cutoff.
+# 21.- chi2_dof_Max_Label = sys.argv[21] # Text label for the Chi^2_dof cut.
+# 22.- residualMax = float(sys.argv[22]); # residual cutoff.
+# 23.- residualMax_Label = sys.argv[23] # text label of residual cutoff.
+# 24.- MinNumOfDataInLC = int(sys.argv[24]) # Num. data cutoff.
+# 25.- Chi2dofPrint = sys.argv[25] == 'True'.
+# 26.- deltamu_print = sys.argv[26] == 'True'.
+# 27.- DirSNeWithCepheid = sys.argv[27].
+# 28.- BandMax = sys.argv[28]. . Options: ( Bmax , NIRmax , Bmax_GP , Snoopy , SALT2 ).
+# 29.- BandNameText = sys.argv[29]. Text to write in the plot title about
+#         the bands used to determine the distance modulus.
+# 30.- PlotTotalMu = sys.argv[30] == 'True'. Plot the "total" distance modulus
 #         derived from the three distance modulus computed from each band?
-# 25.- BandsCombination = sys.argv[25]. Options: ( AllBands , JH , YJH , JHK ,  YJHK )
-# 26.- plot_raisins =  sys.argv[26] == 'True'.
-# 27.- minimize_residuals = sys.argv[27] == 'True'.
+# 31.- BandsCombination = sys.argv[31]. Options: ( AllBands , JH , YJH , JHK ,  YJHK )
+# 32.- plot_raisins =  sys.argv[32] == 'True'.
+# 33.- minimize_residuals = sys.argv[33] == 'True'.
 
 
 # In[3]:
-
 
 
 ## Terminal or notebook version of this script?
@@ -340,6 +347,12 @@ if BandName == 'J':
         #-- dm15 cutoff
         dm15LowerLim = 0.8 # I assume 0.79.
         dm15UpperLim = 1.6
+        
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        chi2_dof_Max = 1e6; 
+        chi2_dof_Max_Label = 'chi_1e6'
 
     #------------------------------
 
@@ -364,18 +377,17 @@ if BandName == 'J':
         dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
         dm15UpperLim = float(sys.argv[19])
 
-
-    # Ignore data with a chi^2_dof larger than a given threshold:
-    # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
-    # the first time I run the notebook.
-    chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
-    # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        chi2_dof_Max = float(sys.argv[20]) # Chi^2_dof cutoff
+        chi2_dof_Max_Label = sys.argv[21] # Text label for the Chi^2_dof cut
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
     MWATempTypeFile = 'TempWeightedSmooth_Box7_Step05_Window21_Poly3.dat'
 
-###########################################################
+#########################################################60
 
 if BandName == 'Y':
 
@@ -404,6 +416,13 @@ if BandName == 'Y':
         #-- dm15 cutoff
         dm15LowerLim = 0.8 # I assume 0.8.
         dm15UpperLim = 1.6
+        
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
+        # chi2_dof_Max = 3; chi2_dof_Max_Label = 'chi3' # Low-z
+        chi2_dof_Max = 10; chi2_dof_Max_Label = 'chi10' # RAISIN
 
     #------------------------------
 
@@ -427,14 +446,13 @@ if BandName == 'Y':
         #-- dm15 cutoff
         dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
         dm15UpperLim = float(sys.argv[19])
-
-
-    # Ignore data with a chi^2_dof larger than a given threshold:
-    # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
-    # the first time I run the notebook.
-    # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
-    # chi2_dof_Max = 3; chi2_dof_Max_Label = 'chi3' # Low-z
-    chi2_dof_Max = 10; chi2_dof_Max_Label = 'chi10' # RAISIN
+        
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        chi2_dof_Max = float(sys.argv[20]) # Chi^2_dof cutoff
+        chi2_dof_Max_Label = sys.argv[21] # Text label for the Chi^2_dof cut
+        
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
@@ -469,6 +487,12 @@ if BandName == 'H':
         #-- dm15 cutoff
         dm15LowerLim = 0.8 # I assume 0.78.
         dm15UpperLim = 1.6
+        
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
+        # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
 
     #------------------------------
 
@@ -492,13 +516,13 @@ if BandName == 'H':
         #-- dm15 cutoff
         dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
         dm15UpperLim = float(sys.argv[19])
+        
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        chi2_dof_Max = float(sys.argv[20]) # Chi^2_dof cutoff
+        chi2_dof_Max_Label = sys.argv[21] # Text label for the Chi^2_dof cut
 
-
-    # Ignore data with a chi^2_dof larger than a given threshold:
-    # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
-    # the first time I run the notebook.
-    chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
-    # chi2_dof_Max = 3.5; chi2_dof_Max_Label = 'chi3_5'
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
@@ -533,6 +557,12 @@ if BandName == 'K':
         #-- dm15 cutoff
         dm15LowerLim = 0.8 # I assume 0.78.
         dm15UpperLim = 1.6
+        
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        # chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
+        chi2_dof_Max = 4; chi2_dof_Max_Label = 'chi4'
 
     #------------------------------
 
@@ -556,13 +586,13 @@ if BandName == 'K':
         #-- dm15 cutoff
         dm15LowerLim = float(sys.argv[18]) # I assume 0.79.
         dm15UpperLim = float(sys.argv[19])
+        
+        # Ignore data with a chi^2_dof larger than a given threshold:
+        # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
+        # the first time I run the notebook.
+        chi2_dof_Max = float(sys.argv[20]) # Chi^2_dof cutoff
+        chi2_dof_Max_Label = sys.argv[21] # Text label for the Chi^2_dof cut
 
-
-    # Ignore data with a chi^2_dof larger than a given threshold:
-    # Use the values ( chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6')
-    # the first time I run the notebook.
-    # chi2_dof_Max = 1e6; chi2_dof_Max_Label = 'chi_1e6'
-    chi2_dof_Max = 4; chi2_dof_Max_Label = 'chi4'
 
     # - Smoothed Moving windows average to construct the template
     # If TempType = 'MWA' then specify the template file to use
@@ -614,9 +644,6 @@ elif Method==2 or Method==3 or Method==4: CovMat_MeanMu = True; CovMat_ErrorMu =
 
 #-------------
 
-#-- Minimal number of data in LC:
-MinNumOfDataInLC = 1
-
 # Print the (RMS, WRMS, sigma_int) text in the residual plot?:
 WRMS_label = True # Print the WRMS of the total sample (or total+subsamples)?
 RMS_simple = True # or print instead the simple RMS only of total and subsamples?
@@ -624,15 +651,6 @@ WRMS_subsamples = True # Print the RMS, WRMS of each subsample?
 
 #=================================================================
 #( Fixed values usually)
-
-# --- (FIX) Residual cutoff ---
-# residualMax = 0.7; residualMax_Label = 'resid07'
-# residualMax = 0.8; residualMax_Label = 'resid08'
-# residualMax = 0.9; residualMax_Label = 'resid09'
-# residualMax = 1; residualMax_Label = 'resid1'
-# residualMax = 3; residualMax_Label = 'resid3'
-# residualMax = 5; residualMax_Label = 'resid5'
-residualMax = 20; residualMax_Label = 'resid20'
 
 #---- (FIX) Limits in the plots for the Hubble diagram and residual  ----
 
@@ -649,6 +667,19 @@ ylimPlots_residual = -1.1, 1.1
 x_RangePlots = -10, 60;
 
 if ScriptVersion == 'notebook':
+    # --- (FIX) Residual cutoff ---
+    # residualMax = 0.7; residualMax_Label = 'resid07'
+    # residualMax = 0.8; residualMax_Label = 'resid08'
+    # residualMax = 0.9; residualMax_Label = 'resid09'
+    # residualMax = 1; residualMax_Label = 'resid1'
+    # residualMax = 3; residualMax_Label = 'resid3'
+    # residualMax = 5; residualMax_Label = 'resid5'
+    residualMax = 20; # residual cutoff
+    residualMax_Label = 'resid20' # text label of residual cutoff
+    
+    #-- Minimal number of data in LC:
+    MinNumOfDataInLC = 1
+    
     # In the plots of the individual LC, print the chi2_dof value?:
     Chi2dofPrint = True
 
@@ -656,11 +687,17 @@ if ScriptVersion == 'notebook':
     deltamu_print = False
 
 elif ScriptVersion == 'terminal':
+    residualMax = float(sys.argv[22]); # residual cutoff
+    residualMax_Label = sys.argv[23] # text label of residual cutoff
+    
+    #-- Minimal number of data in LC:
+    MinNumOfDataInLC = int(sys.argv[24]) # Num. data cutoff
+    
     # In the plots of the individual LC, print the chi2_dof value?:
-    Chi2dofPrint = sys.argv[20] == 'True'
+    Chi2dofPrint = sys.argv[25] == 'True'
 
     # Print residual value:
-    deltamu_print = sys.argv[21] == 'True'
+    deltamu_print = sys.argv[26] == 'True'
 
 #--------------------------------------------
 
@@ -1336,7 +1373,7 @@ if ScriptVersion == 'notebook':
 
 if ScriptVersion == 'notebook':
     DirSNeWithCepheid = '/Users/arturo/Dropbox/Research/SoftwareResearch/Snoopy/AndyLCComp_2018_02/MyNotes/'
-else: DirSNeWithCepheid = sys.argv[22]
+else: DirSNeWithCepheid = sys.argv[27]
 
 # From the Cepheid SNe list the only part that I use in the entire
 # notebook is the first column, i.e., the SN Name column.
@@ -2985,7 +3022,7 @@ elif ScriptVersion == 'terminal':
 if ScriptVersion == 'notebook':
     BandMax = 'Bmax'  
 elif ScriptVersion == 'terminal':
-    BandMax = sys.argv[23]
+    BandMax = sys.argv[28]
 
 #--------------------
 #   LABELS IN THE PLOT'S TITLE for the OPTICAL
@@ -2995,7 +3032,7 @@ if ScriptVersion == 'notebook':
     if BandMax == 'Snoopy': BandNameText = 'Optical' 
     
 elif ScriptVersion == 'terminal':
-    BandNameText = sys.argv[24]
+    BandNameText = sys.argv[29]
 
 # if BandMax == 'Snoopy': BandName = 'Optical+NIR'  # TEMPORAL
 # if BandMax == 'Snoopy': BandName = 'NIR'  # TEMPORAL
@@ -3015,7 +3052,7 @@ elif ScriptVersion == 'terminal':
 if ScriptVersion == 'notebook':
     PlotTotalMu = False
 elif ScriptVersion == 'terminal':
-    PlotTotalMu = sys.argv[25] == 'True'
+    PlotTotalMu = sys.argv[30] == 'True'
 
     
 # "PlotTotalMu = True"  is only valid when BandMax = NIRmax, Bmax, Bmax_GP.
@@ -3035,7 +3072,7 @@ if PlotTotalMu == True:
         BandsCombination = 'AllBands'  
         
     elif ScriptVersion == 'terminal':
-        BandsCombination = sys.argv[26]
+        BandsCombination = sys.argv[31]
         
 else: BandsCombination = ''
     
@@ -3051,7 +3088,7 @@ if ScriptVersion == 'notebook':
     
 elif ScriptVersion == 'terminal':
     # False = plot the low-z sample.
-    plot_raisins =  sys.argv[27] == 'True'
+    plot_raisins =  sys.argv[32] == 'True'
 
 #--------------------
 
@@ -3320,7 +3357,7 @@ if ScriptVersion == 'notebook':
     # print '# type of variable: %s'%type(delta_Mo)
     
 elif ScriptVersion == 'terminal':
-    minimize_residuals = sys.argv[28] == 'True'
+    minimize_residuals = sys.argv[33] == 'True'
     
     if minimize_residuals:
         delta_Mo = SimplexResult_1[0] 
